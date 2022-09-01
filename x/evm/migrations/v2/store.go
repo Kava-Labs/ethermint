@@ -6,15 +6,8 @@ import (
 	"github.com/tharsis/ethermint/x/evm/types"
 )
 
-// MigrateStore sets the default AllowUnprotectedTxs parameter.
-func MigrateStore(ctx sdk.Context, paramstore *paramtypes.Subspace) error {
-	if !paramstore.HasKeyTable() {
-		ps := paramstore.WithKeyTable(types.ParamKeyTable())
-		paramstore = &ps
-	}
-
-	// add msgs to whitelist
-	allowedMsgs := []types.EIP712AllowedMsg{
+var (
+	NewAllowedMsgs = []types.EIP712AllowedMsg{
 		{
 			MsgTypeUrl:       "/kava.evmutil.v1beta1.MsgConvertERC20ToCoin",
 			MsgValueTypeName: "MsgValueEVMConvertERC20ToCoin",
@@ -40,7 +33,7 @@ func MigrateStore(ctx sdk.Context, paramstore *paramtypes.Subspace) error {
 			ValueTypes: []types.EIP712MsgAttrType{
 				{Name: "depositor", Type: "string"},
 				{Name: "amount", Type: "Coin"},
-				{Name: "strategy", Type: "number"},
+				{Name: "strategy", Type: "string"},
 			},
 		},
 		{
@@ -49,10 +42,46 @@ func MigrateStore(ctx sdk.Context, paramstore *paramtypes.Subspace) error {
 			ValueTypes: []types.EIP712MsgAttrType{
 				{Name: "from", Type: "string"},
 				{Name: "amount", Type: "Coin"},
-				{Name: "strategy", Type: "number"},
+				{Name: "strategy", Type: "string"},
+			},
+		},
+		{
+			MsgTypeUrl:       "/cosmos.staking.v1beta1.MsgDelegate",
+			MsgValueTypeName: "MsgValueStakingDelegate",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "delegator_address", Type: "string"},
+				{Name: "validator_address", Type: "string"},
+				{Name: "amount", Type: "Coin"},
+			},
+		},
+		{
+			MsgTypeUrl:       "/cosmos.staking.v1beta1.MsgUndelegate",
+			MsgValueTypeName: "MsgValueStakingUndelegate",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "delegator_address", Type: "string"},
+				{Name: "validator_address", Type: "string"},
+				{Name: "amount", Type: "Coin"},
+			},
+		},
+		{
+			MsgTypeUrl:       "/cosmos.staking.v1beta1.MsgBeginRedelegate",
+			MsgValueTypeName: "MsgValueStakingBeginRedelegate",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "delegator_address", Type: "string"},
+				{Name: "validator_src_address", Type: "string"},
+				{Name: "validator_dst_address", Type: "string"},
+				{Name: "amount", Type: "Coin"},
 			},
 		},
 	}
-	paramstore.Set(ctx, types.ParamStoreKeyEIP712AllowedMsgs, allowedMsgs)
+)
+
+// MigrateStore sets the default AllowUnprotectedTxs parameter.
+func MigrateStore(ctx sdk.Context, paramstore *paramtypes.Subspace) error {
+	if !paramstore.HasKeyTable() {
+		ps := paramstore.WithKeyTable(types.ParamKeyTable())
+		paramstore = &ps
+	}
+	paramstore.Set(ctx, types.ParamStoreKeyEIP712AllowedMsgs, NewAllowedMsgs)
 	return nil
 }
