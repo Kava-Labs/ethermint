@@ -8,6 +8,7 @@ import (
 
 var (
 	NewAllowedMsgs = []types.EIP712AllowedMsg{
+		// x/evmutil
 		{
 			MsgTypeUrl:       "/kava.evmutil.v1beta1.MsgConvertERC20ToCoin",
 			MsgValueTypeName: "MsgValueEVMConvertERC20ToCoin",
@@ -27,13 +28,14 @@ var (
 				{Name: "amount", Type: "Coin"},
 			},
 		},
+		// x/earn
 		{
 			MsgTypeUrl:       "/kava.earn.v1beta1.MsgDeposit",
 			MsgValueTypeName: "MsgValueEarnDeposit",
 			ValueTypes: []types.EIP712MsgAttrType{
 				{Name: "depositor", Type: "string"},
 				{Name: "amount", Type: "Coin"},
-				{Name: "strategy", Type: "string"},
+				{Name: "strategy", Type: "int32"},
 			},
 		},
 		{
@@ -42,9 +44,10 @@ var (
 			ValueTypes: []types.EIP712MsgAttrType{
 				{Name: "from", Type: "string"},
 				{Name: "amount", Type: "Coin"},
-				{Name: "strategy", Type: "string"},
+				{Name: "strategy", Type: "int32"},
 			},
 		},
+		// x/staking
 		{
 			MsgTypeUrl:       "/cosmos.staking.v1beta1.MsgDelegate",
 			MsgValueTypeName: "MsgValueStakingDelegate",
@@ -71,6 +74,147 @@ var (
 				{Name: "validator_src_address", Type: "string"},
 				{Name: "validator_dst_address", Type: "string"},
 				{Name: "amount", Type: "Coin"},
+			},
+		},
+		// x/incentive
+		{
+			MsgTypeUrl:       "/kava.incentive.v1beta1.MsgClaimUSDXMintingReward",
+			MsgValueTypeName: "MsgValueIncentiveClaimUSDXMintingReward",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "sender", Type: "string"},
+				{Name: "multiplier_name", Type: "string"},
+			},
+		},
+		{
+			MsgTypeUrl:       "/kava.incentive.v1beta1.MsgClaimHardReward",
+			MsgValueTypeName: "MsgValueIncentiveClaimHardReward",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "sender", Type: "string"},
+				{Name: "denoms_to_claim", Type: "IncentiveSelection"},
+			},
+			NestedTypes: []types.EIP712NestedMsgType{
+				{
+					Name: "IncentiveSelection",
+					Attrs: []types.EIP712MsgAttrType{
+						{Name: "denom", Type: "string"},
+						{Name: "multiplier_name", Type: "string"},
+					},
+				},
+			},
+		},
+		{
+			MsgTypeUrl:       "/kava.incentive.v1beta1.MsgClaimDelegatorReward",
+			MsgValueTypeName: "MsgValueIncentiveClaimDelegatorReward",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "sender", Type: "string"},
+				{Name: "denoms_to_claim", Type: "IncentiveSelection"},
+			},
+			NestedTypes: []types.EIP712NestedMsgType{
+				{
+					Name: "IncentiveSelection",
+					Attrs: []types.EIP712MsgAttrType{
+						{Name: "denom", Type: "string"},
+						{Name: "multiplier_name", Type: "string"},
+					},
+				},
+			},
+		},
+		{
+			MsgTypeUrl:       "/kava.incentive.v1beta1.MsgClaimSwapReward",
+			MsgValueTypeName: "MsgValueIncentiveClaimSwapReward",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "sender", Type: "string"},
+				{Name: "denoms_to_claim", Type: "IncentiveSelection"},
+			},
+			NestedTypes: []types.EIP712NestedMsgType{
+				{
+					Name: "IncentiveSelection",
+					Attrs: []types.EIP712MsgAttrType{
+						{Name: "denom", Type: "string"},
+						{Name: "multiplier_name", Type: "string"},
+					},
+				},
+			},
+		},
+		{
+			MsgTypeUrl:       "/kava.incentive.v1beta1.MsgClaimSavingsReward",
+			MsgValueTypeName: "MsgValueIncentiveClaimSavingsReward",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "sender", Type: "string"},
+				{Name: "denoms_to_claim", Type: "IncentiveSelection"},
+			},
+			NestedTypes: []types.EIP712NestedMsgType{
+				{
+					Name: "IncentiveSelection",
+					Attrs: []types.EIP712MsgAttrType{
+						{Name: "denom", Type: "string"},
+						{Name: "multiplier_name", Type: "string"},
+					},
+				},
+			},
+		},
+		{
+			MsgTypeUrl:       "/kava.incentive.v1beta1.MsgClaimEarnReward",
+			MsgValueTypeName: "MsgValueIncentiveClaimEarnReward",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "sender", Type: "string"},
+				{Name: "denoms_to_claim", Type: "IncentiveSelection"},
+			},
+			NestedTypes: []types.EIP712NestedMsgType{
+				{
+					Name: "IncentiveSelection",
+					Attrs: []types.EIP712MsgAttrType{
+						{Name: "denom", Type: "string"},
+						{Name: "multiplier_name", Type: "string"},
+					},
+				},
+			},
+		},
+		// x/router
+		{
+			MsgTypeUrl:       "/kava.router.v1beta1.MsgMintDeposit",
+			MsgValueTypeName: "MsgValueRouterMintDeposit",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "depositor", Type: "string"},
+				{Name: "validator", Type: "string"},
+				{Name: "amount", Type: "Coin"},
+			},
+		},
+		{
+			MsgTypeUrl:       "/kava.router.v1beta1.MsgDelegateMintDeposit",
+			MsgValueTypeName: "MsgValueRouterDelegateMintDeposit",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "depositor", Type: "string"},
+				{Name: "validator", Type: "string"},
+				{Name: "amount", Type: "Coin"},
+			},
+		},
+		{
+			MsgTypeUrl:       "/kava.router.v1beta1.MsgWithdrawBurn",
+			MsgValueTypeName: "MsgValueRouterWithdrawBurn",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "from", Type: "string"},
+				{Name: "validator", Type: "string"},
+				{Name: "amount", Type: "Coin"},
+			},
+		},
+		{
+			MsgTypeUrl:       "/kava.router.v1beta1.MsgWithdrawBurnUndelegate",
+			MsgValueTypeName: "MsgValueRouterWithdrawBurnUndelegate",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "from", Type: "string"},
+				{Name: "validator", Type: "string"},
+				{Name: "amount", Type: "Coin"},
+			},
+		},
+		// x/gov
+		{
+			MsgTypeUrl:       "/cosmos.gov.v1beta1.MsgVote",
+			MsgValueTypeName: "MsgValueGovVote",
+			ValueTypes: []types.EIP712MsgAttrType{
+				{Name: "proposal_id", Type: "uint64"},
+				{Name: "voter", Type: "string"},
+				{Name: "option", Type: "int32"},
 			},
 		},
 	}
