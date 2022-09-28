@@ -61,8 +61,8 @@ func TestParamsValidate(t *testing.T) {
 				ChainConfig:  DefaultChainConfig(),
 				ExtraEIPs:    []int64{2929, 1884, 1344},
 				EIP712AllowedMsgs: []EIP712AllowedMsg{
-					{LegacyMsgType: "send"},
-					{LegacyMsgType: "send"},
+					{MsgTypeUrl: "/cosmos.bank.v1beta1.MsgSend", MsgValueTypeName: "MsgValueSend"},
+					{MsgTypeUrl: "/cosmos.bank.v1beta1.MsgSend", MsgValueTypeName: "MsgValueSend"},
 				},
 			},
 			true,

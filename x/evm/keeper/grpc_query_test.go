@@ -401,6 +401,7 @@ func (suite *KeeperTestSuite) TestQueryTxLogs() {
 func (suite *KeeperTestSuite) TestQueryParams() {
 	ctx := sdk.WrapSDKContext(suite.ctx)
 	expParams := types.DefaultParams()
+	expParams.EIP712AllowedMsgs = nil
 
 	res, err := suite.queryClient.Params(ctx, &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
