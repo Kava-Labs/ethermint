@@ -21,9 +21,9 @@ func MigrateStore(
 
 	// -------------------------------------------------------------------------
 	// Upstream v2 to v3
-	// GrayGlacierBlock and MergeNetsplitBlock in ChainConfig parameter.
-	// Any new updates including and after london are disabled. These should
-	// actually be nil if we don't do anything, but set explicitly here to nil.
+	// New GrayGlacierBlock and MergeNetsplitBlock in ChainConfig parameter.
+	// Any new fields are disabled / nil. These should be nil if we leave them
+	// out because of the default value, but set explicitly here to nil.
 
 	newChainConfig := types.ChainConfig{
 		HomesteadBlock:      legacyParams.ChainConfig.HomesteadBlock,
@@ -41,7 +41,9 @@ func MigrateStore(
 		BerlinBlock:         legacyParams.ChainConfig.BerlinBlock,
 		LondonBlock:         legacyParams.ChainConfig.LondonBlock,
 		ArrowGlacierBlock:   legacyParams.ChainConfig.ArrowGlacierBlock,
-		MergeNetsplitBlock:  legacyParams.ChainConfig.MergeForkBlock, // This is an old field, but renamed from mergeForkBlock
+
+		// This is an old field, but renamed from mergeForkBlock
+		MergeNetsplitBlock: legacyParams.ChainConfig.MergeForkBlock,
 
 		// New fields are nil
 		GrayGlacierBlock: nil,
@@ -76,6 +78,8 @@ func MigrateStore(
 	return nil
 }
 
+// MigrateEIP712AllowedMsgs converts the old EIP712AllowedMsgs to the new one.
+// No changes, just a type conversion.
 func MigrateEIP712AllowedMsgs(old []v3types.EIP712AllowedMsg) []types.EIP712AllowedMsg {
 	new := make([]types.EIP712AllowedMsg, len(old))
 	for i, msg := range old {
@@ -90,6 +94,8 @@ func MigrateEIP712AllowedMsgs(old []v3types.EIP712AllowedMsg) []types.EIP712Allo
 	return new
 }
 
+// MigrateEIP712MsgAttrTypes converts the old EIP712MsgAttrTypes to the new one.
+// No changes, just a type conversion.
 func MigrateEIP712MsgAttrTypes(old []v3types.EIP712MsgAttrType) []types.EIP712MsgAttrType {
 	new := make([]types.EIP712MsgAttrType, len(old))
 	for i, msg := range old {
@@ -100,6 +106,8 @@ func MigrateEIP712MsgAttrTypes(old []v3types.EIP712MsgAttrType) []types.EIP712Ms
 	return new
 }
 
+// MigrateNestedTypes converts the old EIP712NestedMsgTypes to the new one.
+// No changes, just a type conversion.
 func MigrateNestedTypes(old []v3types.EIP712NestedMsgType) []types.EIP712NestedMsgType {
 	new := make([]types.EIP712NestedMsgType, len(old))
 	for i, msg := range old {
