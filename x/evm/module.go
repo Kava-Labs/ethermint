@@ -45,7 +45,7 @@ var (
 )
 
 // ConsensusVersion defines the current module consensus version.
-const ConsensusVersion = 2
+const ConsensusVersion = 3
 
 // AppModuleBasic defines the basic application module used by the evm module.
 type AppModuleBasic struct{}
@@ -145,12 +145,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(*am.keeper, am.legacySubspace)
-	err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4)
-	if err != nil {
-		panic(err)
-	}
 
-	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
+	// This migration is a Kava specific migration that also includes the
+	// upstream migrations from 3 to 5.
+	err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate2to3)
+	if err != nil {
 		panic(err)
 	}
 }
