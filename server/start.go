@@ -59,7 +59,6 @@ import (
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/evmos/ethermint/indexer"
 	ethdebug "github.com/evmos/ethermint/rpc/namespaces/ethereum/debug"
@@ -601,12 +600,6 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 			offlineMode = true
 		}
 
-		minGasPrices, err := sdk.ParseDecCoins(config.MinGasPrices)
-		if err != nil {
-			ctx.Logger.Error("failed to parse minimum-gas-prices", "error", err.Error())
-			return err
-		}
-
 		conf := &rosetta.Config{
 			Blockchain:          config.Rosetta.Blockchain,
 			Network:             config.Rosetta.Network,
@@ -617,7 +610,6 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 			Offline:             offlineMode,
 			GasToSuggest:        config.Rosetta.GasToSuggest,
 			EnableFeeSuggestion: config.Rosetta.EnableFeeSuggestion,
-			GasPrices:           minGasPrices.Sort(),
 			Codec:               clientCtx.Codec.(*codec.ProtoCodec),
 			InterfaceRegistry:   clientCtx.InterfaceRegistry,
 		}
