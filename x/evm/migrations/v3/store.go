@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v3types "github.com/evmos/ethermint/x/evm/migrations/v3/types"
+	v2types "github.com/evmos/ethermint/x/evm/migrations/v2/types"
 	"github.com/evmos/ethermint/x/evm/types"
 )
 
@@ -16,7 +16,7 @@ func MigrateStore(
 	storeKey storetypes.StoreKey,
 	cdc codec.BinaryCodec,
 ) error {
-	var legacyParams v3types.V2Params
+	var legacyParams v2types.Params
 	paramstore.GetParamSetIfExists(ctx, &legacyParams)
 
 	// -------------------------------------------------------------------------
@@ -80,7 +80,7 @@ func MigrateStore(
 
 // MigrateEIP712AllowedMsgs converts the old EIP712AllowedMsgs to the new one.
 // No changes, just a type conversion.
-func MigrateEIP712AllowedMsgs(old []v3types.EIP712AllowedMsg) []types.EIP712AllowedMsg {
+func MigrateEIP712AllowedMsgs(old []v2types.EIP712AllowedMsg) []types.EIP712AllowedMsg {
 	new := make([]types.EIP712AllowedMsg, len(old))
 	for i, msg := range old {
 		new[i] = types.EIP712AllowedMsg{
@@ -96,7 +96,7 @@ func MigrateEIP712AllowedMsgs(old []v3types.EIP712AllowedMsg) []types.EIP712Allo
 
 // MigrateEIP712MsgAttrTypes converts the old EIP712MsgAttrTypes to the new one.
 // No changes, just a type conversion.
-func MigrateEIP712MsgAttrTypes(old []v3types.EIP712MsgAttrType) []types.EIP712MsgAttrType {
+func MigrateEIP712MsgAttrTypes(old []v2types.EIP712MsgAttrType) []types.EIP712MsgAttrType {
 	new := make([]types.EIP712MsgAttrType, len(old))
 	for i, msg := range old {
 		// We can directly assign because of the same fields
@@ -108,7 +108,7 @@ func MigrateEIP712MsgAttrTypes(old []v3types.EIP712MsgAttrType) []types.EIP712Ms
 
 // MigrateNestedTypes converts the old EIP712NestedMsgTypes to the new one.
 // No changes, just a type conversion.
-func MigrateNestedTypes(old []v3types.EIP712NestedMsgType) []types.EIP712NestedMsgType {
+func MigrateNestedTypes(old []v2types.EIP712NestedMsgType) []types.EIP712NestedMsgType {
 	new := make([]types.EIP712NestedMsgType, len(old))
 	for i, msg := range old {
 		new[i] = types.EIP712NestedMsgType{

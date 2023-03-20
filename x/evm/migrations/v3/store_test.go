@@ -12,8 +12,8 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/encoding"
+	v2types "github.com/evmos/ethermint/x/evm/migrations/v2/types"
 	v3 "github.com/evmos/ethermint/x/evm/migrations/v3"
-	v3types "github.com/evmos/ethermint/x/evm/migrations/v3/types"
 )
 
 func TestMigrate(t *testing.T) {
@@ -31,9 +31,9 @@ func TestMigrate(t *testing.T) {
 		storeKey,
 		tKey,
 		"evm",
-	).WithKeyTable(v3types.ParamKeyTable())
+	).WithKeyTable(v2types.ParamKeyTable())
 
-	initialParams := v3types.DefaultParams()
+	initialParams := v2types.DefaultParams()
 	paramstore.SetParamSet(ctx, &initialParams)
 
 	err := v3.MigrateStore(
@@ -77,23 +77,23 @@ func TestMigrate_Mainnet(t *testing.T) {
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	kvStore := ctx.KVStore(storeKey)
 
-	initialChainConfig := v3types.DefaultChainConfig()
+	initialChainConfig := v2types.DefaultChainConfig()
 	initialChainConfig.LondonBlock = nil
 	initialChainConfig.ArrowGlacierBlock = nil
 	initialChainConfig.MergeForkBlock = nil
 
-	initialParams := v3types.V2Params{
+	initialParams := v2types.Params{
 		EvmDenom:     "akava",
 		EnableCreate: true,
 		EnableCall:   true,
 		ExtraEIPs:    nil,
 		ChainConfig:  initialChainConfig,
 		// Start with a subset of allowed messages
-		EIP712AllowedMsgs: []v3types.EIP712AllowedMsg{
+		EIP712AllowedMsgs: []v2types.EIP712AllowedMsg{
 			{
 				MsgTypeUrl:       "/kava.evmutil.v1beta1.MsgConvertERC20ToCoin",
 				MsgValueTypeName: "MsgValueEVMConvertERC20ToCoin",
-				ValueTypes: []v3types.EIP712MsgAttrType{
+				ValueTypes: []v2types.EIP712MsgAttrType{
 					{Name: "initiator", Type: "string"},
 					{Name: "receiver", Type: "string"},
 					{Name: "kava_erc20_address", Type: "string"},
@@ -103,7 +103,7 @@ func TestMigrate_Mainnet(t *testing.T) {
 			{
 				MsgTypeUrl:       "/kava.evmutil.v1beta1.MsgConvertCoinToERC20",
 				MsgValueTypeName: "MsgValueEVMConvertCoinToERC20",
-				ValueTypes: []v3types.EIP712MsgAttrType{
+				ValueTypes: []v2types.EIP712MsgAttrType{
 					{Name: "initiator", Type: "string"},
 					{Name: "receiver", Type: "string"},
 					{Name: "amount", Type: "Coin"},
@@ -113,7 +113,7 @@ func TestMigrate_Mainnet(t *testing.T) {
 			{
 				MsgTypeUrl:       "/kava.earn.v1beta1.MsgDeposit",
 				MsgValueTypeName: "MsgValueEarnDeposit",
-				ValueTypes: []v3types.EIP712MsgAttrType{
+				ValueTypes: []v2types.EIP712MsgAttrType{
 					{Name: "depositor", Type: "string"},
 					{Name: "amount", Type: "Coin"},
 					{Name: "strategy", Type: "int32"},
@@ -122,7 +122,7 @@ func TestMigrate_Mainnet(t *testing.T) {
 			{
 				MsgTypeUrl:       "/kava.earn.v1beta1.MsgWithdraw",
 				MsgValueTypeName: "MsgValueEarnWithdraw",
-				ValueTypes: []v3types.EIP712MsgAttrType{
+				ValueTypes: []v2types.EIP712MsgAttrType{
 					{Name: "from", Type: "string"},
 					{Name: "amount", Type: "Coin"},
 					{Name: "strategy", Type: "int32"},
@@ -137,7 +137,7 @@ func TestMigrate_Mainnet(t *testing.T) {
 		storeKey,
 		tKey,
 		"evm",
-	).WithKeyTable(v3types.ParamKeyTable())
+	).WithKeyTable(v2types.ParamKeyTable())
 
 	paramstore.SetParamSet(ctx, &initialParams)
 
