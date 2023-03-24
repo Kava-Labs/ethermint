@@ -24,8 +24,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the EVM module parameters
-type Params struct {
+// V2Params defines the EVM module parameters
+type V2Params struct {
 	// evm denom represents the token denomination used to run the EVM state
 	// transitions.
 	EvmDenom string `protobuf:"bytes,1,opt,name=evm_denom,json=evmDenom,proto3" json:"evm_denom,omitempty" yaml:"evm_denom"`
@@ -36,21 +36,21 @@ type Params struct {
 	// extra eips defines the additional EIPs for the vm.Config
 	ExtraEIPs []int64 `protobuf:"varint,4,rep,packed,name=extra_eips,json=extraEips,proto3" json:"extra_eips,omitempty" yaml:"extra_eips"`
 	// chain config defines the EVM chain configuration parameters
-	ChainConfig ChainConfig `protobuf:"bytes,5,opt,name=chain_config,json=chainConfig,proto3" json:"chain_config" yaml:"chain_config"`
+	ChainConfig V2ChainConfig `protobuf:"bytes,5,opt,name=chain_config,json=chainConfig,proto3" json:"chain_config" yaml:"chain_config"`
 	// list of allowed eip712 msgs and their types
-	EIP712AllowedMsgs []EIP712AllowedMsg `protobuf:"bytes,6,rep,name=eip712_allowed_msgs,json=eip712AllowedMsgs,proto3" json:"eip712_allowed_msgs"`
+	EIP712AllowedMsgs []V2EIP712AllowedMsg `protobuf:"bytes,6,rep,name=eip712_allowed_msgs,json=eip712AllowedMsgs,proto3" json:"eip712_allowed_msgs"`
 }
 
-func (m *Params) Reset()         { *m = Params{} }
-func (m *Params) String() string { return proto.CompactTextString(m) }
-func (*Params) ProtoMessage()    {}
-func (*Params) Descriptor() ([]byte, []int) {
+func (m *V2Params) Reset()         { *m = V2Params{} }
+func (m *V2Params) String() string { return proto.CompactTextString(m) }
+func (*V2Params) ProtoMessage()    {}
+func (*V2Params) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d21ecc92c8c8583e, []int{0}
 }
-func (m *Params) XXX_Unmarshal(b []byte) error {
+func (m *V2Params) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *V2Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_Params.Marshal(b, m, deterministic)
 	} else {
@@ -62,63 +62,63 @@ func (m *Params) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *Params) XXX_Merge(src proto.Message) {
+func (m *V2Params) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Params.Merge(m, src)
 }
-func (m *Params) XXX_Size() int {
+func (m *V2Params) XXX_Size() int {
 	return m.Size()
 }
-func (m *Params) XXX_DiscardUnknown() {
+func (m *V2Params) XXX_DiscardUnknown() {
 	xxx_messageInfo_Params.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
-func (m *Params) GetEvmDenom() string {
+func (m *V2Params) GetEvmDenom() string {
 	if m != nil {
 		return m.EvmDenom
 	}
 	return ""
 }
 
-func (m *Params) GetEnableCreate() bool {
+func (m *V2Params) GetEnableCreate() bool {
 	if m != nil {
 		return m.EnableCreate
 	}
 	return false
 }
 
-func (m *Params) GetEnableCall() bool {
+func (m *V2Params) GetEnableCall() bool {
 	if m != nil {
 		return m.EnableCall
 	}
 	return false
 }
 
-func (m *Params) GetExtraEIPs() []int64 {
+func (m *V2Params) GetExtraEIPs() []int64 {
 	if m != nil {
 		return m.ExtraEIPs
 	}
 	return nil
 }
 
-func (m *Params) GetChainConfig() ChainConfig {
+func (m *V2Params) GetChainConfig() V2ChainConfig {
 	if m != nil {
 		return m.ChainConfig
 	}
-	return ChainConfig{}
+	return V2ChainConfig{}
 }
 
-func (m *Params) GetEIP712AllowedMsgs() []EIP712AllowedMsg {
+func (m *V2Params) GetEIP712AllowedMsgs() []V2EIP712AllowedMsg {
 	if m != nil {
 		return m.EIP712AllowedMsgs
 	}
 	return nil
 }
 
-// ChainConfig defines the Ethereum ChainConfig parameters using *sdk.Int values
+// V2ChainConfig defines the Ethereum V2ChainConfig parameters using *sdk.Int values
 // instead of *big.Int.
-type ChainConfig struct {
+type V2ChainConfig struct {
 	// Homestead switch block (nil no fork, 0 = already homestead)
 	HomesteadBlock *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=homestead_block,json=homesteadBlock,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"homestead_block,omitempty" yaml:"homestead_block"`
 	// TheDAO hard-fork switch block (nil no fork)
@@ -154,16 +154,16 @@ type ChainConfig struct {
 	MergeForkBlock *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,19,opt,name=merge_fork_block,json=mergeForkBlock,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"merge_fork_block,omitempty" yaml:"merge_fork_block"`
 }
 
-func (m *ChainConfig) Reset()         { *m = ChainConfig{} }
-func (m *ChainConfig) String() string { return proto.CompactTextString(m) }
-func (*ChainConfig) ProtoMessage()    {}
-func (*ChainConfig) Descriptor() ([]byte, []int) {
+func (m *V2ChainConfig) Reset()         { *m = V2ChainConfig{} }
+func (m *V2ChainConfig) String() string { return proto.CompactTextString(m) }
+func (*V2ChainConfig) ProtoMessage()    {}
+func (*V2ChainConfig) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d21ecc92c8c8583e, []int{1}
 }
-func (m *ChainConfig) XXX_Unmarshal(b []byte) error {
+func (m *V2ChainConfig) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ChainConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *V2ChainConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_ChainConfig.Marshal(b, m, deterministic)
 	} else {
@@ -175,48 +175,48 @@ func (m *ChainConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) 
 		return b[:n], nil
 	}
 }
-func (m *ChainConfig) XXX_Merge(src proto.Message) {
+func (m *V2ChainConfig) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_ChainConfig.Merge(m, src)
 }
-func (m *ChainConfig) XXX_Size() int {
+func (m *V2ChainConfig) XXX_Size() int {
 	return m.Size()
 }
-func (m *ChainConfig) XXX_DiscardUnknown() {
+func (m *V2ChainConfig) XXX_DiscardUnknown() {
 	xxx_messageInfo_ChainConfig.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_ChainConfig proto.InternalMessageInfo
 
-func (m *ChainConfig) GetDAOForkSupport() bool {
+func (m *V2ChainConfig) GetDAOForkSupport() bool {
 	if m != nil {
 		return m.DAOForkSupport
 	}
 	return false
 }
 
-func (m *ChainConfig) GetEIP150Hash() string {
+func (m *V2ChainConfig) GetEIP150Hash() string {
 	if m != nil {
 		return m.EIP150Hash
 	}
 	return ""
 }
 
-// State represents a single Storage key value pair item.
-type State struct {
+// V2State represents a single Storage key value pair item.
+type V2State struct {
 	Key   string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (m *State) Reset()         { *m = State{} }
-func (m *State) String() string { return proto.CompactTextString(m) }
-func (*State) ProtoMessage()    {}
-func (*State) Descriptor() ([]byte, []int) {
+func (m *V2State) Reset()         { *m = V2State{} }
+func (m *V2State) String() string { return proto.CompactTextString(m) }
+func (*V2State) ProtoMessage()    {}
+func (*V2State) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d21ecc92c8c8583e, []int{2}
 }
-func (m *State) XXX_Unmarshal(b []byte) error {
+func (m *V2State) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *State) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *V2State) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_State.Marshal(b, m, deterministic)
 	} else {
@@ -228,50 +228,50 @@ func (m *State) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *State) XXX_Merge(src proto.Message) {
+func (m *V2State) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_State.Merge(m, src)
 }
-func (m *State) XXX_Size() int {
+func (m *V2State) XXX_Size() int {
 	return m.Size()
 }
-func (m *State) XXX_DiscardUnknown() {
+func (m *V2State) XXX_DiscardUnknown() {
 	xxx_messageInfo_State.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_State proto.InternalMessageInfo
 
-func (m *State) GetKey() string {
+func (m *V2State) GetKey() string {
 	if m != nil {
 		return m.Key
 	}
 	return ""
 }
 
-func (m *State) GetValue() string {
+func (m *V2State) GetValue() string {
 	if m != nil {
 		return m.Value
 	}
 	return ""
 }
 
-// TransactionLogs define the logs generated from a transaction execution
+// V2TransactionLogs define the logs generated from a transaction execution
 // with a given hash. It it used for import/export data as transactions are not
 // persisted on blockchain state after an upgrade.
-type TransactionLogs struct {
+type V2TransactionLogs struct {
 	Hash string `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
-	Logs []*Log `protobuf:"bytes,2,rep,name=logs,proto3" json:"logs,omitempty"`
+	Logs []*V2Log `protobuf:"bytes,2,rep,name=logs,proto3" json:"logs,omitempty"`
 }
 
-func (m *TransactionLogs) Reset()         { *m = TransactionLogs{} }
-func (m *TransactionLogs) String() string { return proto.CompactTextString(m) }
-func (*TransactionLogs) ProtoMessage()    {}
-func (*TransactionLogs) Descriptor() ([]byte, []int) {
+func (m *V2TransactionLogs) Reset()         { *m = V2TransactionLogs{} }
+func (m *V2TransactionLogs) String() string { return proto.CompactTextString(m) }
+func (*V2TransactionLogs) ProtoMessage()    {}
+func (*V2TransactionLogs) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d21ecc92c8c8583e, []int{3}
 }
-func (m *TransactionLogs) XXX_Unmarshal(b []byte) error {
+func (m *V2TransactionLogs) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *TransactionLogs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *V2TransactionLogs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_TransactionLogs.Marshal(b, m, deterministic)
 	} else {
@@ -283,36 +283,36 @@ func (m *TransactionLogs) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
-func (m *TransactionLogs) XXX_Merge(src proto.Message) {
+func (m *V2TransactionLogs) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_TransactionLogs.Merge(m, src)
 }
-func (m *TransactionLogs) XXX_Size() int {
+func (m *V2TransactionLogs) XXX_Size() int {
 	return m.Size()
 }
-func (m *TransactionLogs) XXX_DiscardUnknown() {
+func (m *V2TransactionLogs) XXX_DiscardUnknown() {
 	xxx_messageInfo_TransactionLogs.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_TransactionLogs proto.InternalMessageInfo
 
-func (m *TransactionLogs) GetHash() string {
+func (m *V2TransactionLogs) GetHash() string {
 	if m != nil {
 		return m.Hash
 	}
 	return ""
 }
 
-func (m *TransactionLogs) GetLogs() []*Log {
+func (m *V2TransactionLogs) GetLogs() []*V2Log {
 	if m != nil {
 		return m.Logs
 	}
 	return nil
 }
 
-// Log represents an protobuf compatible Ethereum Log that defines a contract
+// V2Log represents an protobuf compatible Ethereum V2Log that defines a contract
 // log event. These events are generated by the LOG opcode and stored/indexed by
 // the node.
-type Log struct {
+type V2Log struct {
 	// address of the contract that generated the event
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// list of topics provided by the contract.
@@ -335,16 +335,16 @@ type Log struct {
 	Removed bool `protobuf:"varint,9,opt,name=removed,proto3" json:"removed,omitempty"`
 }
 
-func (m *Log) Reset()         { *m = Log{} }
-func (m *Log) String() string { return proto.CompactTextString(m) }
-func (*Log) ProtoMessage()    {}
-func (*Log) Descriptor() ([]byte, []int) {
+func (m *V2Log) Reset()         { *m = V2Log{} }
+func (m *V2Log) String() string { return proto.CompactTextString(m) }
+func (*V2Log) ProtoMessage()    {}
+func (*V2Log) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d21ecc92c8c8583e, []int{4}
 }
-func (m *Log) XXX_Unmarshal(b []byte) error {
+func (m *V2Log) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *Log) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *V2Log) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_Log.Marshal(b, m, deterministic)
 	} else {
@@ -356,83 +356,83 @@ func (m *Log) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *Log) XXX_Merge(src proto.Message) {
+func (m *V2Log) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_Log.Merge(m, src)
 }
-func (m *Log) XXX_Size() int {
+func (m *V2Log) XXX_Size() int {
 	return m.Size()
 }
-func (m *Log) XXX_DiscardUnknown() {
+func (m *V2Log) XXX_DiscardUnknown() {
 	xxx_messageInfo_Log.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_Log proto.InternalMessageInfo
 
-func (m *Log) GetAddress() string {
+func (m *V2Log) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-func (m *Log) GetTopics() []string {
+func (m *V2Log) GetTopics() []string {
 	if m != nil {
 		return m.Topics
 	}
 	return nil
 }
 
-func (m *Log) GetData() []byte {
+func (m *V2Log) GetData() []byte {
 	if m != nil {
 		return m.Data
 	}
 	return nil
 }
 
-func (m *Log) GetBlockNumber() uint64 {
+func (m *V2Log) GetBlockNumber() uint64 {
 	if m != nil {
 		return m.BlockNumber
 	}
 	return 0
 }
 
-func (m *Log) GetTxHash() string {
+func (m *V2Log) GetTxHash() string {
 	if m != nil {
 		return m.TxHash
 	}
 	return ""
 }
 
-func (m *Log) GetTxIndex() uint64 {
+func (m *V2Log) GetTxIndex() uint64 {
 	if m != nil {
 		return m.TxIndex
 	}
 	return 0
 }
 
-func (m *Log) GetBlockHash() string {
+func (m *V2Log) GetBlockHash() string {
 	if m != nil {
 		return m.BlockHash
 	}
 	return ""
 }
 
-func (m *Log) GetIndex() uint64 {
+func (m *V2Log) GetIndex() uint64 {
 	if m != nil {
 		return m.Index
 	}
 	return 0
 }
 
-func (m *Log) GetRemoved() bool {
+func (m *V2Log) GetRemoved() bool {
 	if m != nil {
 		return m.Removed
 	}
 	return false
 }
 
-// TxResult stores results of Tx execution.
-type TxResult struct {
+// V2TxResult stores results of Tx execution.
+type V2TxResult struct {
 	// contract_address contains the ethereum address of the created contract (if
 	// any). If the state transition is an evm.Call, the contract address will be
 	// empty.
@@ -441,7 +441,7 @@ type TxResult struct {
 	Bloom []byte `protobuf:"bytes,2,opt,name=bloom,proto3" json:"bloom,omitempty"`
 	// tx_logs contains the transaction hash and the proto-compatible ethereum
 	// logs.
-	TxLogs TransactionLogs `protobuf:"bytes,3,opt,name=tx_logs,json=txLogs,proto3" json:"tx_logs" yaml:"tx_logs"`
+	TxLogs V2TransactionLogs `protobuf:"bytes,3,opt,name=tx_logs,json=txLogs,proto3" json:"tx_logs" yaml:"tx_logs"`
 	// ret defines the bytes from the execution.
 	Ret []byte `protobuf:"bytes,4,opt,name=ret,proto3" json:"ret,omitempty"`
 	// reverted flag is set to true when the call has been reverted
@@ -450,16 +450,16 @@ type TxResult struct {
 	GasUsed uint64 `protobuf:"varint,6,opt,name=gas_used,json=gasUsed,proto3" json:"gas_used,omitempty"`
 }
 
-func (m *TxResult) Reset()         { *m = TxResult{} }
-func (m *TxResult) String() string { return proto.CompactTextString(m) }
-func (*TxResult) ProtoMessage()    {}
-func (*TxResult) Descriptor() ([]byte, []int) {
+func (m *V2TxResult) Reset()         { *m = V2TxResult{} }
+func (m *V2TxResult) String() string { return proto.CompactTextString(m) }
+func (*V2TxResult) ProtoMessage()    {}
+func (*V2TxResult) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d21ecc92c8c8583e, []int{5}
 }
-func (m *TxResult) XXX_Unmarshal(b []byte) error {
+func (m *V2TxResult) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *TxResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *V2TxResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_TxResult.Marshal(b, m, deterministic)
 	} else {
@@ -471,36 +471,36 @@ func (m *TxResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *TxResult) XXX_Merge(src proto.Message) {
+func (m *V2TxResult) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_TxResult.Merge(m, src)
 }
-func (m *TxResult) XXX_Size() int {
+func (m *V2TxResult) XXX_Size() int {
 	return m.Size()
 }
-func (m *TxResult) XXX_DiscardUnknown() {
+func (m *V2TxResult) XXX_DiscardUnknown() {
 	xxx_messageInfo_TxResult.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_TxResult proto.InternalMessageInfo
 
-// AccessTuple is the element type of an access list.
-type AccessTuple struct {
+// V2AccessTuple is the element type of an access list.
+type V2AccessTuple struct {
 	// hex formatted ethereum address
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	// hex formatted hashes of the storage keys
 	StorageKeys []string `protobuf:"bytes,2,rep,name=storage_keys,json=storageKeys,proto3" json:"storageKeys"`
 }
 
-func (m *AccessTuple) Reset()         { *m = AccessTuple{} }
-func (m *AccessTuple) String() string { return proto.CompactTextString(m) }
-func (*AccessTuple) ProtoMessage()    {}
-func (*AccessTuple) Descriptor() ([]byte, []int) {
+func (m *V2AccessTuple) Reset()         { *m = V2AccessTuple{} }
+func (m *V2AccessTuple) String() string { return proto.CompactTextString(m) }
+func (*V2AccessTuple) ProtoMessage()    {}
+func (*V2AccessTuple) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d21ecc92c8c8583e, []int{6}
 }
-func (m *AccessTuple) XXX_Unmarshal(b []byte) error {
+func (m *V2AccessTuple) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AccessTuple) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *V2AccessTuple) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_AccessTuple.Marshal(b, m, deterministic)
 	} else {
@@ -512,20 +512,20 @@ func (m *AccessTuple) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) 
 		return b[:n], nil
 	}
 }
-func (m *AccessTuple) XXX_Merge(src proto.Message) {
+func (m *V2AccessTuple) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_AccessTuple.Merge(m, src)
 }
-func (m *AccessTuple) XXX_Size() int {
+func (m *V2AccessTuple) XXX_Size() int {
 	return m.Size()
 }
-func (m *AccessTuple) XXX_DiscardUnknown() {
+func (m *V2AccessTuple) XXX_DiscardUnknown() {
 	xxx_messageInfo_AccessTuple.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_AccessTuple proto.InternalMessageInfo
 
-// TraceConfig holds extra parameters to trace functions.
-type TraceConfig struct {
+// V2TraceConfig holds extra parameters to trace functions.
+type V2TraceConfig struct {
 	// custom javascript tracer
 	Tracer string `protobuf:"bytes,1,opt,name=tracer,proto3" json:"tracer,omitempty"`
 	// overrides the default timeout of 5 seconds for JavaScript-based tracing
@@ -542,23 +542,23 @@ type TraceConfig struct {
 	// maximum length of output, but zero means unlimited
 	Limit int32 `protobuf:"varint,9,opt,name=limit,proto3" json:"limit,omitempty"`
 	// Chain overrides, can be used to execute a trace using future fork rules
-	Overrides *ChainConfig `protobuf:"bytes,10,opt,name=overrides,proto3" json:"overrides,omitempty"`
+	Overrides *V2ChainConfig `protobuf:"bytes,10,opt,name=overrides,proto3" json:"overrides,omitempty"`
 	// enable memory capture
 	EnableMemory bool `protobuf:"varint,11,opt,name=enable_memory,json=enableMemory,proto3" json:"enableMemory"`
 	// enable return data capture
 	EnableReturnData bool `protobuf:"varint,12,opt,name=enable_return_data,json=enableReturnData,proto3" json:"enableReturnData"`
 }
 
-func (m *TraceConfig) Reset()         { *m = TraceConfig{} }
-func (m *TraceConfig) String() string { return proto.CompactTextString(m) }
-func (*TraceConfig) ProtoMessage()    {}
-func (*TraceConfig) Descriptor() ([]byte, []int) {
+func (m *V2TraceConfig) Reset()         { *m = V2TraceConfig{} }
+func (m *V2TraceConfig) String() string { return proto.CompactTextString(m) }
+func (*V2TraceConfig) ProtoMessage()    {}
+func (*V2TraceConfig) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d21ecc92c8c8583e, []int{7}
 }
-func (m *TraceConfig) XXX_Unmarshal(b []byte) error {
+func (m *V2TraceConfig) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *TraceConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *V2TraceConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_TraceConfig.Marshal(b, m, deterministic)
 	} else {
@@ -570,110 +570,110 @@ func (m *TraceConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) 
 		return b[:n], nil
 	}
 }
-func (m *TraceConfig) XXX_Merge(src proto.Message) {
+func (m *V2TraceConfig) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_TraceConfig.Merge(m, src)
 }
-func (m *TraceConfig) XXX_Size() int {
+func (m *V2TraceConfig) XXX_Size() int {
 	return m.Size()
 }
-func (m *TraceConfig) XXX_DiscardUnknown() {
+func (m *V2TraceConfig) XXX_DiscardUnknown() {
 	xxx_messageInfo_TraceConfig.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_TraceConfig proto.InternalMessageInfo
 
-func (m *TraceConfig) GetTracer() string {
+func (m *V2TraceConfig) GetTracer() string {
 	if m != nil {
 		return m.Tracer
 	}
 	return ""
 }
 
-func (m *TraceConfig) GetTimeout() string {
+func (m *V2TraceConfig) GetTimeout() string {
 	if m != nil {
 		return m.Timeout
 	}
 	return ""
 }
 
-func (m *TraceConfig) GetReexec() uint64 {
+func (m *V2TraceConfig) GetReexec() uint64 {
 	if m != nil {
 		return m.Reexec
 	}
 	return 0
 }
 
-func (m *TraceConfig) GetDisableStack() bool {
+func (m *V2TraceConfig) GetDisableStack() bool {
 	if m != nil {
 		return m.DisableStack
 	}
 	return false
 }
 
-func (m *TraceConfig) GetDisableStorage() bool {
+func (m *V2TraceConfig) GetDisableStorage() bool {
 	if m != nil {
 		return m.DisableStorage
 	}
 	return false
 }
 
-func (m *TraceConfig) GetDebug() bool {
+func (m *V2TraceConfig) GetDebug() bool {
 	if m != nil {
 		return m.Debug
 	}
 	return false
 }
 
-func (m *TraceConfig) GetLimit() int32 {
+func (m *V2TraceConfig) GetLimit() int32 {
 	if m != nil {
 		return m.Limit
 	}
 	return 0
 }
 
-func (m *TraceConfig) GetOverrides() *ChainConfig {
+func (m *V2TraceConfig) GetOverrides() *V2ChainConfig {
 	if m != nil {
 		return m.Overrides
 	}
 	return nil
 }
 
-func (m *TraceConfig) GetEnableMemory() bool {
+func (m *V2TraceConfig) GetEnableMemory() bool {
 	if m != nil {
 		return m.EnableMemory
 	}
 	return false
 }
 
-func (m *TraceConfig) GetEnableReturnData() bool {
+func (m *V2TraceConfig) GetEnableReturnData() bool {
 	if m != nil {
 		return m.EnableReturnData
 	}
 	return false
 }
 
-// EIP712AllowedMsg stores an allowed legacy msg and its eip712 type.
-type EIP712AllowedMsg struct {
+// V2EIP712AllowedMsg stores an allowed legacy msg and its eip712 type.
+type V2EIP712AllowedMsg struct {
 	// msg's proto type name. ie "/cosmos.bank.v1beta1.MsgSend"
 	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 	// name of the eip712 value type. ie "MsgValueSend"
 	MsgValueTypeName string `protobuf:"bytes,2,opt,name=msg_value_type_name,json=msgValueTypeName,proto3" json:"msg_value_type_name,omitempty"`
 	// types of the msg value
-	ValueTypes []EIP712MsgAttrType `protobuf:"bytes,3,rep,name=value_types,json=valueTypes,proto3" json:"value_types"`
+	ValueTypes []V2EIP712MsgAttrType `protobuf:"bytes,3,rep,name=value_types,json=valueTypes,proto3" json:"value_types"`
 	// nested types of the msg value
-	NestedTypes []EIP712NestedMsgType `protobuf:"bytes,4,rep,name=nested_types,json=nestedTypes,proto3" json:"nested_types"`
+	NestedTypes []V2EIP712NestedMsgType `protobuf:"bytes,4,rep,name=nested_types,json=nestedTypes,proto3" json:"nested_types"`
 }
 
-func (m *EIP712AllowedMsg) Reset()         { *m = EIP712AllowedMsg{} }
-func (m *EIP712AllowedMsg) String() string { return proto.CompactTextString(m) }
-func (*EIP712AllowedMsg) ProtoMessage()    {}
-func (*EIP712AllowedMsg) Descriptor() ([]byte, []int) {
+func (m *V2EIP712AllowedMsg) Reset()         { *m = V2EIP712AllowedMsg{} }
+func (m *V2EIP712AllowedMsg) String() string { return proto.CompactTextString(m) }
+func (*V2EIP712AllowedMsg) ProtoMessage()    {}
+func (*V2EIP712AllowedMsg) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d21ecc92c8c8583e, []int{8}
 }
-func (m *EIP712AllowedMsg) XXX_Unmarshal(b []byte) error {
+func (m *V2EIP712AllowedMsg) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EIP712AllowedMsg) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *V2EIP712AllowedMsg) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_EIP712AllowedMsg.Marshal(b, m, deterministic)
 	} else {
@@ -685,40 +685,40 @@ func (m *EIP712AllowedMsg) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
-func (m *EIP712AllowedMsg) XXX_Merge(src proto.Message) {
+func (m *V2EIP712AllowedMsg) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_EIP712AllowedMsg.Merge(m, src)
 }
-func (m *EIP712AllowedMsg) XXX_Size() int {
+func (m *V2EIP712AllowedMsg) XXX_Size() int {
 	return m.Size()
 }
-func (m *EIP712AllowedMsg) XXX_DiscardUnknown() {
+func (m *V2EIP712AllowedMsg) XXX_DiscardUnknown() {
 	xxx_messageInfo_EIP712AllowedMsg.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_EIP712AllowedMsg proto.InternalMessageInfo
 
-func (m *EIP712AllowedMsg) GetMsgTypeUrl() string {
+func (m *V2EIP712AllowedMsg) GetMsgTypeUrl() string {
 	if m != nil {
 		return m.MsgTypeUrl
 	}
 	return ""
 }
 
-func (m *EIP712AllowedMsg) GetMsgValueTypeName() string {
+func (m *V2EIP712AllowedMsg) GetMsgValueTypeName() string {
 	if m != nil {
 		return m.MsgValueTypeName
 	}
 	return ""
 }
 
-func (m *EIP712AllowedMsg) GetValueTypes() []EIP712MsgAttrType {
+func (m *V2EIP712AllowedMsg) GetValueTypes() []V2EIP712MsgAttrType {
 	if m != nil {
 		return m.ValueTypes
 	}
 	return nil
 }
 
-func (m *EIP712AllowedMsg) GetNestedTypes() []EIP712NestedMsgType {
+func (m *V2EIP712AllowedMsg) GetNestedTypes() []V2EIP712NestedMsgType {
 	if m != nil {
 		return m.NestedTypes
 	}
@@ -726,23 +726,23 @@ func (m *EIP712AllowedMsg) GetNestedTypes() []EIP712NestedMsgType {
 }
 
 // EIP712MsgType is the eip712 type of a single message.
-type EIP712NestedMsgType struct {
+type V2EIP712NestedMsgType struct {
 	// name of the nested type. ie "Fee", "Coin"
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// attrs of the nested type
-	Attrs []EIP712MsgAttrType `protobuf:"bytes,2,rep,name=attrs,proto3" json:"attrs"`
+	Attrs []V2EIP712MsgAttrType `protobuf:"bytes,2,rep,name=attrs,proto3" json:"attrs"`
 }
 
-func (m *EIP712NestedMsgType) Reset()         { *m = EIP712NestedMsgType{} }
-func (m *EIP712NestedMsgType) String() string { return proto.CompactTextString(m) }
-func (*EIP712NestedMsgType) ProtoMessage()    {}
-func (*EIP712NestedMsgType) Descriptor() ([]byte, []int) {
+func (m *V2EIP712NestedMsgType) Reset()         { *m = V2EIP712NestedMsgType{} }
+func (m *V2EIP712NestedMsgType) String() string { return proto.CompactTextString(m) }
+func (*V2EIP712NestedMsgType) ProtoMessage()    {}
+func (*V2EIP712NestedMsgType) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d21ecc92c8c8583e, []int{9}
 }
-func (m *EIP712NestedMsgType) XXX_Unmarshal(b []byte) error {
+func (m *V2EIP712NestedMsgType) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EIP712NestedMsgType) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *V2EIP712NestedMsgType) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_EIP712NestedMsgType.Marshal(b, m, deterministic)
 	} else {
@@ -754,48 +754,48 @@ func (m *EIP712NestedMsgType) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *EIP712NestedMsgType) XXX_Merge(src proto.Message) {
+func (m *V2EIP712NestedMsgType) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_EIP712NestedMsgType.Merge(m, src)
 }
-func (m *EIP712NestedMsgType) XXX_Size() int {
+func (m *V2EIP712NestedMsgType) XXX_Size() int {
 	return m.Size()
 }
-func (m *EIP712NestedMsgType) XXX_DiscardUnknown() {
+func (m *V2EIP712NestedMsgType) XXX_DiscardUnknown() {
 	xxx_messageInfo_EIP712NestedMsgType.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_EIP712NestedMsgType proto.InternalMessageInfo
 
-func (m *EIP712NestedMsgType) GetName() string {
+func (m *V2EIP712NestedMsgType) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *EIP712NestedMsgType) GetAttrs() []EIP712MsgAttrType {
+func (m *V2EIP712NestedMsgType) GetAttrs() []V2EIP712MsgAttrType {
 	if m != nil {
 		return m.Attrs
 	}
 	return nil
 }
 
-// EIP712MsgAttrType is the eip712 type of a single message attribute.
-type EIP712MsgAttrType struct {
+// V2EIP712MsgAttrType is the eip712 type of a single message attribute.
+type V2EIP712MsgAttrType struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
 }
 
-func (m *EIP712MsgAttrType) Reset()         { *m = EIP712MsgAttrType{} }
-func (m *EIP712MsgAttrType) String() string { return proto.CompactTextString(m) }
-func (*EIP712MsgAttrType) ProtoMessage()    {}
-func (*EIP712MsgAttrType) Descriptor() ([]byte, []int) {
+func (m *V2EIP712MsgAttrType) Reset()         { *m = V2EIP712MsgAttrType{} }
+func (m *V2EIP712MsgAttrType) String() string { return proto.CompactTextString(m) }
+func (*V2EIP712MsgAttrType) ProtoMessage()    {}
+func (*V2EIP712MsgAttrType) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d21ecc92c8c8583e, []int{10}
 }
-func (m *EIP712MsgAttrType) XXX_Unmarshal(b []byte) error {
+func (m *V2EIP712MsgAttrType) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *EIP712MsgAttrType) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *V2EIP712MsgAttrType) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_EIP712MsgAttrType.Marshal(b, m, deterministic)
 	} else {
@@ -807,26 +807,26 @@ func (m *EIP712MsgAttrType) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *EIP712MsgAttrType) XXX_Merge(src proto.Message) {
+func (m *V2EIP712MsgAttrType) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_EIP712MsgAttrType.Merge(m, src)
 }
-func (m *EIP712MsgAttrType) XXX_Size() int {
+func (m *V2EIP712MsgAttrType) XXX_Size() int {
 	return m.Size()
 }
-func (m *EIP712MsgAttrType) XXX_DiscardUnknown() {
+func (m *V2EIP712MsgAttrType) XXX_DiscardUnknown() {
 	xxx_messageInfo_EIP712MsgAttrType.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_EIP712MsgAttrType proto.InternalMessageInfo
 
-func (m *EIP712MsgAttrType) GetName() string {
+func (m *V2EIP712MsgAttrType) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *EIP712MsgAttrType) GetType() string {
+func (m *V2EIP712MsgAttrType) GetType() string {
 	if m != nil {
 		return m.Type
 	}
@@ -834,17 +834,17 @@ func (m *EIP712MsgAttrType) GetType() string {
 }
 
 func init() {
-	proto.RegisterType((*Params)(nil), "ethermint.evm.v1.Params")
-	proto.RegisterType((*ChainConfig)(nil), "ethermint.evm.v1.ChainConfig")
-	proto.RegisterType((*State)(nil), "ethermint.evm.v1.State")
-	proto.RegisterType((*TransactionLogs)(nil), "ethermint.evm.v1.TransactionLogs")
-	proto.RegisterType((*Log)(nil), "ethermint.evm.v1.Log")
-	proto.RegisterType((*TxResult)(nil), "ethermint.evm.v1.TxResult")
-	proto.RegisterType((*AccessTuple)(nil), "ethermint.evm.v1.AccessTuple")
-	proto.RegisterType((*TraceConfig)(nil), "ethermint.evm.v1.TraceConfig")
-	proto.RegisterType((*EIP712AllowedMsg)(nil), "ethermint.evm.v1.EIP712AllowedMsg")
-	proto.RegisterType((*EIP712NestedMsgType)(nil), "ethermint.evm.v1.EIP712NestedMsgType")
-	proto.RegisterType((*EIP712MsgAttrType)(nil), "ethermint.evm.v1.EIP712MsgAttrType")
+	proto.RegisterType((*V2Params)(nil), "ethermint.evm.v1.V2Params")
+	proto.RegisterType((*V2ChainConfig)(nil), "ethermint.evm.v1.V2ChainConfig")
+	proto.RegisterType((*V2State)(nil), "ethermint.evm.v1.V2State")
+	proto.RegisterType((*V2TransactionLogs)(nil), "ethermint.evm.v1.V2TransactionLogs")
+	proto.RegisterType((*V2Log)(nil), "ethermint.evm.v1.V2Log")
+	proto.RegisterType((*V2TxResult)(nil), "ethermint.evm.v1.V2TxResult")
+	proto.RegisterType((*V2AccessTuple)(nil), "ethermint.evm.v1.V2AccessTuple")
+	proto.RegisterType((*V2TraceConfig)(nil), "ethermint.evm.v1.V2TraceConfig")
+	proto.RegisterType((*V2EIP712AllowedMsg)(nil), "ethermint.evm.v1.V2EIP712AllowedMsg")
+	proto.RegisterType((*V2EIP712NestedMsgType)(nil), "ethermint.evm.v1.V2EIP712NestedMsgType")
+	proto.RegisterType((*V2EIP712MsgAttrType)(nil), "ethermint.evm.v1.V2EIP712MsgAttrType")
 }
 
 func init() { proto.RegisterFile("ethermint/evm/v1/evm.proto", fileDescriptor_d21ecc92c8c8583e) }
@@ -959,7 +959,7 @@ var fileDescriptor_d21ecc92c8c8583e = []byte{
 	0x10, 0x00, 0x00,
 }
 
-func (m *Params) Marshal() (dAtA []byte, err error) {
+func (m *V2Params) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -969,12 +969,12 @@ func (m *Params) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Params) MarshalTo(dAtA []byte) (int, error) {
+func (m *V2Params) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *V2Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1052,7 +1052,7 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ChainConfig) Marshal() (dAtA []byte, err error) {
+func (m *V2ChainConfig) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1062,12 +1062,12 @@ func (m *ChainConfig) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ChainConfig) MarshalTo(dAtA []byte) (int, error) {
+func (m *V2ChainConfig) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ChainConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *V2ChainConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1266,7 +1266,7 @@ func (m *ChainConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *State) Marshal() (dAtA []byte, err error) {
+func (m *V2State) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1276,12 +1276,12 @@ func (m *State) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *State) MarshalTo(dAtA []byte) (int, error) {
+func (m *V2State) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *State) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *V2State) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1303,7 +1303,7 @@ func (m *State) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *TransactionLogs) Marshal() (dAtA []byte, err error) {
+func (m *V2TransactionLogs) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1313,12 +1313,12 @@ func (m *TransactionLogs) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *TransactionLogs) MarshalTo(dAtA []byte) (int, error) {
+func (m *V2TransactionLogs) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *TransactionLogs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *V2TransactionLogs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1347,7 +1347,7 @@ func (m *TransactionLogs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *Log) Marshal() (dAtA []byte, err error) {
+func (m *V2Log) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1357,12 +1357,12 @@ func (m *Log) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Log) MarshalTo(dAtA []byte) (int, error) {
+func (m *V2Log) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *Log) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *V2Log) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1432,7 +1432,7 @@ func (m *Log) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *TxResult) Marshal() (dAtA []byte, err error) {
+func (m *V2TxResult) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1442,12 +1442,12 @@ func (m *TxResult) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *TxResult) MarshalTo(dAtA []byte) (int, error) {
+func (m *V2TxResult) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *TxResult) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *V2TxResult) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1501,7 +1501,7 @@ func (m *TxResult) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *AccessTuple) Marshal() (dAtA []byte, err error) {
+func (m *V2AccessTuple) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1511,12 +1511,12 @@ func (m *AccessTuple) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AccessTuple) MarshalTo(dAtA []byte) (int, error) {
+func (m *V2AccessTuple) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AccessTuple) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *V2AccessTuple) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1540,7 +1540,7 @@ func (m *AccessTuple) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *TraceConfig) Marshal() (dAtA []byte, err error) {
+func (m *V2TraceConfig) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1550,12 +1550,12 @@ func (m *TraceConfig) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *TraceConfig) MarshalTo(dAtA []byte) (int, error) {
+func (m *V2TraceConfig) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *TraceConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *V2TraceConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1649,7 +1649,7 @@ func (m *TraceConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EIP712AllowedMsg) Marshal() (dAtA []byte, err error) {
+func (m *V2EIP712AllowedMsg) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1659,12 +1659,12 @@ func (m *EIP712AllowedMsg) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EIP712AllowedMsg) MarshalTo(dAtA []byte) (int, error) {
+func (m *V2EIP712AllowedMsg) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EIP712AllowedMsg) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *V2EIP712AllowedMsg) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1714,7 +1714,7 @@ func (m *EIP712AllowedMsg) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EIP712NestedMsgType) Marshal() (dAtA []byte, err error) {
+func (m *V2EIP712NestedMsgType) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1724,12 +1724,12 @@ func (m *EIP712NestedMsgType) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EIP712NestedMsgType) MarshalTo(dAtA []byte) (int, error) {
+func (m *V2EIP712NestedMsgType) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EIP712NestedMsgType) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *V2EIP712NestedMsgType) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1758,7 +1758,7 @@ func (m *EIP712NestedMsgType) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EIP712MsgAttrType) Marshal() (dAtA []byte, err error) {
+func (m *V2EIP712MsgAttrType) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1768,12 +1768,12 @@ func (m *EIP712MsgAttrType) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *EIP712MsgAttrType) MarshalTo(dAtA []byte) (int, error) {
+func (m *V2EIP712MsgAttrType) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *EIP712MsgAttrType) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *V2EIP712MsgAttrType) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1806,7 +1806,7 @@ func encodeVarintEvm(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *Params) Size() (n int) {
+func (m *V2Params) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1840,7 +1840,7 @@ func (m *Params) Size() (n int) {
 	return n
 }
 
-func (m *ChainConfig) Size() (n int) {
+func (m *V2ChainConfig) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1912,7 +1912,7 @@ func (m *ChainConfig) Size() (n int) {
 	return n
 }
 
-func (m *State) Size() (n int) {
+func (m *V2State) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1929,7 +1929,7 @@ func (m *State) Size() (n int) {
 	return n
 }
 
-func (m *TransactionLogs) Size() (n int) {
+func (m *V2TransactionLogs) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1948,7 +1948,7 @@ func (m *TransactionLogs) Size() (n int) {
 	return n
 }
 
-func (m *Log) Size() (n int) {
+func (m *V2Log) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1991,7 +1991,7 @@ func (m *Log) Size() (n int) {
 	return n
 }
 
-func (m *TxResult) Size() (n int) {
+func (m *V2TxResult) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2020,7 +2020,7 @@ func (m *TxResult) Size() (n int) {
 	return n
 }
 
-func (m *AccessTuple) Size() (n int) {
+func (m *V2AccessTuple) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2039,7 +2039,7 @@ func (m *AccessTuple) Size() (n int) {
 	return n
 }
 
-func (m *TraceConfig) Size() (n int) {
+func (m *V2TraceConfig) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2081,7 +2081,7 @@ func (m *TraceConfig) Size() (n int) {
 	return n
 }
 
-func (m *EIP712AllowedMsg) Size() (n int) {
+func (m *V2EIP712AllowedMsg) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2110,7 +2110,7 @@ func (m *EIP712AllowedMsg) Size() (n int) {
 	return n
 }
 
-func (m *EIP712NestedMsgType) Size() (n int) {
+func (m *V2EIP712NestedMsgType) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2129,7 +2129,7 @@ func (m *EIP712NestedMsgType) Size() (n int) {
 	return n
 }
 
-func (m *EIP712MsgAttrType) Size() (n int) {
+func (m *V2EIP712MsgAttrType) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2152,7 +2152,7 @@ func sovEvm(x uint64) (n int) {
 func sozEvm(x uint64) (n int) {
 	return sovEvm(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *Params) Unmarshal(dAtA []byte) error {
+func (m *V2Params) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2391,7 +2391,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.EIP712AllowedMsgs = append(m.EIP712AllowedMsgs, EIP712AllowedMsg{})
+			m.EIP712AllowedMsgs = append(m.EIP712AllowedMsgs, V2EIP712AllowedMsg{})
 			if err := m.EIP712AllowedMsgs[len(m.EIP712AllowedMsgs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2417,7 +2417,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ChainConfig) Unmarshal(dAtA []byte) error {
+func (m *V2ChainConfig) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3023,7 +3023,7 @@ func (m *ChainConfig) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *State) Unmarshal(dAtA []byte) error {
+func (m *V2State) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3137,7 +3137,7 @@ func (m *State) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *TransactionLogs) Unmarshal(dAtA []byte) error {
+func (m *V2TransactionLogs) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3227,7 +3227,7 @@ func (m *TransactionLogs) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Logs = append(m.Logs, &Log{})
+			m.Logs = append(m.Logs, &V2Log{})
 			if err := m.Logs[len(m.Logs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3253,7 +3253,7 @@ func (m *TransactionLogs) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Log) Unmarshal(dAtA []byte) error {
+func (m *V2Log) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3542,7 +3542,7 @@ func (m *Log) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *TxResult) Unmarshal(dAtA []byte) error {
+func (m *V2TxResult) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3764,7 +3764,7 @@ func (m *TxResult) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AccessTuple) Unmarshal(dAtA []byte) error {
+func (m *V2AccessTuple) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3878,7 +3878,7 @@ func (m *AccessTuple) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *TraceConfig) Unmarshal(dAtA []byte) error {
+func (m *V2TraceConfig) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4099,7 +4099,7 @@ func (m *TraceConfig) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Overrides == nil {
-				m.Overrides = &ChainConfig{}
+				m.Overrides = &V2ChainConfig{}
 			}
 			if err := m.Overrides.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -4166,7 +4166,7 @@ func (m *TraceConfig) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EIP712AllowedMsg) Unmarshal(dAtA []byte) error {
+func (m *V2EIP712AllowedMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4288,7 +4288,7 @@ func (m *EIP712AllowedMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ValueTypes = append(m.ValueTypes, EIP712MsgAttrType{})
+			m.ValueTypes = append(m.ValueTypes, V2EIP712MsgAttrType{})
 			if err := m.ValueTypes[len(m.ValueTypes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -4322,7 +4322,7 @@ func (m *EIP712AllowedMsg) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.NestedTypes = append(m.NestedTypes, EIP712NestedMsgType{})
+			m.NestedTypes = append(m.NestedTypes, V2EIP712NestedMsgType{})
 			if err := m.NestedTypes[len(m.NestedTypes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -4348,7 +4348,7 @@ func (m *EIP712AllowedMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EIP712NestedMsgType) Unmarshal(dAtA []byte) error {
+func (m *V2EIP712NestedMsgType) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4438,7 +4438,7 @@ func (m *EIP712NestedMsgType) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Attrs = append(m.Attrs, EIP712MsgAttrType{})
+			m.Attrs = append(m.Attrs, V2EIP712MsgAttrType{})
 			if err := m.Attrs[len(m.Attrs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -4464,7 +4464,7 @@ func (m *EIP712NestedMsgType) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *EIP712MsgAttrType) Unmarshal(dAtA []byte) error {
+func (m *V2EIP712MsgAttrType) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {

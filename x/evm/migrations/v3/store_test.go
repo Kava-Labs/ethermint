@@ -82,18 +82,18 @@ func TestMigrate_Mainnet(t *testing.T) {
 	initialChainConfig.ArrowGlacierBlock = nil
 	initialChainConfig.MergeForkBlock = nil
 
-	initialParams := v2types.Params{
+	initialParams := v2types.V2Params{
 		EvmDenom:     "akava",
 		EnableCreate: true,
 		EnableCall:   true,
 		ExtraEIPs:    nil,
 		ChainConfig:  initialChainConfig,
 		// Start with a subset of allowed messages
-		EIP712AllowedMsgs: []v2types.EIP712AllowedMsg{
+		EIP712AllowedMsgs: []v2types.V2EIP712AllowedMsg{
 			{
 				MsgTypeUrl:       "/kava.evmutil.v1beta1.MsgConvertERC20ToCoin",
 				MsgValueTypeName: "MsgValueEVMConvertERC20ToCoin",
-				ValueTypes: []v2types.EIP712MsgAttrType{
+				ValueTypes: []v2types.V2EIP712MsgAttrType{
 					{Name: "initiator", Type: "string"},
 					{Name: "receiver", Type: "string"},
 					{Name: "kava_erc20_address", Type: "string"},
@@ -103,7 +103,7 @@ func TestMigrate_Mainnet(t *testing.T) {
 			{
 				MsgTypeUrl:       "/kava.evmutil.v1beta1.MsgConvertCoinToERC20",
 				MsgValueTypeName: "MsgValueEVMConvertCoinToERC20",
-				ValueTypes: []v2types.EIP712MsgAttrType{
+				ValueTypes: []v2types.V2EIP712MsgAttrType{
 					{Name: "initiator", Type: "string"},
 					{Name: "receiver", Type: "string"},
 					{Name: "amount", Type: "Coin"},
@@ -113,7 +113,7 @@ func TestMigrate_Mainnet(t *testing.T) {
 			{
 				MsgTypeUrl:       "/kava.earn.v1beta1.MsgDeposit",
 				MsgValueTypeName: "MsgValueEarnDeposit",
-				ValueTypes: []v2types.EIP712MsgAttrType{
+				ValueTypes: []v2types.V2EIP712MsgAttrType{
 					{Name: "depositor", Type: "string"},
 					{Name: "amount", Type: "Coin"},
 					{Name: "strategy", Type: "int32"},
@@ -122,7 +122,7 @@ func TestMigrate_Mainnet(t *testing.T) {
 			{
 				MsgTypeUrl:       "/kava.earn.v1beta1.MsgWithdraw",
 				MsgValueTypeName: "MsgValueEarnWithdraw",
-				ValueTypes: []v2types.EIP712MsgAttrType{
+				ValueTypes: []v2types.V2EIP712MsgAttrType{
 					{Name: "from", Type: "string"},
 					{Name: "amount", Type: "Coin"},
 					{Name: "strategy", Type: "int32"},

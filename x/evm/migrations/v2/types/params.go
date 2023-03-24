@@ -12,7 +12,7 @@ import (
 	"github.com/evmos/ethermint/types"
 )
 
-var _ paramtypes.ParamSet = &Params{}
+var _ paramtypes.ParamSet = &V2Params{}
 
 const (
 	DefaultEVMDenom = types.AttoPhoton
@@ -37,36 +37,36 @@ var (
 
 // ParamKeyTable returns the parameter key table.
 func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+	return paramtypes.NewKeyTable().RegisterParamSet(&V2Params{})
 }
 
 // NewParams creates a new Params instance
-func NewParams(evmDenom string, enableCreate, enableCall bool, config ChainConfig, extraEIPs ...int64) Params {
-	return Params{
+func NewParams(evmDenom string, enableCreate, enableCall bool, config V2ChainConfig, extraEIPs ...int64) V2Params {
+	return V2Params{
 		EvmDenom:          evmDenom,
 		EnableCreate:      enableCreate,
 		EnableCall:        enableCall,
 		ExtraEIPs:         extraEIPs,
 		ChainConfig:       config,
-		EIP712AllowedMsgs: []EIP712AllowedMsg{},
+		EIP712AllowedMsgs: []V2EIP712AllowedMsg{},
 	}
 }
 
 // DefaultParams returns default evm parameters
 // ExtraEIPs is empty to prevent overriding the latest hard fork instruction set
-func DefaultParams() Params {
-	return Params{
+func DefaultParams() V2Params {
+	return V2Params{
 		EvmDenom:          DefaultEVMDenom,
 		EnableCreate:      true,
 		EnableCall:        true,
 		ChainConfig:       DefaultChainConfig(),
 		ExtraEIPs:         nil,
-		EIP712AllowedMsgs: []EIP712AllowedMsg{},
+		EIP712AllowedMsgs: []V2EIP712AllowedMsg{},
 	}
 }
 
 // ParamSetPairs returns the parameter set pairs.
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
+func (p *V2Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyEVMDenom, &p.EvmDenom, validateEVMDenom),
 		paramtypes.NewParamSetPair(ParamStoreKeyEnableCreate, &p.EnableCreate, validateBool),
@@ -78,7 +78,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 // Validate performs basic validation on evm parameters.
-func (p Params) Validate() error {
+func (p V2Params) Validate() error {
 	if err := sdk.ValidateDenom(p.EvmDenom); err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (p Params) Validate() error {
 }
 
 // EIP712AllowedMsgFromMsgType returns the EIP712AllowedMsg for a given message type url.
-func (p Params) EIP712AllowedMsgFromMsgType(msgTypeUrl string) *EIP712AllowedMsg {
+func (p V2Params) EIP712AllowedMsgFromMsgType(msgTypeUrl string) *V2EIP712AllowedMsg {
 	for _, allowedMsg := range p.EIP712AllowedMsgs {
 		if allowedMsg.MsgTypeUrl == msgTypeUrl {
 			return &allowedMsg
@@ -105,7 +105,7 @@ func (p Params) EIP712AllowedMsgFromMsgType(msgTypeUrl string) *EIP712AllowedMsg
 }
 
 // EIPs returns the ExtraEips as a int slice
-func (p Params) EIPs() []int {
+func (p V2Params) EIPs() []int {
 	eips := make([]int, len(p.ExtraEIPs))
 	for i, eip := range p.ExtraEIPs {
 		eips[i] = int(eip)
@@ -146,7 +146,7 @@ func validateEIPs(i interface{}) error {
 }
 
 func validateChainConfig(i interface{}) error {
-	cfg, ok := i.(ChainConfig)
+	cfg, ok := i.(V2ChainConfig)
 	if !ok {
 		return fmt.Errorf("invalid chain config type: %T", i)
 	}
@@ -155,7 +155,7 @@ func validateChainConfig(i interface{}) error {
 }
 
 func validateEIP712AllowedMsgs(i interface{}) error {
-	allowedMsgs, ok := i.([]EIP712AllowedMsg)
+	allowedMsgs, ok := i.([]V2EIP712AllowedMsg)
 	if !ok {
 		return fmt.Errorf("invalid EIP712AllowedMsg slice type: %T", i)
 	}
