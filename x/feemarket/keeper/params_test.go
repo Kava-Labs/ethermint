@@ -13,6 +13,13 @@ import (
 	"github.com/evmos/ethermint/x/feemarket/types"
 )
 
+func (suite *KeeperTestSuite) TestGetParams() {
+	params := suite.app.FeeMarketKeeper.GetParams(suite.ctx)
+	suite.Require().NotNil(params.BaseFee)
+	suite.Require().NotNil(params.MinGasPrice)
+	suite.Require().NotNil(params.MinGasMultiplier)
+}
+
 func (suite *KeeperTestSuite) TestSetGetParams() {
 	params := suite.app.FeeMarketKeeper.GetParams(suite.ctx)
 	suite.app.FeeMarketKeeper.SetParams(suite.ctx, params)
