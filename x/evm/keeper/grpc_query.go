@@ -452,7 +452,7 @@ func (k Keeper) TraceTx(c context.Context, req *types.QueryTraceTxRequest) (*typ
 		txConfig.TxHash = ethTx.Hash()
 		txConfig.TxIndex = uint(i)
 		// reset gas meter for each transaction
-		ctx = ctx.WithGasMeter(ethermint.NewInfiniteGasMeterWithLimit(msg.Gas()))
+		ctx = ctx.WithGasMeter(ethermint.NewInfiniteGasMeterWithLimit(uint64(0)))
 		rsp, err := k.ApplyMessageWithConfig(ctx, msg, types.NewNoOpTracer(), true, cfg, txConfig)
 		if err != nil {
 			continue
