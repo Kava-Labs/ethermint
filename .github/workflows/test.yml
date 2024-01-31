@@ -88,6 +88,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: cachix/install-nix-action@v18
+      - uses: technote-space/get-diff-action@v6.1.2
+        with:
+          PATTERNS: |
+            **/**.sol
+            **/**.go
+            go.mod
+            go.sum
       - name: Run integration tests
         run: make run-integration-tests
         if: env.GIT_DIFF
