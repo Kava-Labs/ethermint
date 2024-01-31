@@ -43,6 +43,9 @@ issues:
     - linters:
         - lll
       source: "https://"
+    - path: \.pb.go
+      linters:
+        - lll
   max-same-issues: 50
 
 linters-settings:
