@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -71,13 +72,13 @@ func ConstructUntypedEIP712Data(
 func ComputeTypedDataHash(typedData apitypes.TypedData) ([]byte, error) {
 	domainSeparator, err := typedData.HashStruct("EIP712Domain", typedData.Domain.Map())
 	if err != nil {
-		err = sdkerrors.Wrap(err, "failed to pack and hash typedData EIP712Domain")
+		err = errorsmod.Wrap(err, "failed to pack and hash typedData EIP712Domain")
 		return nil, err
 	}
 
 	typedDataHash, err := typedData.HashStruct(typedData.PrimaryType, typedData.Message)
 	if err != nil {
-		err = sdkerrors.Wrap(err, "failed to pack and hash typedData primary type")
+		err = errorsmod.Wrap(err, "failed to pack and hash typedData primary type")
 		return nil, err
 	}
 
@@ -97,7 +98,7 @@ func WrapTxToTypedData(
 	txData := make(map[string]interface{})
 
 	if err := json.Unmarshal(data, &txData); err != nil {
-		return apitypes.TypedData{}, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, "failed to JSON unmarshal data")
+		return apitypes.TypedData{}, errorsmod.Wrap(sdkerrors.ErrJSONUnmarshal, "failed to JSON unmarshal data")
 	}
 
 	domain := getTypedDataDomain(chainID)
@@ -110,7 +111,7 @@ func WrapTxToTypedData(
 	if feeDelegation != nil {
 		feeInfo, ok := txData["fee"].(map[string]interface{})
 		if !ok {
-			return apitypes.TypedData{}, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "cannot parse fee from tx data")
+			return apitypes.TypedData{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "cannot parse fee from tx data")
 		}
 
 		feeInfo["feePayer"] = feeDelegation.FeePayer.String()
@@ -149,7 +150,7 @@ func extractMsgTypes(msgs []sdk.Msg, params evmtypes.Params) (apitypes.Types, er
 		// ensure eip712 messages implement legacytx.LegacyMsg
 		_, ok := msg.(legacytx.LegacyMsg)
 		if !ok {
-			err := sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "msg %T must implement legacytx.LegacyMsg", (*legacytx.LegacyMsg)(nil))
+			err := errorsmod.Wrapf(sdkerrors.ErrInvalidType, "msg %T must implement legacytx.LegacyMsg", (*legacytx.LegacyMsg)(nil))
 			return apitypes.Types{}, err
 		}
 
@@ -157,7 +158,7 @@ func extractMsgTypes(msgs []sdk.Msg, params evmtypes.Params) (apitypes.Types, er
 		msgType := sdk.MsgTypeURL(msg)
 		allowedMsg := params.EIP712AllowedMsgFromMsgType(msgType)
 		if allowedMsg == nil {
-			err := sdkerrors.Wrapf(
+			err := errorsmod.Wrapf(
 				sdkerrors.ErrInvalidType,
 				"eip712 message type \"%s\" is not permitted",
 				msgType,

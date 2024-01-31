@@ -148,7 +148,6 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 			// and gas usage
 			query := fmt.Sprintf("%s.%s='%s'", evmtypes.TypeMsgEthereumTx, evmtypes.AttributeKeyEthereumTxHash, hash.Hex())
 			resTxs, err := b.clientCtx.Client.TxSearch(b.ctx, query, false, nil, nil, "")
-
 			if err != nil {
 				panic(err)
 			}
