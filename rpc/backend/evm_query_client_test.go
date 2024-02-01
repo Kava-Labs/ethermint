@@ -30,16 +30,23 @@ import (
 // To use a mock method it has to be registered in a given test.
 var _ evmtypes.QueryClient = &mocks.EVMQueryClient{}
 
+// {"failed": false, "test": "hello"}
+var data = []byte{
+	0x7B, 0x22, 0x66, 0x61, 0x69, 0x6C, 0x65, 0x64,
+	0x22, 0x3A, 0x20, 0x66, 0x61, 0x6C, 0x73, 0x65,
+	0x2C, 0x20, 0x22, 0x74, 0x65, 0x73, 0x74, 0x22,
+	0x3A, 0x20, 0x22, 0x68, 0x65, 0x6C, 0x6C, 0x6F,
+	0x22, 0x7D,
+}
+
 // TraceTransaction
 func RegisterTraceTransactionWithPredecessors(queryClient *mocks.EVMQueryClient, msgEthTx *evmtypes.MsgEthereumTx, predecessors []*evmtypes.MsgEthereumTx) {
-	data := []byte{0x7b, 0x22, 0x74, 0x65, 0x73, 0x74, 0x22, 0x3a, 0x20, 0x22, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x22, 0x7d}
 	queryClient.On("TraceTx", rpc.ContextWithHeight(1),
 		&evmtypes.QueryTraceTxRequest{Msg: msgEthTx, BlockNumber: 1, Predecessors: predecessors, ChainId: 9000}).
 		Return(&evmtypes.QueryTraceTxResponse{Data: data}, nil)
 }
 
 func RegisterTraceTransaction(queryClient *mocks.EVMQueryClient, msgEthTx *evmtypes.MsgEthereumTx) {
-	data := []byte{0x7b, 0x22, 0x74, 0x65, 0x73, 0x74, 0x22, 0x3a, 0x20, 0x22, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x22, 0x7d}
 	queryClient.On("TraceTx", rpc.ContextWithHeight(1), &evmtypes.QueryTraceTxRequest{Msg: msgEthTx, BlockNumber: 1, ChainId: 9000}).
 		Return(&evmtypes.QueryTraceTxResponse{Data: data}, nil)
 }
