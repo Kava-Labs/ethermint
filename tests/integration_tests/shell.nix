@@ -9,7 +9,5 @@ pkgs.mkShell {
     pkgs.nodejs
     pkgs.test-env
   ];
-  shellHook = ''
-    . ${../../scripts/.env}
-  '';
+  shellHook = builtins.readFile ../../scripts/.env;
 }
