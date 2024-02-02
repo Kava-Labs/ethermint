@@ -160,7 +160,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 			txMe := resTxs.Txs[0]
 
 			// using the actual gas used amount for when the tx was executed
-			jsonResult["gas_used"] = txMe.TxResult.GasUsed
+			jsonResult["gasUsed"] = txMe.TxResult.GasUsed
 
 			// TODO: supporting configuring max error string length
 			// some indexing services (e.g. blockscout) have a character limit
