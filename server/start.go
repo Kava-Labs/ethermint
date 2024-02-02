@@ -185,7 +185,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().String(srvflags.AppDBBackend, "", "The type of database for application and snapshots databases")
 
 	cmd.Flags().Bool(server.FlagAPIEnable, false, "Define if the API server should be enabled")
-	cmd.Flags().Bool(server.FlagAPISwagger, false, "Define if swagger documentation should automatically be registered (Note: the API must also be enabled)")
+	cmd.Flags().Bool(server.FlagAPISwagger, false, "Define if swagger documentation should automatically be registered (Note: the API must also be enabled)") //nolint:lll
 	cmd.Flags().String(server.FlagAPIAddress, serverconfig.DefaultAPIAddress, "the API server address to listen on")
 	cmd.Flags().Uint(server.FlagAPIMaxOpenConnections, 1000, "Define the number of maximum open connections")
 	cmd.Flags().Uint(server.FlagRPCReadTimeout, 10, "Define the Tendermint RPC read timeout (in seconds)")
