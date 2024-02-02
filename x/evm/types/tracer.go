@@ -75,35 +75,37 @@ func NewNoOpTracer() *NoOpTracer {
 }
 
 // CaptureStart implements vm.Tracer interface
-func (dt NoOpTracer) CaptureStart(env *vm.EVM,
-	from common.Address,
-	to common.Address,
-	create bool,
-	input []byte,
-	gas uint64,
-	value *big.Int) {
+func (dt NoOpTracer) CaptureStart(
+	_ *vm.EVM,
+	_ common.Address,
+	_ common.Address,
+	_ bool,
+	_ []byte,
+	_ uint64,
+	_ *big.Int,
+) {
 }
 
 // CaptureState implements vm.Tracer interface
-func (dt NoOpTracer) CaptureState(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, rData []byte, depth int, err error) {
+func (dt NoOpTracer) CaptureState(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, rData []byte, depth int, err error) { //nolint: revive,lll
 }
 
 // CaptureFault implements vm.Tracer interface
-func (dt NoOpTracer) CaptureFault(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {
+func (dt NoOpTracer) CaptureFault(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) { //nolint: revive
 }
 
 // CaptureEnd implements vm.Tracer interface
-func (dt NoOpTracer) CaptureEnd(output []byte, gasUsed uint64, tm time.Duration, err error) {}
+func (dt NoOpTracer) CaptureEnd(output []byte, gasUsed uint64, tm time.Duration, err error) {} //nolint: revive
 
 // CaptureEnter implements vm.Tracer interface
-func (dt NoOpTracer) CaptureEnter(typ vm.OpCode, from common.Address, to common.Address, input []byte, gas uint64, value *big.Int) {
+func (dt NoOpTracer) CaptureEnter(typ vm.OpCode, from common.Address, to common.Address, input []byte, gas uint64, value *big.Int) { //nolint: revive,lll
 }
 
 // CaptureExit implements vm.Tracer interface
-func (dt NoOpTracer) CaptureExit(output []byte, gasUsed uint64, err error) {}
+func (dt NoOpTracer) CaptureExit(output []byte, gasUsed uint64, err error) {} //nolint: revive
 
 // CaptureTxStart implements vm.Tracer interface
-func (dt NoOpTracer) CaptureTxStart(gasLimit uint64) {}
+func (dt NoOpTracer) CaptureTxStart(gasLimit uint64) {} //nolint: revive
 
 // CaptureTxEnd implements vm.Tracer interface
-func (dt NoOpTracer) CaptureTxEnd(restGas uint64) {}
+func (dt NoOpTracer) CaptureTxEnd(restGas uint64) {} //nolint: revive

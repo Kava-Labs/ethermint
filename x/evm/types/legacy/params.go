@@ -93,9 +93,9 @@ func (p LegacyParams) Validate() error {
 }
 
 // EIP712AllowedMsgFromMsgType returns the EIP712AllowedMsg for a given message type url.
-func (p LegacyParams) EIP712AllowedMsgFromMsgType(msgTypeUrl string) *types.EIP712AllowedMsg {
+func (p LegacyParams) EIP712AllowedMsgFromMsgType(msgTypeURL string) *types.EIP712AllowedMsg {
 	for _, allowedMsg := range p.EIP712AllowedMsgs {
-		if allowedMsg.MsgTypeUrl == msgTypeUrl {
+		if allowedMsg.MsgTypeUrl == msgTypeURL {
 			return &allowedMsg
 		}
 	}

@@ -109,9 +109,9 @@ func (p Params) Validate() error {
 }
 
 // EIP712AllowedMsgFromMsgType returns the EIP712AllowedMsg for a given message type url.
-func (p Params) EIP712AllowedMsgFromMsgType(msgTypeUrl string) *EIP712AllowedMsg {
+func (p Params) EIP712AllowedMsgFromMsgType(msgTypeURL string) *EIP712AllowedMsg {
 	for _, allowedMsg := range p.EIP712AllowedMsgs {
-		if allowedMsg.MsgTypeUrl == msgTypeUrl {
+		if allowedMsg.MsgTypeUrl == msgTypeURL {
 			return &allowedMsg
 		}
 	}

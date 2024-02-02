@@ -217,16 +217,16 @@ func (tx LegacyTx) Cost() *big.Int {
 }
 
 // EffectiveGasPrice is the same as GasPrice for LegacyTx
-func (tx LegacyTx) EffectiveGasPrice(baseFee *big.Int) *big.Int {
+func (tx LegacyTx) EffectiveGasPrice(baseFee *big.Int) *big.Int { //nolint: revive
 	return tx.GetGasPrice()
 }
 
 // EffectiveFee is the same as Fee for LegacyTx
-func (tx LegacyTx) EffectiveFee(baseFee *big.Int) *big.Int {
+func (tx LegacyTx) EffectiveFee(baseFee *big.Int) *big.Int { //nolint: revive
 	return tx.Fee()
 }
 
 // EffectiveCost is the same as Cost for LegacyTx
-func (tx LegacyTx) EffectiveCost(baseFee *big.Int) *big.Int {
+func (tx LegacyTx) EffectiveCost(baseFee *big.Int) *big.Int { //nolint: revive
 	return tx.Cost()
 }
