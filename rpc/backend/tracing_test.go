@@ -169,6 +169,9 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 			map[string]interface{}{"failed": false, "test": "hello"},
 			true,
 		},
+		// TODO: Actually test trace when out of gas, for BOTH:
+		// - "out of gas in location: block gas meter; gasWanted:"
+		// - "no block gas left to run tx: out of gas" (this is the one is not considered in tx indexer)
 		/*
 			{
 				"pass - out of gas error",
