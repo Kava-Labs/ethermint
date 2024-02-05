@@ -18,11 +18,11 @@ package backend
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	rpctypes "github.com/evmos/ethermint/rpc/types"
+	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
 	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -133,41 +133,68 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 		return decodedResult, nil
 	}
 
-	// handle edge cases in differences between traced tx status
-	// and actual tx status when it was executed as part of a block
-	// this can happen when
-	// - tracing a tx succeeds even though when the tx was executed
-	// the block gas meter became exhausted
-	if jsonResult["failed"] != transaction.Failed {
-		// override trace transaction status with actual tx status
-		jsonResult["failed"] = transaction.Failed
-		_, exists := jsonResult["error"]
+	return b.updateTransactionErrorStatus(hash, transaction, jsonResult)
+}
 
-		if !exists {
-			// use tendermint as source of truth for error message
-			// and gas usage
-			query := fmt.Sprintf("%s.%s='%s'", evmtypes.TypeMsgEthereumTx, evmtypes.AttributeKeyEthereumTxHash, hash.Hex())
-			resTxs, err := b.clientCtx.Client.TxSearch(b.ctx, query, false, nil, nil, "")
-			if err != nil {
-				panic(err)
-			}
+// updateTransactionErrorStatus updates the transaction status to failed if the
+// transaction failed and the JSON result does not match the transaction status.
+// This can happen when the cosmos transaction failed due to insufficient gas,
+// but the JSON result still shows the transaction as successful.
+func (b *Backend) updateTransactionErrorStatus(
+	hash common.Hash,
+	transaction *ethermint.TxResult,
+	jsonResult map[string]interface{},
+) (map[string]interface{}, error) {
+	// Ignore successful txs
+	if !transaction.Failed {
+		return jsonResult, nil
+	}
 
-			if resTxs.TotalCount != 1 {
-				// gracefully fallback to default behavior
-				return decodedResult, nil
-			}
+	// Ignore json result if it already matches the transaction.Failed
+	if jsonResult["failed"] == true {
+		return jsonResult, nil
+	}
 
-			txMe := resTxs.Txs[0]
+	// Ignore if error field already exists
+	_, errExists := jsonResult["error"]
+	if errExists {
+		return jsonResult, nil
+	}
 
-			// using the actual gas used amount for when the tx was executed
-			jsonResult["gasUsed"] = txMe.TxResult.GasUsed
+	jsonResult["failed"] = true
 
-			// TODO: supporting configuring max error string length
-			// some indexing services (e.g. blockscout) have a character limit
-			// for the field that stores this data
-			maxErrorStringLength := math.Min(200, float64(len(txMe.TxResult.Log)-1))
-			jsonResult["error"] = txMe.TxResult.Log[0:int64(maxErrorStringLength)]
-		}
+	// use tendermint as source of truth for error message
+	// and gas usage
+	query := fmt.Sprintf("%s.%s='%s'", evmtypes.TypeMsgEthereumTx, evmtypes.AttributeKeyEthereumTxHash, hash.Hex())
+	resTxs, err := b.clientCtx.Client.TxSearch(b.ctx, query, false, nil, nil, "")
+	if err != nil {
+		return nil, err
+	}
+
+	if resTxs.TotalCount != 1 {
+		// gracefully fallback to default behavior
+		return jsonResult, nil
+	}
+
+	txMe := resTxs.Txs[0]
+
+	// Only set error message for when the block gas meter became exhausted
+	if !rpctypes.TxExceedBlockGasLimit(&txMe.TxResult) {
+		return jsonResult, nil
+	}
+
+	// using the actual gas used amount for when the tx was executed
+	// TODO: This should be camel case gasUsed, but preserving for now to not
+	// break changes with BlockScout.
+	jsonResult["gas_used"] = txMe.TxResult.GasUsed
+
+	jsonResult["error"] = map[string]interface{}{
+		"code": -32010,
+		"message": fmt.Sprintf(
+			"insufficient gas: gas used %d, gas wanted %d",
+			txMe.TxResult.GasUsed,
+			txMe.TxResult.GasWanted,
+		),
 	}
 
 	return jsonResult, nil

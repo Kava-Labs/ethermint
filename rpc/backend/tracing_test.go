@@ -169,6 +169,38 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 			map[string]interface{}{"failed": false, "test": "hello"},
 			true,
 		},
+		/*
+			{
+				"pass - out of gas error",
+				func() {
+					queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+					client := suite.backend.clientCtx.Client.(*mocks.Client)
+					RegisterBlock(client, 1, txBz)
+					RegisterTraceTransaction(queryClient, msgEthereumTx)
+				},
+				&tmtypes.Block{Header: tmtypes.Header{Height: 1}, Data: tmtypes.Data{Txs: []tmtypes.Tx{txBz}}},
+				[]*abci.ResponseDeliverTx{
+					{
+						Code:      11,
+						GasWanted: 21000,
+						GasUsed:   21000,
+						Log:       rpctypes.ExceedBlockGasLimitError,
+						Events: []abci.Event{
+							{Type: evmtypes.EventTypeEthereumTx, Attributes: []abci.EventAttribute{
+								{Key: []byte("ethereumTxHash"), Value: []byte(txHash.Hex())},
+								{Key: []byte("txIndex"), Value: []byte("0")},
+								{Key: []byte("amount"), Value: []byte("1000")},
+								{Key: []byte("txGasUsed"), Value: []byte("21000")},
+								{Key: []byte("txHash"), Value: []byte("")},
+								{Key: []byte("recipient"), Value: []byte("0x775b87ef5D82ca211811C1a02CE0fE0CA3a455d7")},
+							}},
+						},
+					},
+				},
+				map[string]interface{}{"failed": true, "test": "hello"},
+				true,
+			},
+		*/
 	}
 
 	for _, tc := range testCases {
