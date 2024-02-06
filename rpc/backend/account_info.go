@@ -168,6 +168,7 @@ func (b *Backend) GetBalance(address common.Address, blockNrOrHash rpctypes.Bloc
 	}
 
 	res, err := b.queryClient.Balance(rpctypes.ContextWithHeight(blockNum.Int64()), req)
+	// Responds with error if state is pruned
 	if err != nil {
 		return nil, err
 	}
