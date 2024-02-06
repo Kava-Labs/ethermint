@@ -60,7 +60,7 @@ def wait_for_grpc_accept(port, host="127.0.0.1", timeout=40.0):
             raise TimeoutError(
                 "Waited too long for the port {} on host {} to start accepting "
                 "connections.".format(port, host)
-            ) from ex
+            )
 
 
 def test_grpc_mode(custom_ethermint):
@@ -118,7 +118,8 @@ def test_grpc_mode(custom_ethermint):
 
             # Requests seem to have an error for a few seconds before actually
             # accepting connections:
-            # connection error: desc = \"transport: Error while dialing: dial tcp 127.0.0.1:26413: connect: connection refused\"
+            # connection error: desc = \"transport: Error while dialing: dial
+            # tcp 127.0.0.1:26413: connect: connection refused\"
 
             wait_for_grpc_accept(api_port)
 
