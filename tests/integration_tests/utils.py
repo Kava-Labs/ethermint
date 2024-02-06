@@ -64,7 +64,6 @@ def wait_for_port(port, host="127.0.0.1", timeout=40.0):
                     "connections.".format(port, host)
                 ) from ex
 
-
 def w3_wait_for_new_blocks(w3, n, sleep=0.5):
     begin_height = w3.eth.block_number
     while True:

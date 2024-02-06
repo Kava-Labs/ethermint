@@ -47,6 +47,22 @@ def grpc_eth_call(port: int, args: dict, chain_id=None, proposer_address=None):
     ).json()
 
 
+def wait_for_grpc_accept(port, host="127.0.0.1", timeout=40.0):
+    start_time = time.perf_counter()
+    while True:
+        rsp = grpc_eth_call(port, {})
+
+        if "connect: connection refused" not in rsp["message"]:
+            break
+
+        time.sleep(0.1)
+        if time.perf_counter() - start_time >= timeout:
+            raise TimeoutError(
+                "Waited too long for the port {} on host {} to start accepting "
+                "connections.".format(port, host)
+            ) from ex
+
+
 def test_grpc_mode(custom_ethermint):
     """
     - restart a fullnode in grpc-only mode
@@ -99,6 +115,12 @@ def test_grpc_mode(custom_ethermint):
             grpc_port = ports.grpc_port(custom_ethermint.base_port(1))
             wait_for_port(grpc_port)
             wait_for_port(api_port)
+
+            # Requests seem to have an error for a few seconds before actually
+            # accepting connections:
+            # connection error: desc = \"transport: Error while dialing: dial tcp 127.0.0.1:26413: connect: connection refused\"
+
+            wait_for_grpc_accept(api_port)
 
             # in grpc-only mode, grpc query don't work if we don't pass chain_id
             rsp = grpc_eth_call(api_port, msg)
