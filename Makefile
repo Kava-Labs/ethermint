@@ -163,7 +163,7 @@ all: build
 
 build-all: tools build lint test vulncheck
 
-.PHONY: distclean clean build-all
+.PHONY: distclean clean build build-all
 
 ###############################################################################
 ###                                Releasing                                ###
@@ -335,10 +335,10 @@ test-import:
 	go test -run TestImporterTestSuite -v --vet=off github.com/evmos/ethermint/tests/importer
 
 test-rpc:
-	./scripts/integration-test-all.sh -t "rpc" -q 1 -z 1 -s 2 -m "rpc" -r "true"
+	./scripts/integration-test-all.sh -t "rpc" -q 1 -z 1 -s 5 -m "rpc" -r "true"
 
 run-integration-tests:
-	@nix-shell ./tests/integration_tests/shell.nix --run ./scripts/run-integration-tests.sh
+	@nix-shell -I nixpkgs=./nix ./tests/integration_tests/shell.nix --run ./scripts/run-integration-tests.sh
 
 .PHONY: run-integration-tests
 
