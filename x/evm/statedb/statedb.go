@@ -45,7 +45,9 @@ var _ vm.StateDB = &StateDB{}
 // * Accounts
 type StateDB struct {
 	keeper Keeper
-	ctx    sdk.Context
+
+	ctx      *SnapshotCommitCtx
+	sdkError error
 
 	// Journal of state modifications. This is the backbone of
 	// Snapshot and RevertToSnapshot.
@@ -71,7 +73,8 @@ type StateDB struct {
 func New(ctx sdk.Context, keeper Keeper, txConfig TxConfig) *StateDB {
 	return &StateDB{
 		keeper:       keeper,
-		ctx:          ctx,
+		ctx:          NewSnapshotCtx(ctx),
+		sdkError:     nil,
 		stateObjects: make(map[common.Address]*stateObject),
 		journal:      newJournal(),
 		accessList:   newAccessList(),
@@ -83,6 +86,13 @@ func New(ctx sdk.Context, keeper Keeper, txConfig TxConfig) *StateDB {
 // Keeper returns the underlying `Keeper`
 func (s *StateDB) Keeper() Keeper {
 	return s.keeper
+}
+
+// Context returns the current sdk.Context of the latest snapshot for any
+// stateful cosmos operations.
+// NOTE: This should not be used for querying or modifying evm state.
+func (s *StateDB) Context() sdk.Context {
+	return s.ctx.CurrentCtx()
 }
 
 // AddLog adds a log, called by evm.
@@ -132,6 +142,8 @@ func (s *StateDB) Empty(addr common.Address) bool {
 
 // GetBalance retrieves the balance from the given address or 0 if object not found
 func (s *StateDB) GetBalance(addr common.Address) *big.Int {
+	// TODO: This should use the active ctx balance
+
 	stateObject := s.getStateObject(addr)
 	if stateObject != nil {
 		return stateObject.Balance()
@@ -221,8 +233,10 @@ func (s *StateDB) getStateObject(addr common.Address) *stateObject {
 	if obj := s.stateObjects[addr]; obj != nil {
 		return obj
 	}
-	// If no live objects are available, load it from keeper
-	account := s.keeper.GetAccount(s.ctx, addr)
+	// If no live objects are available, load it from keeper.
+	// Use the current context to load the account as it may have been modified
+	// by a precompile.
+	account := s.keeper.GetAccount(s.ctx.CurrentCtx(), addr)
 	if account == nil {
 		return nil
 	}
@@ -272,7 +286,7 @@ func (s *StateDB) createObject(addr common.Address) (newobj, prev *stateObject) 
 func (s *StateDB) CreateAccount(addr common.Address) {
 	newObj, prev := s.createObject(addr)
 	if prev != nil {
-		newObj.setBalance(prev.account.Balance)
+		newObj.setBalance(prev.Balance())
 	}
 }
 
@@ -282,7 +296,9 @@ func (s *StateDB) ForEachStorage(addr common.Address, cb func(key, value common.
 	if so == nil {
 		return nil
 	}
-	s.keeper.ForEachStorage(s.ctx, addr, func(key, value common.Hash) bool {
+
+	// TODO: InitialCtx or CurrentCtx? Neither will include new keys
+	s.keeper.ForEachStorage(s.ctx.CurrentCtx(), addr, func(key, value common.Hash) bool {
 		if value, dirty := so.dirtyStorage[key]; dirty {
 			return cb(key, value)
 		}
@@ -291,6 +307,7 @@ func (s *StateDB) ForEachStorage(addr common.Address, cb func(key, value common.
 		}
 		return true
 	})
+
 	return nil
 }
 
@@ -358,7 +375,7 @@ func (s *StateDB) Suicide(addr common.Address) bool {
 		prevbalance: new(big.Int).Set(stateObject.Balance()),
 	})
 	stateObject.markSuicided()
-	stateObject.account.Balance = new(big.Int)
+	stateObject.SetBalance(new(big.Int))
 
 	return true
 }
@@ -429,6 +446,9 @@ func (s *StateDB) Snapshot() int {
 	id := s.nextRevisionID
 	s.nextRevisionID++
 	s.validRevisions = append(s.validRevisions, revision{id, s.journal.length()})
+
+	s.ctx.Snapshot(id)
+
 	return id
 }
 
@@ -446,33 +466,56 @@ func (s *StateDB) RevertToSnapshot(revid int) {
 	// Replay the journal to undo changes and remove invalidated snapshots
 	s.journal.Revert(s, snapshot)
 	s.validRevisions = s.validRevisions[:idx]
+
+	s.ctx.Revert(revid)
+}
+
+// SetError sets the error in the StateDB which will be returned on Commit. This
+// only sets the first error that occurs. Subsequent calls to SetError will be
+// ignored as the initial error is the most important. Any errors that occur
+// after the first error may be due to invalid state caused by the first error.
+func (s *StateDB) SetError(err error) {
+	if s.sdkError != nil {
+		return
+	}
+
+	s.sdkError = err
 }
 
 // Commit writes the dirty states to keeper
 // the StateDB object should be discarded after committed.
 func (s *StateDB) Commit() error {
+	if s.sdkError != nil {
+		return s.sdkError
+	}
+
 	for _, addr := range s.journal.sortedDirties() {
 		obj := s.stateObjects[addr]
 		if obj.suicided {
-			if err := s.keeper.DeleteAccount(s.ctx, obj.Address()); err != nil {
+			if err := s.keeper.DeleteAccount(s.ctx.CurrentCtx(), obj.Address()); err != nil {
 				return errorsmod.Wrap(err, "failed to delete account")
 			}
 		} else {
 			if obj.code != nil && obj.dirtyCode {
-				s.keeper.SetCode(s.ctx, obj.CodeHash(), obj.code)
+				s.keeper.SetCode(s.ctx.CurrentCtx(), obj.CodeHash(), obj.code)
 			}
-			if err := s.keeper.SetAccount(s.ctx, obj.Address(), obj.account); err != nil {
+
+			if err := s.keeper.SetAccount(s.ctx.CurrentCtx(), obj.Address(), obj.account); err != nil {
 				return errorsmod.Wrap(err, "failed to set account")
 			}
+
 			for _, key := range obj.dirtyStorage.SortedKeys() {
 				value := obj.dirtyStorage[key]
 				// Skip noop changes, persist actual changes
 				if value == obj.originStorage[key] {
 					continue
 				}
-				s.keeper.SetState(s.ctx, obj.Address(), key, value.Bytes())
+				s.keeper.SetState(s.ctx.CurrentCtx(), obj.Address(), key, value)
 			}
 		}
 	}
+
+	s.ctx.Commit()
+
 	return nil
 }

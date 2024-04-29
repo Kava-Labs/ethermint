@@ -67,8 +67,10 @@ func (k Keeper) Account(c context.Context, req *types.QueryAccountRequest) (*typ
 	ctx := sdk.UnwrapSDKContext(c)
 	acct := k.GetAccountOrEmpty(ctx, addr)
 
+	bal := k.GetBalance(ctx, addr)
+
 	return &types.QueryAccountResponse{
-		Balance:  acct.Balance.String(),
+		Balance:  bal.String(),
 		CodeHash: common.BytesToHash(acct.CodeHash).Hex(),
 		Nonce:    acct.Nonce,
 	}, nil

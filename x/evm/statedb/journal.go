@@ -110,7 +110,6 @@ type (
 	// Changes to individual accounts.
 	balanceChange struct {
 		account *common.Address
-		prev    *big.Int
 	}
 	nonceChange struct {
 		account *common.Address
@@ -169,8 +168,8 @@ func (ch suicideChange) Dirtied() *common.Address {
 	return ch.account
 }
 
-func (ch balanceChange) Revert(s *StateDB) {
-	s.getStateObject(*ch.account).setBalance(ch.prev)
+func (ch balanceChange) Revert(_ *StateDB) {
+	// Do nothing, balance is reverted by SnapshotCommitCtx
 }
 
 func (ch balanceChange) Dirtied() *common.Address {

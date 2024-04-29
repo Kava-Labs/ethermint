@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 			"Deploy contract tx - insufficient gas",
 			func() {
 				msg, err = suite.createContractMsgTx(
-					vmdb.GetNonce(suite.address),
+					vmdb.GetNonce(suite.Address),
 					signer,
 					chainCfg,
 					big.NewInt(1),
@@ -44,11 +44,11 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 			"Transfer funds tx",
 			func() {
 				msg, _, err = newEthMsgTx(
-					vmdb.GetNonce(suite.address),
-					suite.ctx.BlockHeight(),
-					suite.address,
+					vmdb.GetNonce(suite.Address),
+					suite.Ctx.BlockHeight(),
+					suite.Address,
 					chainCfg,
-					suite.signer,
+					suite.Signer,
 					signer,
 					ethtypes.AccessListTxType,
 					nil,
@@ -64,13 +64,13 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-			keeperParams := suite.app.EvmKeeper.GetParams(suite.ctx)
-			chainCfg = keeperParams.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
-			signer = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
+			keeperParams := suite.App.EvmKeeper.GetParams(suite.Ctx)
+			chainCfg = keeperParams.ChainConfig.EthereumConfig(suite.App.EvmKeeper.ChainID())
+			signer = ethtypes.LatestSignerForChainID(suite.App.EvmKeeper.ChainID())
 			vmdb = suite.StateDB()
 
 			tc.malleate()
-			res, err := suite.app.EvmKeeper.EthereumTx(suite.ctx, msg)
+			res, err := suite.App.EvmKeeper.EthereumTx(suite.Ctx, msg)
 			if tc.expErr {
 				suite.Require().Error(err)
 				return
@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestUpdateParams() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run("MsgUpdateParams", func() {
-			_, err := suite.app.EvmKeeper.UpdateParams(suite.ctx, tc.request)
+			_, err := suite.App.EvmKeeper.UpdateParams(suite.Ctx, tc.request)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {

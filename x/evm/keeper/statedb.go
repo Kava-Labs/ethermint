@@ -44,7 +44,7 @@ func (k *Keeper) GetAccount(ctx sdk.Context, addr common.Address) *statedb.Accou
 		return nil
 	}
 
-	acct.Balance = k.GetBalance(ctx, addr)
+	// acct.Balance = k.GetBalance(ctx, addr)
 	return acct
 }
 
@@ -153,29 +153,27 @@ func (k *Keeper) SetAccount(ctx sdk.Context, addr common.Address, account stated
 
 	k.accountKeeper.SetAccount(ctx, acct)
 
-	if err := k.SetBalance(ctx, addr, account.Balance); err != nil {
-		return err
-	}
-
 	k.Logger(ctx).Debug(
 		"account updated",
 		"ethereum-address", addr.Hex(),
 		"nonce", account.Nonce,
 		"codeHash", codeHash.Hex(),
-		"balance", account.Balance,
+		// "balance", account.Balance,
 	)
 	return nil
 }
 
 // SetState update contract storage, delete if value is empty.
-func (k *Keeper) SetState(ctx sdk.Context, addr common.Address, key common.Hash, value []byte) {
+func (k *Keeper) SetState(ctx sdk.Context, addr common.Address, key, value common.Hash) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.AddressStoragePrefix(addr))
 	action := "updated"
-	if len(value) == 0 {
+
+	// Value is always HashLength long, so check if empty by comparing to zero hash
+	if (value == common.Hash{}) {
 		store.Delete(key.Bytes())
 		action = "deleted"
 	} else {
-		store.Set(key.Bytes(), value)
+		store.Set(key.Bytes(), value.Bytes())
 	}
 	k.Logger(ctx).Debug(
 		fmt.Sprintf("state %s", action),
@@ -227,7 +225,8 @@ func (k *Keeper) DeleteAccount(ctx sdk.Context, addr common.Address) error {
 
 	// clear storage
 	k.ForEachStorage(ctx, addr, func(key, _ common.Hash) bool {
-		k.SetState(ctx, addr, key, nil)
+		// Empty Hash to clear
+		k.SetState(ctx, addr, key, common.Hash{})
 		return true
 	})
 

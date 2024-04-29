@@ -289,6 +289,7 @@ func (k *Keeper) GetAccountWithoutBalance(ctx sdk.Context, addr common.Address) 
 	return &statedb.Account{
 		Nonce:    acct.GetSequence(),
 		CodeHash: codeHash,
+		// Balance:       nil,
 	}
 }
 
@@ -301,7 +302,7 @@ func (k *Keeper) GetAccountOrEmpty(ctx sdk.Context, addr common.Address) statedb
 
 	// empty account
 	return statedb.Account{
-		Balance:  new(big.Int),
+		// Balance:  new(big.Int),
 		CodeHash: types.EmptyCodeHash,
 	}
 }

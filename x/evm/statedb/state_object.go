@@ -29,15 +29,14 @@ var emptyCodeHash = crypto.Keccak256(nil)
 // Account is the Ethereum consensus representation of accounts.
 // These objects are stored in the storage of auth module.
 type Account struct {
+	// Balance is *not* included as it is managed by bank
 	Nonce    uint64
-	Balance  *big.Int
 	CodeHash []byte
 }
 
 // NewEmptyAccount returns an empty account.
 func NewEmptyAccount() *Account {
 	return &Account{
-		Balance:  new(big.Int),
 		CodeHash: emptyCodeHash,
 	}
 }
@@ -83,10 +82,11 @@ type stateObject struct {
 }
 
 // newObject creates a state object.
-func newObject(db *StateDB, address common.Address, account Account) *stateObject {
-	if account.Balance == nil {
-		account.Balance = new(big.Int)
-	}
+func newObject(
+	db *StateDB,
+	address common.Address,
+	account Account,
+) *stateObject {
 	if account.CodeHash == nil {
 		account.CodeHash = emptyCodeHash
 	}
@@ -101,7 +101,9 @@ func newObject(db *StateDB, address common.Address, account Account) *stateObjec
 
 // empty returns whether the account is considered empty.
 func (s *stateObject) empty() bool {
-	return s.account.Nonce == 0 && s.account.Balance.Sign() == 0 && bytes.Equal(s.account.CodeHash, emptyCodeHash)
+	return s.account.Nonce == 0 &&
+		s.Balance().Sign() == 0 &&
+		bytes.Equal(s.account.CodeHash, emptyCodeHash)
 }
 
 func (s *stateObject) markSuicided() {
@@ -128,15 +130,19 @@ func (s *stateObject) SubBalance(amount *big.Int) {
 
 // SetBalance update account balance.
 func (s *stateObject) SetBalance(amount *big.Int) {
+	// Create a journal entry that only contains the address to track dirties.
+	// The prev value is not used as snapshots/rollbacks for balance state is
+	// managed by SnapshotCommitCtx
 	s.db.journal.append(balanceChange{
 		account: &s.address,
-		prev:    new(big.Int).Set(s.account.Balance),
 	})
 	s.setBalance(amount)
 }
 
 func (s *stateObject) setBalance(amount *big.Int) {
-	s.account.Balance = amount
+	if err := s.db.keeper.SetBalance(s.db.ctx.CurrentCtx(), s.address, amount); err != nil {
+		s.db.SetError(err)
+	}
 }
 
 //
@@ -156,7 +162,7 @@ func (s *stateObject) Code() []byte {
 	if bytes.Equal(s.CodeHash(), emptyCodeHash) {
 		return nil
 	}
-	code := s.db.keeper.GetCode(s.db.ctx, common.BytesToHash(s.CodeHash()))
+	code := s.db.keeper.GetCode(s.db.ctx.InitialCtx(), common.BytesToHash(s.CodeHash()))
 	s.code = code
 	return code
 }
@@ -204,7 +210,14 @@ func (s *stateObject) CodeHash() []byte {
 
 // Balance returns the balance of account
 func (s *stateObject) Balance() *big.Int {
-	return s.account.Balance
+	// Balance tracking uses the current ctx state, NOT journal state as
+	// precompiles can modify balances directly.
+	return s.db.keeper.GetBalance(s.db.ctx.CurrentCtx(), s.address)
+}
+
+// CommittedBalance returns the committed balance of account
+func (s *stateObject) CommittedBalance() *big.Int {
+	return s.db.keeper.GetBalance(s.db.ctx.InitialCtx(), s.address)
 }
 
 // Nonce returns the nonce of account
@@ -218,7 +231,7 @@ func (s *stateObject) GetCommittedState(key common.Hash) common.Hash {
 		return value
 	}
 	// If no live objects are available, load it from keeper
-	value := s.db.keeper.GetState(s.db.ctx, s.Address(), key)
+	value := s.db.keeper.GetState(s.db.ctx.InitialCtx(), s.Address(), key)
 	s.originStorage[key] = value
 	return value
 }

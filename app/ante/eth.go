@@ -88,13 +88,14 @@ func (avd EthAccountVerificationDecorator) AnteHandle(
 		if acct == nil {
 			acc := avd.ak.NewAccountWithAddress(ctx, from)
 			avd.ak.SetAccount(ctx, acc)
-			acct = statedb.NewEmptyAccount()
 		} else if acct.IsContract() {
 			return ctx, errorsmod.Wrapf(errortypes.ErrInvalidType,
 				"the sender is not EOA: address %s, codeHash <%s>", fromAddr, acct.CodeHash)
 		}
 
-		if err := keeper.CheckSenderBalance(sdkmath.NewIntFromBigInt(acct.Balance), txData); err != nil {
+		bal := avd.evmKeeper.GetBalance(ctx, fromAddr)
+
+		if err := keeper.CheckSenderBalance(sdkmath.NewIntFromBigInt(bal), txData); err != nil {
 			return ctx, errorsmod.Wrap(err, "failed to check sender balance")
 		}
 	}

@@ -18,8 +18,8 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestParams() {
-	params := suite.app.EvmKeeper.GetParams(suite.ctx)
-	suite.app.EvmKeeper.SetParams(suite.ctx, params)
+	params := suite.App.EvmKeeper.GetParams(suite.Ctx)
+	suite.App.EvmKeeper.SetParams(suite.Ctx, params)
 	testCases := []struct {
 		name      string
 		paramsFun func() interface{}
@@ -32,7 +32,7 @@ func (suite *KeeperTestSuite) TestParams() {
 				return types.DefaultParams()
 			},
 			func() interface{} {
-				return suite.app.EvmKeeper.GetParams(suite.ctx)
+				return suite.App.EvmKeeper.GetParams(suite.Ctx)
 			},
 			true,
 		},
@@ -40,11 +40,11 @@ func (suite *KeeperTestSuite) TestParams() {
 			"success - EvmDenom param is set to \"inj\" and can be retrieved correctly",
 			func() interface{} {
 				params.EvmDenom = "inj"
-				suite.app.EvmKeeper.SetParams(suite.ctx, params)
+				suite.App.EvmKeeper.SetParams(suite.Ctx, params)
 				return params.EvmDenom
 			},
 			func() interface{} {
-				evmParams := suite.app.EvmKeeper.GetParams(suite.ctx)
+				evmParams := suite.App.EvmKeeper.GetParams(suite.Ctx)
 				return evmParams.GetEvmDenom()
 			},
 			true,
@@ -53,11 +53,11 @@ func (suite *KeeperTestSuite) TestParams() {
 			"success - Check EnableCreate param is set to false and can be retrieved correctly",
 			func() interface{} {
 				params.EnableCreate = false
-				suite.app.EvmKeeper.SetParams(suite.ctx, params)
+				suite.App.EvmKeeper.SetParams(suite.Ctx, params)
 				return params.EnableCreate
 			},
 			func() interface{} {
-				evmParams := suite.app.EvmKeeper.GetParams(suite.ctx)
+				evmParams := suite.App.EvmKeeper.GetParams(suite.Ctx)
 				return evmParams.GetEnableCreate()
 			},
 			true,
@@ -66,11 +66,11 @@ func (suite *KeeperTestSuite) TestParams() {
 			"success - Check EnableCall param is set to false and can be retrieved correctly",
 			func() interface{} {
 				params.EnableCall = false
-				suite.app.EvmKeeper.SetParams(suite.ctx, params)
+				suite.App.EvmKeeper.SetParams(suite.Ctx, params)
 				return params.EnableCall
 			},
 			func() interface{} {
-				evmParams := suite.app.EvmKeeper.GetParams(suite.ctx)
+				evmParams := suite.App.EvmKeeper.GetParams(suite.Ctx)
 				return evmParams.GetEnableCall()
 			},
 			true,
@@ -79,11 +79,11 @@ func (suite *KeeperTestSuite) TestParams() {
 			"success - Check AllowUnprotectedTxs param is set to false and can be retrieved correctly",
 			func() interface{} {
 				params.AllowUnprotectedTxs = false
-				suite.app.EvmKeeper.SetParams(suite.ctx, params)
+				suite.App.EvmKeeper.SetParams(suite.Ctx, params)
 				return params.AllowUnprotectedTxs
 			},
 			func() interface{} {
-				evmParams := suite.app.EvmKeeper.GetParams(suite.ctx)
+				evmParams := suite.App.EvmKeeper.GetParams(suite.Ctx)
 				return evmParams.GetAllowUnprotectedTxs()
 			},
 			true,
@@ -92,11 +92,11 @@ func (suite *KeeperTestSuite) TestParams() {
 			"success - Check ChainConfig param is set to the default value and can be retrieved correctly",
 			func() interface{} {
 				params.ChainConfig = types.DefaultChainConfig()
-				suite.app.EvmKeeper.SetParams(suite.ctx, params)
+				suite.App.EvmKeeper.SetParams(suite.Ctx, params)
 				return params.ChainConfig
 			},
 			func() interface{} {
-				evmParams := suite.app.EvmKeeper.GetParams(suite.ctx)
+				evmParams := suite.App.EvmKeeper.GetParams(suite.Ctx)
 				return evmParams.GetChainConfig()
 			},
 			true,
@@ -118,7 +118,7 @@ func (suite *KeeperTestSuite) TestLegacyParamsKeyTableRegistration() {
 	paramStoreKey := sdk.NewKVStoreKey(paramtypes.ModuleName)
 	paramStoreTKey := sdk.NewTransientStoreKey(paramtypes.TStoreKey)
 	ctx := legacytestutil.NewDBContext([]storetypes.StoreKey{storeKey, paramStoreKey}, []storetypes.StoreKey{tKey, paramStoreTKey})
-	ak := suite.app.AccountKeeper
+	ak := suite.App.AccountKeeper
 
 	// paramspace used only for setting legacy parameters (not given to keeper)
 	setParamSpace := paramtypes.NewSubspace(
@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) TestRenamedFieldReturnsProperValueForLegacyParams(
 	paramStoreKey := sdk.NewKVStoreKey(paramtypes.ModuleName)
 	paramStoreTKey := sdk.NewTransientStoreKey(paramtypes.TStoreKey)
 	ctx := legacytestutil.NewDBContext([]storetypes.StoreKey{storeKey, paramStoreKey}, []storetypes.StoreKey{tKey, paramStoreTKey})
-	ak := suite.app.AccountKeeper
+	ak := suite.App.AccountKeeper
 
 	// paramspace used only for setting legacy parameters (not given to keeper)
 	legacyParamstore := paramtypes.NewSubspace(
@@ -223,10 +223,11 @@ func (suite *KeeperTestSuite) TestNilLegacyParamsDoNotPanic() {
 	cdc := encCfg.Codec
 	storeKey := sdk.NewKVStoreKey(types.ModuleName)
 	tKey := sdk.NewTransientStoreKey(types.TransientKey)
+
 	paramStoreKey := sdk.NewKVStoreKey(paramtypes.ModuleName)
 	paramStoreTKey := sdk.NewTransientStoreKey(paramtypes.TStoreKey)
 	ctx := legacytestutil.NewDBContext([]storetypes.StoreKey{storeKey, paramStoreKey}, []storetypes.StoreKey{tKey, paramStoreTKey})
-	ak := suite.app.AccountKeeper
+	ak := suite.App.AccountKeeper
 
 	subspace := paramtypes.NewSubspace(
 		cdc,

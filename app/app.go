@@ -423,7 +423,8 @@ func NewEthermintApp(
 	// Set authority to x/gov module account to only expect the module account to update params
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
 	app.EvmKeeper = evmkeeper.NewKeeper(
-		appCodec, keys[evmtypes.StoreKey], tkeys[evmtypes.TransientKey],
+		appCodec,
+		keys[evmtypes.StoreKey], tkeys[evmtypes.TransientKey],
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, stakingKeeper, app.FeeMarketKeeper,
 		vm.NewEVM, tracer, evmSs,
@@ -764,6 +765,13 @@ func (app *EthermintApp) AppCodec() codec.Codec {
 // InterfaceRegistry returns EthermintApp's InterfaceRegistry
 func (app *EthermintApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
+}
+
+// GetKeys returns all KVStoreKeys
+//
+// NOTE: This is solely to be used for testing purposes.
+func (app *EthermintApp) GetKeys() map[string]*storetypes.KVStoreKey {
+	return app.keys
 }
 
 // GetKey returns the KVStoreKey for the provided store key.

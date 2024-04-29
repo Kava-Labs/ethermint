@@ -24,12 +24,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simutils "github.com/cosmos/cosmos-sdk/testutil/sims"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/common"
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -105,7 +107,9 @@ func SetupWithDB(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.Genesis
 
 // NewTestGenesisState generate genesis state with single validator
 func NewTestGenesisState(codec codec.Codec) simapp.GenesisState {
-	privVal := mock.NewPV()
+	key := ed25519.GenPrivKeyFromSecret([]byte("constant seed"))
+	privVal := mock.PV{PrivKey: key}
+
 	pubKey, err := privVal.GetPubKey()
 	if err != nil {
 		panic(err)
@@ -115,7 +119,9 @@ func NewTestGenesisState(codec codec.Codec) simapp.GenesisState {
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	// generate genesis account
-	senderPrivKey := secp256k1.GenPrivKey()
+	senderPrivKey := secp256k1.PrivKey{
+		Key: common.Hex2Bytes("6b65793a225c745c3337355c33363627365c333735476c5c3331375f5c323530305c3031375c303237375c3337365c3234315c3336355c323136247d475c3237316a3c5c3336365f785c3337353b5c3336305c3031362220"), //nolint:lll
+	}
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
