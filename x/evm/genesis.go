@@ -27,8 +27,13 @@ import (
 	precompile_modules "github.com/ethereum/go-ethereum/precompile/modules"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/keeper"
+	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
 )
+
+const PrecompileNonce uint64 = 1
+
+var PrecompileCode = []byte{0x1}
 
 // InitGenesis initializes genesis state based on exported genesis
 func InitGenesis(
@@ -51,6 +56,25 @@ func InitGenesis(
 	err = k.SetParams(ctx, data.Params)
 	if err != nil {
 		panic(fmt.Errorf("error setting params %s", err))
+	}
+
+	txConfig := statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash().Bytes()))
+	stateDB := statedb.New(ctx, k, txConfig)
+
+	for _, hexAddr := range data.Params.EnabledPrecompiles {
+		addr := common.HexToAddress(hexAddr)
+
+		// Set the nonce of the precompile's address (as is done when a contract is created) to ensure
+		// that it is marked as non-empty and will not be cleaned up when the statedb is finalized.
+		stateDB.SetNonce(addr, PrecompileNonce)
+		// Set the code of the precompile's address to a non-zero length byte slice to ensure that the precompile
+		// can be called from within Solidity contracts. Solidity adds a check before invoking a contract to ensure
+		// that it does not attempt to invoke a non-existent contract.
+		stateDB.SetCode(addr, PrecompileCode)
+	}
+
+	if err := stateDB.Commit(); err != nil {
+		panic(err)
 	}
 
 	// ensure evm module account is set

@@ -231,3 +231,35 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 		})
 	}
 }
+
+func (suite *EvmTestSuite) TestInitPrecompiles() {
+	hexAddr1 := "0x1000000000000000000000000000000000000000"
+	hexAddr2 := "0x2000000000000000000000000000000000000000"
+
+	genState := types.DefaultGenesisState()
+	genState.Params.EnabledPrecompiles = []string{hexAddr1, hexAddr2}
+	registeredModules := []precompile_modules.Module{
+		{Address: common.HexToAddress(hexAddr1)},
+		{Address: common.HexToAddress(hexAddr2)},
+	}
+
+	vmdb := suite.StateDB()
+
+	// check that enabled precompiles are uninitialized
+	for _, hexAddr := range genState.Params.EnabledPrecompiles {
+		addr := common.HexToAddress(hexAddr)
+
+		suite.Require().Equal(uint64(0), vmdb.GetNonce(addr))
+		suite.Require().Equal([]byte(nil), vmdb.GetCode(addr))
+	}
+
+	evm.InitGenesis(suite.ctx, suite.app.EvmKeeper, suite.app.AccountKeeper, *genState, registeredModules)
+
+	// check that enabled precompiles are initialized
+	for _, hexAddr := range genState.Params.EnabledPrecompiles {
+		addr := common.HexToAddress(hexAddr)
+
+		suite.Require().Equal(evm.PrecompileNonce, vmdb.GetNonce(addr))
+		suite.Require().Equal(evm.PrecompileCode, vmdb.GetCode(addr))
+	}
+}
