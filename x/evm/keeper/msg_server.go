@@ -16,22 +16,32 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"strconv"
-
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	tmbytes "github.com/cometbft/cometbft/libs/bytes"
-	tmtypes "github.com/cometbft/cometbft/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/armon/go-metrics"
+	tmbytes "github.com/cometbft/cometbft/libs/bytes"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 
+	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
+)
+
+const PrecompileNonce uint64 = 1
+
+var (
+	PrecompileCode     = []byte{0x1}
+	PrecompileCodeHash = crypto.Keccak256Hash(PrecompileCode)
 )
 
 var _ types.MsgServer = &Keeper{}
@@ -153,9 +163,64 @@ func (k *Keeper) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := k.updatePrecompiles(ctx, req.Params.EnabledPrecompiles); err != nil {
+		return nil, err
+	}
+
 	if err := k.SetParams(ctx, req.Params); err != nil {
 		return nil, err
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+func (k *Keeper) updatePrecompiles(ctx sdk.Context, newEnabledPrecompiles []string) error {
+	oldParams := k.GetParams(ctx)
+	oldEnabledPrecompiles := oldParams.GetEnabledPrecompiles()
+
+	newEnabledPrecompilesMap := make(map[common.Address]struct{}, len(newEnabledPrecompiles))
+
+	// initialize newly enabled precompiles
+	for _, hexAddr := range newEnabledPrecompiles {
+		addr := common.HexToAddress(hexAddr)
+		newEnabledPrecompilesMap[addr] = struct{}{}
+
+		account := k.GetAccount(ctx, addr)
+		if account != nil && account.Nonce == PrecompileNonce && bytes.Equal(account.CodeHash, PrecompileCodeHash[:]) {
+			// skip initialization if account is already initialized
+			continue
+		}
+
+		// Set the nonce of the precompile's address (as is done when a contract is created) to ensure
+		// that it is marked as non-empty and will not be cleaned up when the statedb is finalized.
+		err := k.SetAccount(ctx, addr, statedb.Account{
+			Nonce:    PrecompileNonce,
+			Balance:  big.NewInt(0),
+			CodeHash: PrecompileCodeHash[:],
+		})
+		if err != nil {
+			return err
+		}
+
+		// Set the code of the precompile's address to a non-zero length byte slice to ensure that the precompile
+		// can be called from within Solidity contracts. Solidity adds a check before invoking a contract to ensure
+		// that it does not attempt to invoke a non-existent contract.
+		k.SetCode(ctx, PrecompileCodeHash[:], PrecompileCode)
+	}
+
+	// uninitialize disabled precompiles
+	for _, hexAddr := range oldEnabledPrecompiles {
+		addr := common.HexToAddress(hexAddr)
+		if _, ok := newEnabledPrecompilesMap[addr]; ok {
+			continue
+		}
+
+		// if precompile existed in oldEnabledPrecompiles, but doesn't exist in newEnabledPrecompiles - it means it's disabled and should be uninitialized
+		if err := k.DeleteAccount(ctx, addr); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
