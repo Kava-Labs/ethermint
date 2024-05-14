@@ -68,7 +68,14 @@ func (k *Keeper) NewEVM(
 		tracer = k.Tracer(ctx, msg, cfg.ChainConfig)
 	}
 	vmConfig := k.VMConfig(ctx, msg, cfg, tracer)
-	return k.evmConstructor(blockCtx, txCtx, stateDB, cfg.ChainConfig, vmConfig)
+
+	enabledPrecompiles := k.GetParams(ctx).EnabledPrecompiles
+	enabledPrecompileAddrs := make([]common.Address, len(enabledPrecompiles))
+	for i, p := range enabledPrecompiles {
+		enabledPrecompileAddrs[i] = common.HexToAddress(p)
+	}
+
+	return k.evmConstructor(blockCtx, txCtx, stateDB, cfg.ChainConfig, vmConfig, enabledPrecompileAddrs)
 }
 
 // GetHashFn implements vm.GetHashFunc for Ethermint. It handles 3 cases:
