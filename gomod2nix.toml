@@ -211,8 +211,8 @@ schema = 3
     version = "v1.4.2"
     hash = "sha256-g9MC558WBelvkVbOZMGrPz2B4OnYwrOWWkC7OHfc8TI="
   [mod."github.com/ethereum/go-ethereum"]
-    version = "v1.10.27-0.20240308170502-da7973e5eee0"
-    hash = "sha256-/KkxjI8UtvtIriAcAySHQcmKyohO9W0vLdBLVo47myM="
+    version = "v1.10.27-0.20240513233504-6e038346780b"
+    hash = "sha256-4bTz1DhUk2dvcPog0hMrEFw96aVWyr/EjhfGmPI/CT0="
     replaced = "github.com/Kava-Labs/go-ethereum"
   [mod."github.com/felixge/httpsnoop"]
     version = "v1.0.2"
