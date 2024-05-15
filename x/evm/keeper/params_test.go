@@ -217,7 +217,7 @@ func (suite *KeeperTestSuite) TestLegacyParamsKeyTableRegistration() {
 			cdc, storeKey, tKey, authtypes.NewModuleAddress("gov"),
 			ak,
 			nil, nil, nil, // OK to pass nil in for these since we only instantiate and use params
-			vm.NewEVM,
+			vm.NewEVMWithEnabledPrecompiles,
 			"",
 			unregisteredSubspace,
 		)
@@ -274,7 +274,7 @@ func (suite *KeeperTestSuite) TestRenamedFieldReturnsProperValueForLegacyParams(
 		cdc, storeKey, tKey, authtypes.NewModuleAddress("gov"),
 		ak,
 		nil, nil, nil,
-		vm.NewEVM,
+		vm.NewEVMWithEnabledPrecompiles,
 		"",
 		subspace,
 	)
@@ -306,7 +306,7 @@ func (suite *KeeperTestSuite) TestNilLegacyParamsDoNotPanic() {
 		cdc, storeKey, tKey, authtypes.NewModuleAddress("gov"),
 		ak,
 		nil, nil, nil, // OK to pass nil in for these since we only instantiate and use params
-		vm.NewEVM,
+		vm.NewEVMWithEnabledPrecompiles,
 		"",
 		subspace,
 	)
