@@ -426,7 +426,7 @@ func NewEthermintApp(
 		appCodec, keys[evmtypes.StoreKey], tkeys[evmtypes.TransientKey],
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, stakingKeeper, app.FeeMarketKeeper,
-		vm.NewEVM, tracer, evmSs,
+		vm.NewEVMWithEnabledPrecompiles, tracer, evmSs,
 	)
 
 	// Create IBC Keeper
