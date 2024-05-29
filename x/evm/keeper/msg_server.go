@@ -192,22 +192,22 @@ func (k *Keeper) updatePrecompiles(ctx sdk.Context, newEnabledPrecompiles []stri
 			continue
 		}
 
-		// Set the nonce of the precompile's address (as is done when a contract is created) to ensure
-		// that it is marked as non-empty and will not be cleaned up when the statedb is finalized.
 		err := k.SetAccount(ctx, addr, statedb.Account{
+			// Set the nonce of the precompile's address (as is done when a contract is created) to ensure
+			// that it is marked as non-empty and will not be cleaned up when the statedb is finalized.
 			Nonce:    PrecompileNonce,
 			Balance:  big.NewInt(0),
+			// Set the code of the precompile's address to a non-zero length byte slice to ensure that the precompile
+			// can be called from within Solidity contracts. Solidity adds a check before invoking a contract to ensure
+			// that it does not attempt to invoke a non-existent contract.
 			CodeHash: PrecompileCodeHash[:],
 		})
 		if err != nil {
 			return err
 		}
-
-		// Set the code of the precompile's address to a non-zero length byte slice to ensure that the precompile
-		// can be called from within Solidity contracts. Solidity adds a check before invoking a contract to ensure
-		// that it does not attempt to invoke a non-existent contract.
-		k.SetCode(ctx, PrecompileCodeHash[:], PrecompileCode)
 	}
+
+	k.SetCode(ctx, PrecompileCodeHash[:], PrecompileCode)
 
 	// uninitialize disabled precompiles
 	for _, hexAddr := range oldEnabledPrecompiles {
