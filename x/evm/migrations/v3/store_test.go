@@ -150,7 +150,7 @@ func TestKeyTableCompatiabilityWithKeeper(t *testing.T) {
 		cdc, storeKey, tKey, authtypes.NewModuleAddress("gov"),
 		ak,
 		nil, nil, nil,
-		vm.NewEVM,
+		vm.NewEVMWithEnabledPrecompiles,
 		"",
 		subspace,
 	)

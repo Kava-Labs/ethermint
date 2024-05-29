@@ -138,6 +138,16 @@ func (p Params) EIPs() []int {
 	return eips
 }
 
+// EnabledPrecompileAddrs returns enabled precompiles as a list of addresses.
+func (p Params) EnabledPrecompileAddrs() []common.Address {
+	addrs := make([]common.Address, len(p.EnabledPrecompiles))
+	for i, p := range p.EnabledPrecompiles {
+		addrs[i] = common.HexToAddress(p)
+	}
+
+	return addrs
+}
+
 func validateEVMDenom(i interface{}) error {
 	denom, ok := i.(string)
 	if !ok {
