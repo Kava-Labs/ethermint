@@ -264,6 +264,54 @@ func TestEnabledPrecompilesUniquenessInBytesRepr(t *testing.T) {
 	}
 }
 
+func TestEnabledPrecompileAddrs(t *testing.T) {
+	const (
+		addr1 = "0x1000000000000000000000000000000000000000"
+		addr2 = "0x2000000000000000000000000000000000000000"
+	)
+
+	testCases := []struct {
+		name      string
+		getParams func() Params
+		expected  []common.Address
+	}{
+		{
+			name: "enabled precompiles list is nil",
+			getParams: func() Params {
+				params := DefaultParams()
+				params.EnabledPrecompiles = nil
+				return params
+			},
+			expected: []common.Address{},
+		},
+		{
+			name: "enabled precompiles list is empty",
+			getParams: func() Params {
+				params := DefaultParams()
+				params.EnabledPrecompiles = []string{}
+				return params
+			},
+			expected: []common.Address{},
+		},
+		{
+			name: "enabled precompiles list is non-empty",
+			getParams: func() Params {
+				params := DefaultParams()
+				params.EnabledPrecompiles = []string{addr1, addr2}
+				return params
+			},
+			expected: []common.Address{common.HexToAddress(addr1), common.HexToAddress(addr2)},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			enabledPrecompileAddrs := tc.getParams().EnabledPrecompileAddrs()
+			require.Equal(t, tc.expected, enabledPrecompileAddrs)
+		})
+	}
+}
+
 func TestParamsEIPs(t *testing.T) {
 	extraEips := []int64{2929, 1884, 1344}
 	params := NewParams("ara", false, true, true, DefaultChainConfig(), extraEips, []EIP712AllowedMsg{})
