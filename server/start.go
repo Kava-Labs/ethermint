@@ -62,6 +62,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 
+	"github.com/Kava-Labs/opendb"
 	"github.com/evmos/ethermint/indexer"
 	ethdebug "github.com/evmos/ethermint/rpc/namespaces/ethereum/debug"
 	"github.com/evmos/ethermint/server/config"
@@ -296,6 +297,16 @@ func startStandAlone(ctx *server.Context, opts StartOptions) error {
 	return server.WaitForQuitSignals()
 }
 
+// DefaultDBProvider returns a database using the DBBackend and DBDir
+// specified in the ctx.Config.
+func DBProviderFromAppOpts(appOpts types.AppOptions) node.DBProvider {
+	return func(ctx *node.DBContext) (dbm.DB, error) {
+		dbType := dbm.BackendType(ctx.Config.DBBackend)
+
+		return opendb.OpenDB(appOpts, ctx.Config.DBDir(), ctx.ID, dbType)
+	}
+}
+
 // legacyAminoCdc is used for the legacy REST API
 func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOptions) (err error) {
 	cfg := ctx.Config
@@ -386,7 +397,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 			nodeKey,
 			proxy.NewLocalClientCreator(app),
 			genDocProvider,
-			node.DefaultDBProvider,
+			DBProviderFromAppOpts(ctx.Viper),
 			node.DefaultMetricsProvider(cfg.Instrumentation),
 			ctx.Logger.With("server", "node"),
 		)
