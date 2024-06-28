@@ -90,7 +90,11 @@ func (k *Keeper) SetBalance(ctx sdk.Context, addr common.Address, amount *big.In
 	cosmosAddr := sdk.AccAddress(addr.Bytes())
 
 	params := k.GetParams(ctx)
-	coin := k.bankKeeper.GetBalance(ctx, cosmosAddr, params.EvmDenom)
+
+	// Since spendable balances are fetched to get balances, when setting balances
+	// it should also compare with spendable coins as well to get the correct
+	// delta.
+	coin := k.bankKeeper.SpendableCoin(ctx, cosmosAddr, params.EvmDenom)
 	balance := coin.Amount.BigInt()
 	delta := new(big.Int).Sub(amount, balance)
 	switch delta.Sign() {

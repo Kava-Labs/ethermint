@@ -326,7 +326,11 @@ func (k *Keeper) GetBalance(ctx sdk.Context, addr common.Address) *big.Int {
 	if evmDenom == "" {
 		return big.NewInt(-1)
 	}
-	coin := k.bankKeeper.GetBalance(ctx, cosmosAddr, evmDenom)
+
+	// Only spendable coin is considered as balance from EVM perspective.
+	// Locked coins are not shown in the balance to prevent misleading
+	// insufficient balance errors for users.
+	coin := k.bankKeeper.SpendableCoin(ctx, cosmosAddr, evmDenom)
 	return coin.Amount.BigInt()
 }
 
