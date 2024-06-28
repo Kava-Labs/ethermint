@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/simapp v0.0.0-20230608160436-666c345ad23d
 	cosmossdk.io/tools/rosetta v0.2.1
-	github.com/Kava-Labs/opendb v0.0.0-20240628184137-13ad41c5df2b
+	github.com/Kava-Labs/opendb v0.0.0-20240628201734-2700e168e88c
 	github.com/armon/go-metrics v0.4.1
 	github.com/btcsuite/btcd v0.23.4
 	github.com/btcsuite/btcd/btcutil v1.1.3
