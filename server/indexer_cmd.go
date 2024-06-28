@@ -55,7 +55,7 @@ func NewIndexTxCmd() *cobra.Command {
 			cfg := serverCtx.Config
 			home := cfg.RootDir
 			logger := serverCtx.Logger
-			idxDB, err := OpenIndexerDB(home, server.GetAppDBBackend(serverCtx.Viper))
+			idxDB, err := OpenIndexerDB(serverCtx.Viper, home, server.GetAppDBBackend(serverCtx.Viper))
 			if err != nil {
 				logger.Error("failed to open evm indexer DB", "error", err.Error())
 				return err
