@@ -51,6 +51,7 @@ import (
 	ethmetricsexp "github.com/ethereum/go-ethereum/metrics/exp"
 
 	errorsmod "cosmossdk.io/errors"
+	_ "github.com/Kava-Labs/opendb"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -61,6 +62,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 
+	"github.com/Kava-Labs/opendb"
 	"github.com/evmos/ethermint/indexer"
 	ethdebug "github.com/evmos/ethermint/rpc/namespaces/ethereum/debug"
 	"github.com/evmos/ethermint/server/config"
@@ -295,6 +297,16 @@ func startStandAlone(ctx *server.Context, opts StartOptions) error {
 	return server.WaitForQuitSignals()
 }
 
+// DefaultDBProvider returns a database using the DBBackend and DBDir
+// specified in the ctx.Config.
+func DBProviderFromAppOpts(appOpts types.AppOptions) node.DBProvider {
+	return func(ctx *node.DBContext) (dbm.DB, error) {
+		dbType := dbm.BackendType(ctx.Config.DBBackend)
+
+		return opendb.OpenDB(appOpts, ctx.Config.DBDir(), ctx.ID, dbType)
+	}
+}
+
 // legacyAminoCdc is used for the legacy REST API
 func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOptions) (err error) {
 	cfg := ctx.Config
@@ -385,7 +397,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 			nodeKey,
 			proxy.NewLocalClientCreator(app),
 			genDocProvider,
-			node.DefaultDBProvider,
+			DBProviderFromAppOpts(ctx.Viper),
 			node.DefaultMetricsProvider(cfg.Instrumentation),
 			ctx.Logger.With("server", "node"),
 		)
@@ -430,7 +442,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 
 	var idxer ethermint.EVMTxIndexer
 	if config.JSONRPC.EnableIndexer {
-		idxDB, err := OpenIndexerDB(home, server.GetAppDBBackend(ctx.Viper))
+		idxDB, err := OpenIndexerDB(ctx.Viper, home, server.GetAppDBBackend(ctx.Viper))
 		if err != nil {
 			logger.Error("failed to open evm indexer DB", "error", err.Error())
 			return err
@@ -648,9 +660,10 @@ func openDB(_ types.AppOptions, rootDir string, backendType dbm.BackendType) (db
 }
 
 // OpenIndexerDB opens the custom eth indexer db, using the same db backend as the main app
-func OpenIndexerDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
+func OpenIndexerDB(appOpts types.AppOptions, rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	return dbm.NewDB("evmindexer", backendType, dataDir)
+
+	return opendb.OpenDB(appOpts, dataDir, "evmindexer", backendType)
 }
 
 func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {
