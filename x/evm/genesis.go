@@ -90,7 +90,6 @@ func InitGenesis(
 		for _, storage := range account.Storage {
 			k.SetState(ctx, address, common.HexToHash(storage.Key), common.HexToHash(storage.Value).Bytes())
 		}
-
 	}
 
 	for _, precompileAddr := range data.Params.GetEnabledPrecompiles() {
