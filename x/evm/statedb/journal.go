@@ -88,6 +88,13 @@ func (j *journal) Revert(statedb *StateDB, snapshot int) {
 	j.entries = j.entries[:snapshot]
 }
 
+// dirty explicitly sets an address to dirty, even if the change entries would
+// otherwise suggest it as clean. This method is an ugly hack to handle the RIPEMD
+// precompile consensus exception.
+func (j *journal) dirty(addr common.Address) {
+	j.dirties[addr]++
+}
+
 // length returns the current number of entries in the journal.
 func (j *journal) length() int {
 	return len(j.entries)
@@ -122,6 +129,9 @@ type (
 	codeChange struct {
 		account            *common.Address
 		prevcode, prevhash []byte
+	}
+	touchChange struct {
+		account *common.Address
 	}
 
 	// Changes to other state values.
@@ -165,6 +175,14 @@ func (ch suicideChange) Revert(s *StateDB) {
 }
 
 func (ch suicideChange) Dirtied() *common.Address {
+	return ch.account
+}
+
+var ripemd = common.HexToAddress("0000000000000000000000000000000000000003")
+
+func (ch touchChange) Revert(_ *StateDB) {}
+
+func (ch touchChange) Dirtied() *common.Address {
 	return ch.account
 }
 

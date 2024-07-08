@@ -679,7 +679,7 @@ func (suite *EvmTestSuite) TestContractDeploymentRevert() {
 			// simulate nonce increment in ante handler
 			db := suite.StateDB()
 			db.SetNonce(suite.from, nonce+1)
-			suite.Require().NoError(db.Commit())
+			suite.Require().NoError(db.Commit(true))
 
 			rsp, err := k.EthereumTx(sdk.WrapSDKContext(suite.ctx), tx)
 			suite.Require().NoError(err)

@@ -398,7 +398,8 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 
 	// The dirty states in `StateDB` is either committed or discarded after return
 	if commit {
-		if err := stateDB.Commit(); err != nil {
+		isEIP158 := cfg.ChainConfig.IsEIP158(evm.Context.BlockNumber)
+		if err := stateDB.Commit(isEIP158); err != nil {
 			return nil, errorsmod.Wrap(err, "failed to commit stateDB")
 		}
 	}

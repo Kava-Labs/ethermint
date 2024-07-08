@@ -914,7 +914,7 @@ func (suite *KeeperTestSuite) TestNoopStateChange_UnmodifiedIAVLTree() {
 			db := statedb.New(suite.Ctx, suite.App.EvmKeeper, emptyTxConfig)
 			tt.initializeState(db)
 
-			suite.Require().NoError(db.Commit())
+			suite.Require().NoError(db.Commit(true))
 			suite.Commit()
 
 			store := suite.App.CommitMultiStore().GetStore(suite.App.GetKey(types.StoreKey))
@@ -927,7 +927,7 @@ func (suite *KeeperTestSuite) TestNoopStateChange_UnmodifiedIAVLTree() {
 			db = statedb.New(suite.Ctx, suite.App.EvmKeeper, emptyTxConfig)
 			tt.maleate(db)
 
-			suite.Require().NoError(db.Commit())
+			suite.Require().NoError(db.Commit(true))
 			// suite.Commit()
 
 			commitID2 := iavlStore.LastCommitID()

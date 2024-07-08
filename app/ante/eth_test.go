@@ -91,7 +91,7 @@ func (suite AnteTestSuite) TestNewEthAccountVerificationDecorator() {
 		suite.Run(tc.name, func() {
 			vmdb = suite.StateDB()
 			tc.malleate()
-			suite.Require().NoError(vmdb.Commit())
+			suite.Require().NoError(vmdb.Commit(true))
 
 			_, err := dec.AnteHandle(suite.ctx.WithIsCheckTx(tc.checkTx), tc.tx, false, NextFn)
 
@@ -296,7 +296,7 @@ func (suite AnteTestSuite) TestEthGasConsumeDecorator() {
 		suite.Run(tc.name, func() {
 			vmdb = suite.StateDB()
 			tc.malleate()
-			suite.Require().NoError(vmdb.Commit())
+			suite.Require().NoError(vmdb.Commit(true))
 
 			if tc.expPanic {
 				suite.Require().Panics(func() {
@@ -388,7 +388,7 @@ func (suite AnteTestSuite) TestCanTransferDecorator() {
 		suite.Run(tc.name, func() {
 			vmdb = suite.StateDB()
 			tc.malleate()
-			suite.Require().NoError(vmdb.Commit())
+			suite.Require().NoError(vmdb.Commit(true))
 
 			_, err := dec.AnteHandle(suite.ctx.WithIsCheckTx(true), tc.tx, false, NextFn)
 

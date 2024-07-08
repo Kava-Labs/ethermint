@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) TestCheckSenderBalance() {
 	vmdb.AddBalance(suite.Address, hundredInt.BigInt())
 	balance := vmdb.GetBalance(suite.Address)
 	suite.Require().Equal(balance, hundredInt.BigInt())
-	err := vmdb.Commit()
+	err := vmdb.Commit(true)
 	suite.Require().NoError(err, "Unexpected error while committing to vmdb: %d", err)
 
 	for i, tc := range testCases {
@@ -467,7 +467,7 @@ func (suite *KeeperTestSuite) TestVerifyFeeAndDeductTxCostsFromUserBalance() {
 				balance := vmdb.GetBalance(suite.Address)
 				suite.Require().Equal(balance, hundredInt.BigInt())
 			}
-			err := vmdb.Commit()
+			err := vmdb.Commit(true)
 			suite.Require().NoError(err, "Unexpected error while committing to vmdb: %d", err)
 
 			tx := evmtypes.NewTx(zeroInt.BigInt(), 1, &suite.Address, amount, tc.gasLimit, gasPrice, gasFeeCap, gasTipCap, nil, tc.accessList)

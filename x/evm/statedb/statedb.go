@@ -142,8 +142,6 @@ func (s *StateDB) Empty(addr common.Address) bool {
 
 // GetBalance retrieves the balance from the given address or 0 if object not found
 func (s *StateDB) GetBalance(addr common.Address) *big.Int {
-	// TODO: This should use the active ctx balance
-
 	stateObject := s.getStateObject(addr)
 	if stateObject != nil {
 		return stateObject.Balance()
@@ -297,7 +295,8 @@ func (s *StateDB) ForEachStorage(addr common.Address, cb func(key, value common.
 		return nil
 	}
 
-	// TODO: InitialCtx or CurrentCtx? Neither will include new keys
+	// Note: ForEachStorage is not used by geth and is removed in later versions.
+	// InitialCtx vs CurrentCtx is undetermined and neither includes new keys.
 	s.keeper.ForEachStorage(s.ctx.CurrentCtx(), addr, func(key, value common.Hash) bool {
 		if value, dirty := so.dirtyStorage[key]; dirty {
 			return cb(key, value)
@@ -484,14 +483,14 @@ func (s *StateDB) SetError(err error) {
 
 // Commit writes the dirty states to keeper
 // the StateDB object should be discarded after committed.
-func (s *StateDB) Commit() error {
+func (s *StateDB) Commit(deleteEmptyObjects bool) error {
 	if s.sdkError != nil {
 		return s.sdkError
 	}
 
 	for _, addr := range s.journal.sortedDirties() {
 		obj := s.stateObjects[addr]
-		if obj.suicided {
+		if obj.suicided || (deleteEmptyObjects && obj.empty()) {
 			if err := s.keeper.DeleteAccount(s.ctx.CurrentCtx(), obj.Address()); err != nil {
 				return errorsmod.Wrap(err, "failed to delete account")
 			}

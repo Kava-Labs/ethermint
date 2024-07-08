@@ -21,30 +21,7 @@ import (
 	"sort"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 )
-
-var emptyCodeHash = crypto.Keccak256(nil)
-
-// Account is the Ethereum consensus representation of accounts.
-// These objects are stored in the storage of auth module.
-type Account struct {
-	// Balance is *not* included as it is managed by bank
-	Nonce    uint64
-	CodeHash []byte
-}
-
-// NewEmptyAccount returns an empty account.
-func NewEmptyAccount() *Account {
-	return &Account{
-		CodeHash: emptyCodeHash,
-	}
-}
-
-// IsContract returns if the account contains contract code.
-func (acct Account) IsContract() bool {
-	return !bytes.Equal(acct.CodeHash, emptyCodeHash)
-}
 
 // Storage represents in-memory cache/buffer of contract storage.
 type Storage map[common.Hash]common.Hash
@@ -110,10 +87,32 @@ func (s *stateObject) markSuicided() {
 	s.suicided = true
 }
 
+func (s *stateObject) touch() {
+	s.db.journal.append(touchChange{
+		account: &s.address,
+	})
+	if s.address == ripemd {
+		// https://github.com/ethereum/EIPs/issues/716
+		// Explicitly put it in the dirty-cache, which is otherwise generated from
+		// flattened journals.
+		s.db.journal.dirty(s.address)
+	}
+}
+
 // AddBalance adds amount to s's balance.
 // It is used to add funds to the destination account of a transfer.
 func (s *stateObject) AddBalance(amount *big.Int) {
+	// EIP161: We must check emptiness for the objects such that the account
+	// clearing (0,0,0 objects) can take effect.
+
+	// The only state changes that can actually result in an empty account are
+	// transactions, e.g. CALL, SUICIDE, with zero value transferred to this
+	// account, so this is the only area where the account marked as touched.
+	// See: EIP-161 Notes - https://eips.ethereum.org/EIPS/eip-161
 	if amount.Sign() == 0 {
+		if s.empty() {
+			s.touch()
+		}
 		return
 	}
 	s.SetBalance(new(big.Int).Add(s.Balance(), amount))

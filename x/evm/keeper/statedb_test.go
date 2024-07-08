@@ -579,16 +579,21 @@ func (suite *KeeperTestSuite) TestCommittedState() {
 	value2 := common.BytesToHash([]byte("value2"))
 
 	vmdb := suite.StateDB()
+	vmdb.SetCode(suite.Address, []byte("code"))
 	vmdb.SetState(suite.Address, key, value1)
-	vmdb.Commit()
+	suite.Require().NoError(vmdb.Commit(true))
 
 	vmdb = suite.StateDB()
+	vmdb.SetCode(suite.Address, []byte("code"))
 	vmdb.SetState(suite.Address, key, value2)
+
 	tmp := vmdb.GetState(suite.Address, key)
 	suite.Require().Equal(value2, tmp)
+
 	tmp = vmdb.GetCommittedState(suite.Address, key)
 	suite.Require().Equal(value1, tmp)
-	vmdb.Commit()
+
+	suite.Require().NoError(vmdb.Commit(true))
 
 	vmdb = suite.StateDB()
 	tmp = vmdb.GetCommittedState(suite.Address, key)
@@ -606,7 +611,7 @@ func (suite *KeeperTestSuite) TestSuicide() {
 		db.SetState(suite.Address, common.BytesToHash([]byte(fmt.Sprintf("key%d", i))), common.BytesToHash([]byte(fmt.Sprintf("value%d", i))))
 	}
 
-	suite.Require().NoError(db.Commit())
+	suite.Require().NoError(db.Commit(true))
 	db = suite.StateDB()
 
 	// Generate 2nd address
@@ -629,7 +634,7 @@ func (suite *KeeperTestSuite) TestSuicide() {
 	suite.Require().Equal(true, db.HasSuicided(suite.Address))
 
 	// Commit state
-	suite.Require().NoError(db.Commit())
+	suite.Require().NoError(db.Commit(true))
 	db = suite.StateDB()
 
 	// Check code is deleted
@@ -1101,7 +1106,7 @@ func (suite *KeeperTestSuite) TestUnsetBalanceChange() {
 	// init non-zero balance
 	db := statedb.New(suite.Ctx, suite.App.EvmKeeper, emptyTxConfig)
 	db.AddBalance(suite.Address, big.NewInt(100))
-	suite.Require().NoError(db.Commit())
+	suite.Require().NoError(db.Commit(true))
 
 	suite.Commit()
 
@@ -1118,7 +1123,7 @@ func (suite *KeeperTestSuite) TestUnsetBalanceChange() {
 
 	// Currently doesn't actually test if the state was removed, but just if it
 	// doesn't error
-	suite.Require().NoError(db.Commit())
+	suite.Require().NoError(db.Commit(true))
 
 	suite.Commit()
 

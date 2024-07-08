@@ -256,6 +256,10 @@ func (suite *KeeperTestSuite) TestQueryStorage() {
 				value := common.BytesToHash([]byte("value"))
 				expValue = value.String()
 				vmdb.SetState(suite.Address, key, value)
+
+				// We need to set code for account, otherwise the account will
+				// be considered empty and will be cleared
+				vmdb.SetCode(suite.Address, []byte("code"))
 				req = &types.QueryStorageRequest{
 					Address: suite.Address.String(),
 					Key:     key.String(),
@@ -271,7 +275,7 @@ func (suite *KeeperTestSuite) TestQueryStorage() {
 
 			vmdb := suite.StateDB()
 			tc.malleate(vmdb)
-			suite.Require().NoError(vmdb.Commit())
+			suite.Require().NoError(vmdb.Commit(true))
 
 			ctx := sdk.WrapSDKContext(suite.Ctx)
 			res, err := suite.QueryClient.Storage(ctx, req)
@@ -330,7 +334,7 @@ func (suite *KeeperTestSuite) TestQueryCode() {
 
 			vmdb := suite.StateDB()
 			tc.malleate(vmdb)
-			suite.Require().NoError(vmdb.Commit())
+			suite.Require().NoError(vmdb.Commit(true))
 
 			ctx := sdk.WrapSDKContext(suite.Ctx)
 			res, err := suite.QueryClient.Code(ctx, req)
@@ -393,7 +397,7 @@ func (suite *KeeperTestSuite) TestQueryTxLogs() {
 
 			vmdb := statedb.New(suite.Ctx, suite.App.EvmKeeper, statedb.NewTxConfig(common.BytesToHash(suite.Ctx.HeaderHash().Bytes()), txHash, txIndex, logIndex))
 			tc.malleate(vmdb)
-			suite.Require().NoError(vmdb.Commit())
+			suite.Require().NoError(vmdb.Commit(true))
 
 			logs := vmdb.Logs()
 			suite.Require().Equal(expLogs, types.NewLogsFromEth(logs))
@@ -837,7 +841,7 @@ func (suite *KeeperTestSuite) TestTraceTx() {
 				// increase nonce to avoid address collision
 				vmdb := suite.StateDB()
 				vmdb.SetNonce(suite.Address, vmdb.GetNonce(suite.Address)+1)
-				suite.Require().NoError(vmdb.Commit())
+				suite.Require().NoError(vmdb.Commit(true))
 
 				contractAddr := suite.DeployTestContract(suite.T(), suite.Address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
 				suite.Commit()
@@ -896,7 +900,7 @@ func (suite *KeeperTestSuite) TestTraceTx() {
 				// increase nonce to avoid address collision
 				vmdb := suite.StateDB()
 				vmdb.SetNonce(suite.Address, vmdb.GetNonce(suite.Address)+1)
-				suite.Require().NoError(vmdb.Commit())
+				suite.Require().NoError(vmdb.Commit(true))
 
 				chainID := suite.App.EvmKeeper.ChainID()
 				nonce := suite.App.EvmKeeper.GetNonce(suite.Ctx, suite.Address)
@@ -1057,7 +1061,7 @@ func (suite *KeeperTestSuite) TestTraceBlock() {
 				// increase nonce to avoid address collision
 				vmdb := suite.StateDB()
 				vmdb.SetNonce(suite.Address, vmdb.GetNonce(suite.Address)+1)
-				suite.Require().NoError(vmdb.Commit())
+				suite.Require().NoError(vmdb.Commit(true))
 
 				contractAddr := suite.DeployTestContract(suite.T(), suite.Address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
 				suite.Commit()
