@@ -149,7 +149,7 @@ func TestKeyTableCompatiabilityWithKeeper(t *testing.T) {
 	keeper.NewKeeper(
 		cdc, storeKey, tKey, authtypes.NewModuleAddress("gov"),
 		ak,
-		nil, nil, nil,
+		nil, nil, nil, nil,
 		vm.NewEVM,
 		"",
 		subspace,

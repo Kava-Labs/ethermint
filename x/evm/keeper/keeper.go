@@ -17,6 +17,7 @@ package keeper
 
 import (
 	"math/big"
+	"os"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/libs/log"
@@ -29,6 +30,7 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/eth/tracers/logger"
 	"github.com/ethereum/go-ethereum/params"
 
 	ethermint "github.com/evmos/ethermint/types"
@@ -61,6 +63,8 @@ type Keeper struct {
 	stakingKeeper types.StakingKeeper
 	// fetch EIP1559 base fee and parameters
 	feeMarketKeeper types.FeeMarketKeeper
+	// access to module managed precompiled contract addresses
+	precompileKeeper types.PrecompileKeeper
 
 	// chain ID number obtained from the context's chain id
 	eip155ChainID *big.Int
@@ -86,6 +90,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	sk types.StakingKeeper,
 	fmk types.FeeMarketKeeper,
+	precompileKeeper types.PrecompileKeeper,
 	evmConstructor types.Constructor,
 	tracer string,
 	ss paramstypes.Subspace,
@@ -104,19 +109,28 @@ func NewKeeper(
 		ss = ss.WithKeyTable(legacytypes.ParamKeyTable())
 	}
 
+	// If no precompile keeper is provided, use the default keeper.
+	// This keeper returns an empty list of stateful precompile addresses,
+	// effectively disabling all stateful precompiles. Existing vanilla
+	// stateless geth-native precompiles are still available.
+	if precompileKeeper == nil {
+		precompileKeeper = types.DefaultPrecompileKeeper{}
+	}
+
 	// NOTE: we pass in the parameter space to the CommitStateDB in order to use custom denominations for the EVM operations
 	return &Keeper{
-		cdc:             cdc,
-		authority:       authority,
-		accountKeeper:   ak,
-		bankKeeper:      bankKeeper,
-		stakingKeeper:   sk,
-		feeMarketKeeper: fmk,
-		storeKey:        storeKey,
-		transientKey:    transientKey,
-		evmConstructor:  evmConstructor,
-		tracer:          tracer,
-		ss:              ss,
+		cdc:              cdc,
+		authority:        authority,
+		accountKeeper:    ak,
+		bankKeeper:       bankKeeper,
+		stakingKeeper:    sk,
+		feeMarketKeeper:  fmk,
+		precompileKeeper: precompileKeeper,
+		storeKey:         storeKey,
+		transientKey:     transientKey,
+		evmConstructor:   evmConstructor,
+		tracer:           tracer,
+		ss:               ss,
 	}
 }
 
@@ -268,7 +282,30 @@ func (k *Keeper) PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *et
 
 // Tracer return a default vm.Tracer based on current keeper state
 func (k Keeper) Tracer(ctx sdk.Context, msg core.Message, ethCfg *params.ChainConfig) vm.EVMLogger {
-	return types.NewTracer(k.tracer, msg, ethCfg, ctx.BlockHeight())
+	// TODO: enable additional log configuration
+	logCfg := &logger.Config{
+		Debug: true,
+	}
+
+	switch k.tracer {
+	case types.TracerAccessList:
+		chainRules := ethCfg.Rules(big.NewInt(ctx.BlockHeight()), ethCfg.MergeNetsplitBlock != nil)
+		allPrecompiles := vm.ActivePrecompiles(chainRules)
+
+		// Include stateful precompiles enabled at this block
+		activeStatefulPrecompiles := k.precompileKeeper.GetPrecompileAddresses(ctx)
+		allPrecompiles = append(allPrecompiles, activeStatefulPrecompiles...)
+
+		return logger.NewAccessListTracer(msg.AccessList(), msg.From(), *msg.To(), allPrecompiles)
+	case types.TracerJSON:
+		return logger.NewJSONLogger(logCfg, os.Stderr)
+	case types.TracerMarkdown:
+		return logger.NewMarkdownLogger(logCfg, os.Stdout) // TODO: Stderr ?
+	case types.TracerStruct:
+		return logger.NewStructLogger(logCfg)
+	default:
+		return types.NewNoOpTracer()
+	}
 }
 
 // GetAccountWithoutBalance load nonce and codehash without balance,

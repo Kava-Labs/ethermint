@@ -15,11 +15,14 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/testutil"
+	"github.com/evmos/ethermint/x/evm/types/mocks"
 
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/types"
 
 	"github.com/ethereum/go-ethereum/common"
+	coretypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/eth/tracers/logger"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 )
@@ -153,6 +156,78 @@ func (suite *KeeperTestSuite) TestGetAccountOrEmpty() {
 			} else {
 				suite.Require().NotEqual(empty, res)
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestTracer_AccessList() {
+	precompileKeeper := mocks.NewPrecompileKeeper(suite.T())
+
+	// Update app keeper with the mock precompile keeper with access list tracer
+	suite.SetEVMPrecompileKeeper(precompileKeeper, types.TracerAccessList)
+
+	msgAccessList := coretypes.AccessList{
+		coretypes.AccessTuple{
+			// Ensure we don't use 0x01 or an already existing native precompile address
+			Address:     common.BytesToAddress([]byte("hello")),
+			StorageKeys: nil,
+		},
+	}
+
+	tests := []struct {
+		name                    string
+		precompileAddrs         []common.Address
+		expectedAccessListAddrs []common.Address
+	}{
+		{
+			"no precompile addresses",
+			nil,
+			[]common.Address{msgAccessList[0].Address},
+		},
+		{
+			"with precompile addresses",
+			[]common.Address{msgAccessList[0].Address, common.BytesToAddress([]byte{0x02})},
+			[]common.Address{},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			precompileKeeper.EXPECT().GetPrecompileAddresses(suite.Ctx).
+				Return(tt.precompileAddrs).
+				Once()
+
+			msg := coretypes.NewMessage(
+				suite.Address,
+				&suite.Address,
+				1,
+				big.NewInt(0),
+				2000000,
+				big.NewInt(1),
+				nil,
+				nil,
+				nil,
+				msgAccessList,
+				true,
+			)
+
+			cfg := suite.App.EvmKeeper.GetParams(suite.Ctx).
+				ChainConfig.
+				EthereumConfig(suite.App.EvmKeeper.ChainID())
+			tracer := suite.App.EvmKeeper.Tracer(suite.Ctx, msg, cfg)
+
+			// Check the access list within tracer EXCLUDES precompile addresses
+			accessListLogger := tracer.(*logger.AccessListTracer)
+			accessListAddrs := []common.Address{}
+			for _, accessTuple := range accessListLogger.AccessList() {
+				accessListAddrs = append(accessListAddrs, accessTuple.Address)
+			}
+
+			suite.Require().Equal(
+				tt.expectedAccessListAddrs,
+				accessListAddrs,
+				"access_list tracer should **exclude** precompile addresses",
+			)
 		})
 	}
 }

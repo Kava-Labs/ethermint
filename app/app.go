@@ -426,7 +426,13 @@ func NewEthermintApp(
 		appCodec,
 		keys[evmtypes.StoreKey], tkeys[evmtypes.TransientKey],
 		authtypes.NewModuleAddress(govtypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper, stakingKeeper, app.FeeMarketKeeper,
+		// Keepers
+		app.AccountKeeper,
+		app.BankKeeper,
+		stakingKeeper,
+		app.FeeMarketKeeper,
+		nil, // Use default precompile keeper
+		// EVM
 		vm.NewEVM, tracer, evmSs,
 	)
 

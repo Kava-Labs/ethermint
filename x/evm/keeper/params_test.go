@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestLegacyParamsKeyTableRegistration() {
 		return keeper.NewKeeper(
 			cdc, storeKey, tKey, authtypes.NewModuleAddress("gov"),
 			ak,
-			nil, nil, nil, // OK to pass nil in for these since we only instantiate and use params
+			nil, nil, nil, nil, // OK to pass nil in for these since we only instantiate and use params
 			vm.NewEVM,
 			"",
 			unregisteredSubspace,
@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) TestRenamedFieldReturnsProperValueForLegacyParams(
 	k := keeper.NewKeeper(
 		cdc, storeKey, tKey, authtypes.NewModuleAddress("gov"),
 		ak,
-		nil, nil, nil,
+		nil, nil, nil, nil,
 		vm.NewEVM,
 		"",
 		subspace,
@@ -240,7 +240,7 @@ func (suite *KeeperTestSuite) TestNilLegacyParamsDoNotPanic() {
 	k := keeper.NewKeeper(
 		cdc, storeKey, tKey, authtypes.NewModuleAddress("gov"),
 		ak,
-		nil, nil, nil, // OK to pass nil in for these since we only instantiate and use params
+		nil, nil, nil, nil, // OK to pass nil in for these since we only instantiate and use params
 		vm.NewEVM,
 		"",
 		subspace,

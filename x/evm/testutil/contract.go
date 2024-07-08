@@ -24,6 +24,10 @@ var (
 	//go:embed EIP161Test.json
 	EIP161TestContractJSON []byte
 	EIP161TestContract     types.CompiledContract
+
+	//go:embed EIP2929Test.json
+	EIP2929TestContractJSON []byte
+	EIP2929TestContract     types.CompiledContract
 )
 
 func loadContract(jsonBytes []byte) types.CompiledContract {
@@ -43,6 +47,7 @@ func loadContract(jsonBytes []byte) types.CompiledContract {
 func init() {
 	StateTestContract = loadContract(stateTestContractJSON)
 	EIP161TestContract = loadContract(EIP161TestContractJSON)
+	EIP2929TestContract = loadContract(EIP2929TestContractJSON)
 }
 
 // DeployContract deploys a provided contract and returns the contract address

@@ -12,7 +12,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -22,7 +24,9 @@ import (
 	"github.com/evmos/ethermint/tests"
 	"github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/evmos/ethermint/x/evm/statedb"
+	"github.com/evmos/ethermint/x/evm/testutil"
 	"github.com/evmos/ethermint/x/evm/types"
+	"github.com/evmos/ethermint/x/evm/types/mocks"
 )
 
 func (suite *KeeperTestSuite) TestGetHashFn() {
@@ -945,6 +949,179 @@ func (suite *KeeperTestSuite) TestNoopStateChange_UnmodifiedIAVLTree() {
 
 			// Check all affected stores
 			suite.Require().Equal(iavlHashes1, iavlHashes2)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) SetEVMPrecompileKeeper(
+	precompileKeeper types.PrecompileKeeper,
+	tracer string,
+) {
+	evmKeeper := keeper.NewKeeper(
+		suite.App.AppCodec(),
+		suite.App.GetKey(types.StoreKey),
+		suite.App.GetTKey(types.TransientKey),
+		authtypes.NewModuleAddress(govtypes.ModuleName), // authority
+		suite.App.AccountKeeper,
+		suite.App.BankKeeper,
+		suite.App.StakingKeeper,
+		suite.App.FeeMarketKeeper,
+		precompileKeeper,
+		vm.NewEVM,
+		tracer,
+		suite.App.GetSubspace(types.ModuleName),
+	)
+
+	suite.App.EvmKeeper = evmKeeper
+}
+
+func (suite *KeeperTestSuite) TestPrecompileAccessList() {
+	precompileKeeper := mocks.NewPrecompileKeeper(suite.T())
+
+	// Update app keeper with the mock precompile keeper
+	// empty tracer does *not* use access_list - test separately
+	suite.SetEVMPrecompileKeeper(precompileKeeper, "")
+
+	// --------------------------------------------------------------------------
+	// Deploy contract that loads state according to EIP2929
+	// ---
+	// Why do we need a contract that calls another one?
+	// The initial contract load does not use the access list - i.e. calling
+	// contractAddr is not considered for the dynamic gas cost.
+	// EIP2929 additional gas cost only applies to __opcodes__ that load state,
+	// so within the contract itself that loads state or calls another contract.
+	// Loading the initial contract does not use such opcodes.
+
+	// Deploy will call this
+	precompileKeeper.EXPECT().GetPrecompileAddresses(suite.Ctx).
+		Return(nil). // Not applicable for contract deployment
+		Once()
+	contractAddr := suite.DeployContract(testutil.EIP2929TestContract)
+
+	tests := []struct {
+		name   string
+		method string
+	}{
+		{
+			"CALL",
+			"callAccount",
+		},
+		{
+			"BALANCE",
+			"getAccountBalance",
+		},
+		{
+			"EXTCODESIZE",
+			"getAccountCodeSize",
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			precompileKeeper.EXPECT().GetPrecompileAddresses(suite.Ctx).
+				Return(nil). // No additional contracts added to access list
+				Once()
+
+			targetAddr := common.BytesToAddress([]byte("target"))
+			_, txResp1, err := suite.CallContract(
+				testutil.EIP2929TestContract,
+				contractAddr,
+				common.Big0,
+				tt.method,
+				targetAddr,
+			)
+
+			suite.Require().NoError(err)
+			suite.Require().False(txResp1.Failed())
+
+			precompileKeeper.EXPECT().GetPrecompileAddresses(suite.Ctx).
+				Return([]common.Address{targetAddr}). // Add contract to access list
+				Once()
+
+			_, txResp2, err := suite.CallContract(
+				testutil.EIP2929TestContract,
+				contractAddr,
+				common.Big0,
+				tt.method,
+				targetAddr,
+			)
+
+			suite.Require().NoError(err)
+			suite.Require().False(txResp2.Failed())
+
+			// Check if gas is less than the previous call
+			suite.Require().Less(txResp2.GasUsed, txResp1.GasUsed)
+
+			// COLD_ACCOUNT_ACCESS_COST - WARM_STORAGE_READ_COST
+			// Refer to table: https://eips.ethereum.org/EIPS/eip-2929
+			eip2929AdditionalGas := uint64(2600 - 100)
+			suite.Require().Equal(
+				txResp2.GasUsed+eip2929AdditionalGas,
+				txResp1.GasUsed,
+				"gas used should be less with custom precompile addresses in access list",
+			)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestPrecompileAccessList_DefaultKeeper() {
+	// This test uses DefaultPrecompileKeeper which always returns nil for the
+	// list of custom precompiles. ie. no extra gas cost exemption for custom
+	// precompile.
+
+	var contractAddr common.Address
+	suite.Require().NotPanics(func() {
+		contractAddr = suite.DeployContract(testutil.EIP2929TestContract)
+	}, "default precompile keeper should not panic on contract deployment")
+
+	tests := []struct {
+		name   string
+		method string
+	}{
+		{
+			"CALL",
+			"callAccount",
+		},
+		{
+			"BALANCE",
+			"getAccountBalance",
+		},
+		{
+			"EXTCODESIZE",
+			"getAccountCodeSize",
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			targetAddr := common.BytesToAddress([]byte("target"))
+			_, txResp1, err := suite.CallContract(
+				testutil.EIP2929TestContract,
+				contractAddr,
+				common.Big0,
+				tt.method,
+				targetAddr,
+			)
+
+			suite.Require().NoError(err)
+			suite.Require().False(txResp1.Failed())
+
+			_, txResp2, err := suite.CallContract(
+				testutil.EIP2929TestContract,
+				contractAddr,
+				common.Big0,
+				tt.method,
+				targetAddr,
+			)
+
+			suite.Require().NoError(err)
+			suite.Require().False(txResp2.Failed())
+
+			suite.Require().Equal(
+				txResp1.GasUsed,
+				txResp2.GasUsed,
+				"gas used should be the same without custom precompile addresses in access list",
+			)
 		})
 	}
 }
