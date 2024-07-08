@@ -90,6 +90,40 @@ func InitGenesis(
 		for _, storage := range account.Storage {
 			k.SetState(ctx, address, common.HexToHash(storage.Key), common.HexToHash(storage.Value).Bytes())
 		}
+
+	}
+
+	for _, precompileAddr := range data.Params.GetEnabledPrecompiles() {
+		addr := common.HexToAddress(precompileAddr)
+		accAddr := sdk.AccAddress(addr.Bytes())
+
+		acc := accountKeeper.GetAccount(ctx, accAddr)
+		if acc == nil {
+			panic(fmt.Errorf("account not found for address %s", precompileAddr))
+		}
+		ethAcct, ok := acc.(ethermint.EthAccountI)
+		if !ok {
+			panic(
+				fmt.Errorf("account %s must be an EthAccount interface, got %T",
+					precompileAddr, acc,
+				),
+			)
+		}
+		if ethAcct.GetSequence() != 1 {
+			panic(
+				fmt.Errorf("precompile %s code must have nonce equal to 1",
+					precompileAddr,
+				),
+			)
+		}
+		code := k.GetCode(ctx, ethAcct.GetCodeHash())
+		if !bytes.Equal(code, []byte{0x1}) {
+			panic(
+				fmt.Errorf("precompile %s code must be equal to 0x1",
+					precompileAddr,
+				),
+			)
+		}
 	}
 
 	return []abci.ValidatorUpdate{}

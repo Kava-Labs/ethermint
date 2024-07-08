@@ -5,6 +5,7 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	precompile_modules "github.com/ethereum/go-ethereum/precompile/modules"
 
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
@@ -155,19 +156,6 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 			expPanic: false,
 		},
 		{
-			name:     "precompile is enabled and registered",
-			malleate: func() {},
-			getGenState: func() *types.GenesisState {
-				defaultGen := types.DefaultGenesisState()
-				defaultGen.Params.EnabledPrecompiles = []string{hexAddr1}
-				return defaultGen
-			},
-			registeredModules: []precompile_modules.Module{
-				{Address: common.HexToAddress(hexAddr1)},
-			},
-			expPanic: false,
-		},
-		{
 			name:     "precompile is enabled, but not registered",
 			malleate: func() {},
 			getGenState: func() *types.GenesisState {
@@ -204,6 +192,106 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 				{Address: common.HexToAddress(hexAddr1)},
 			},
 			expPanic: true,
+		},
+		{
+			name:     "enabled precompile",
+			malleate: func() {},
+			getGenState: func() *types.GenesisState {
+				defaultGen := types.DefaultGenesisState()
+				defaultGen.Params.EnabledPrecompiles = []string{hexAddr1, hexAddr1}
+				return defaultGen
+			},
+			registeredModules: []precompile_modules.Module{
+				{Address: common.HexToAddress(hexAddr1)},
+			},
+			expPanic: true,
+		},
+		{
+			name:     "precompile is enabled and registered without any account state set",
+			malleate: func() {},
+			getGenState: func() *types.GenesisState {
+				defaultGen := types.DefaultGenesisState()
+				defaultGen.Params.EnabledPrecompiles = []string{hexAddr1}
+				return defaultGen
+			},
+			registeredModules: []precompile_modules.Module{
+				{Address: common.HexToAddress(hexAddr1)},
+			},
+			expPanic: true,
+		},
+		{
+			name: "precompile is enabled and registered with code set but not nonce",
+			malleate: func() {
+				addr := common.HexToAddress(hexAddr1).Bytes()
+
+				precompileAcc := &etherminttypes.EthAccount{
+					BaseAccount: authtypes.NewBaseAccount(addr, nil, 9999, 0),
+					CodeHash:    crypto.Keccak256Hash([]byte{0x1}).Hex(),
+				}
+
+				suite.app.AccountKeeper.SetAccount(suite.ctx, precompileAcc)
+			},
+			getGenState: func() *types.GenesisState {
+				defaultGen := types.DefaultGenesisState()
+				defaultGen.Params.EnabledPrecompiles = []string{hexAddr1}
+				defaultGen.Accounts = append(defaultGen.Accounts, types.GenesisAccount{
+					Address: hexAddr1,
+					Code:    common.Bytes2Hex([]byte{0x1}),
+				})
+				return defaultGen
+			},
+			registeredModules: []precompile_modules.Module{
+				{Address: common.HexToAddress(hexAddr1)},
+			},
+			expPanic: true,
+		},
+		{
+			name: "precompile is enabled and registered with nonce set but not code",
+			malleate: func() {
+				addr := common.HexToAddress(hexAddr1).Bytes()
+
+				precompileAcc := &etherminttypes.EthAccount{
+					BaseAccount: authtypes.NewBaseAccount(addr, nil, 9999, 1),
+					CodeHash:    crypto.Keccak256Hash([]byte{0x1}).Hex(),
+				}
+
+				suite.app.AccountKeeper.SetAccount(suite.ctx, precompileAcc)
+			},
+			getGenState: func() *types.GenesisState {
+				defaultGen := types.DefaultGenesisState()
+				defaultGen.Params.EnabledPrecompiles = []string{hexAddr1}
+				return defaultGen
+			},
+			registeredModules: []precompile_modules.Module{
+				{Address: common.HexToAddress(hexAddr1)},
+			},
+			expPanic: true,
+		},
+		{
+			name: "precompile is enabled and registered with nonce and code set",
+			malleate: func() {
+				addr := common.HexToAddress(hexAddr1).Bytes()
+
+				precompileAcc := &etherminttypes.EthAccount{
+					BaseAccount: authtypes.NewBaseAccount(addr, nil, 9999, 1),
+					CodeHash:    crypto.Keccak256Hash([]byte{0x1}).Hex(),
+				}
+
+				suite.app.AccountKeeper.SetAccount(suite.ctx, precompileAcc)
+			},
+			getGenState: func() *types.GenesisState {
+				defaultGen := types.DefaultGenesisState()
+				defaultGen.Params.EnabledPrecompiles = []string{hexAddr1}
+				defaultGen.Accounts = append(defaultGen.Accounts, types.GenesisAccount{
+					Address: hexAddr1,
+					Code:    common.Bytes2Hex([]byte{0x1}),
+				})
+				return defaultGen
+			},
+			registeredModules: []precompile_modules.Module{
+				{Address: common.HexToAddress(hexAddr1)},
+			},
+			expPanic: false,
 		},
 	}
 
