@@ -53,9 +53,6 @@ schema = 3
   [mod."github.com/ChainSafe/go-schnorrkel"]
     version = "v1.0.0"
     hash = "sha256-atJ2waz124m0DVHjol8v3NfCLKidU3fYu5AgzT9xCBA="
-  [mod."github.com/DataDog/zstd"]
-    version = "v1.5.2"
-    hash = "sha256-LVkZHLG8O4CzmqyQVbGn+0r6AKIMABej8a4HKMFw/xo="
   [mod."github.com/Kava-Labs/opendb"]
     version = "v0.0.0-20240715194257-36fd81dc1423"
     hash = "sha256-80i8SeMCaWBe9/PBfaJpaAgKzG+c7GYsu9vanQHZANQ="
@@ -113,9 +110,6 @@ schema = 3
   [mod."github.com/cockroachdb/logtags"]
     version = "v0.0.0-20230118201751-21c54148d20b"
     hash = "sha256-7dQH6j1o99fuxHKkw0RhNC5wJKkvRLMDJpUiVnDx6h8="
-  [mod."github.com/cockroachdb/pebble"]
-    version = "v0.0.0-20230226194802-02d779ffbc46"
-    hash = "sha256-BYbaz4nJ6JeyiCWLye5Zvk/sI7EqXejK2hWLsZweB00="
   [mod."github.com/cockroachdb/redact"]
     version = "v1.1.5"
     hash = "sha256-0rtT7LRO0wxf9XovOK8GXRrhmx8OcbdPK/mXOKbJdog="
@@ -134,15 +128,12 @@ schema = 3
   [mod."github.com/cosmos/btcutil"]
     version = "v1.0.5"
     hash = "sha256-t572Sr5iiHcuMKLMWa2i+LBAt192oa+G1oA371tG/eI="
-  [mod."github.com/cosmos/cosmos-db"]
-    version = "v1.0.0"
-    hash = "sha256-3EL4xQsSpovTy/V3gwulybqSDHvuu7bPodBZib9JKAk="
   [mod."github.com/cosmos/cosmos-proto"]
     version = "v1.0.0-beta.4"
     hash = "sha256-5Kn82nsZfiEtuwhhLZqmMxdAY1tX/Fi3HJ0/MEaRohw="
   [mod."github.com/cosmos/cosmos-sdk"]
-    version = "v0.47.10-kava.2"
-    hash = "sha256-kIq7aJFgZpPQu9RW+QJhe9Xx5w16k/T0052GDzPmJxM="
+    version = "v0.47.10-kava.1"
+    hash = "sha256-d47IruKukpHfnDzxUpZExLhpngRgt9Gz2yi2DNuW3wc="
     replaced = "github.com/kava-labs/cosmos-sdk"
   [mod."github.com/cosmos/go-bip39"]
     version = "v1.0.0"
@@ -154,8 +145,8 @@ schema = 3
     version = "v1.4.10"
     hash = "sha256-Anm4O3bUONsN7J9Psg9E+oQasmUyoGc7UE1aaHJaehE="
   [mod."github.com/cosmos/iavl"]
-    version = "v1.0.0"
-    hash = "sha256-Zm1TfR7vBJ7zMT0whznStO42S0t6hyrwpbUnDmM3MlI="
+    version = "v0.20.1"
+    hash = "sha256-AlvJ9ufYrgTaY/C+zEs2DA2b6jqRaqDVDOwy2xtrThM="
   [mod."github.com/cosmos/ibc-go/v7"]
     version = "v7.3.1"
     hash = "sha256-5lRAQaQRscTMVKeKlsiWtLFauK/gjL9cD7gTJgUbddQ="
@@ -210,9 +201,6 @@ schema = 3
   [mod."github.com/edsrzf/mmap-go"]
     version = "v1.0.0"
     hash = "sha256-k1DYvCqO3BKNcGEve/nMW0RxzMkK2tGfXbUbycqcVSo="
-  [mod."github.com/emicklei/dot"]
-    version = "v1.4.2"
-    hash = "sha256-g9MC558WBelvkVbOZMGrPz2B4OnYwrOWWkC7OHfc8TI="
   [mod."github.com/ethereum/go-ethereum"]
     version = "v1.10.26"
     hash = "sha256-gkMEwJ4rOgn12amD4QpZ4th/10uyTTeoFmpseuKDQPs="
