@@ -225,3 +225,5 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
+
+retract v0.21.0-kava-v26.3 // incorrectly upgraded to iavl-v1
