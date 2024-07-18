@@ -29,17 +29,18 @@ type Storage []State
 
 // Validate performs a basic validation of the Storage fields.
 func (s Storage) Validate() error {
-	seenStorage := make(map[string]bool)
-	for i, state := range s {
-		if seenStorage[state.Key] {
-			return errorsmod.Wrapf(ErrInvalidState, "duplicate state key %d: %s", i, state.Key)
-		}
-
+	seenStorage := make(map[string]struct{})
+	for index, state := range s {
+		// validate state before key is accessed
 		if err := state.Validate(); err != nil {
 			return err
 		}
 
-		seenStorage[state.Key] = true
+		if _, ok := seenStorage[state.Key]; ok {
+			return errorsmod.Wrapf(ErrInvalidState, "duplicate state key index %d, key %s", index, state.Key)
+		}
+
+		seenStorage[state.Key] = struct{}{}
 	}
 	return nil
 }
@@ -62,6 +63,14 @@ func (s Storage) Copy() Storage {
 	return cpy
 }
 
+// NewState creates a new State instance
+func NewState(key, value common.Hash) State {
+	return State{
+		Key:   key.String(),
+		Value: value.String(),
+	}
+}
+
 // Validate performs a basic validation of the State fields.
 // NOTE: state value can be empty
 func (s State) Validate() error {
@@ -70,12 +79,4 @@ func (s State) Validate() error {
 	}
 
 	return nil
-}
-
-// NewState creates a new State instance
-func NewState(key, value common.Hash) State {
-	return State{
-		Key:   key.String(),
-		Value: value.String(),
-	}
 }
