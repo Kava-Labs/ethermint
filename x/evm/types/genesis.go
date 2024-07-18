@@ -21,12 +21,12 @@ import (
 	ethermint "github.com/evmos/ethermint/types"
 )
 
-// Validate performs a basic validation of a GenesisAccount fields.
-func (ga GenesisAccount) Validate() error {
-	if err := ethermint.ValidateAddress(ga.Address); err != nil {
-		return err
+// NewGenesisState creates a new genesis state.
+func NewGenesisState(params Params, accounts []GenesisAccount) *GenesisState {
+	return &GenesisState{
+		Accounts: accounts,
+		Params:   params,
 	}
-	return ga.Storage.Validate()
 }
 
 // DefaultGenesisState sets default evm genesis state with empty accounts and default params and
@@ -38,12 +38,12 @@ func DefaultGenesisState() *GenesisState {
 	}
 }
 
-// NewGenesisState creates a new genesis state.
-func NewGenesisState(params Params, accounts []GenesisAccount) *GenesisState {
-	return &GenesisState{
-		Accounts: accounts,
-		Params:   params,
+// Validate performs a basic validation of a GenesisAccount fields.
+func (ga GenesisAccount) Validate() error {
+	if err := ethermint.ValidateAddress(ga.Address); err != nil {
+		return err
 	}
+	return ga.Storage.Validate()
 }
 
 // Validate performs basic genesis state validation returning an error upon any
