@@ -56,6 +56,7 @@ func NewParams(
 	config ChainConfig,
 	extraEIPs []int64,
 	eip712AllowedMsgs []EIP712AllowedMsg,
+	enabledPrecompiles []string,
 ) Params {
 	return Params{
 		EvmDenom:            evmDenom,
@@ -65,6 +66,7 @@ func NewParams(
 		ExtraEIPs:           extraEIPs,
 		ChainConfig:         config,
 		EIP712AllowedMsgs:   eip712AllowedMsgs,
+		EnabledPrecompiles:  enabledPrecompiles,
 	}
 }
 
@@ -79,36 +81,27 @@ func DefaultParams() Params {
 		ExtraEIPs:           nil,
 		AllowUnprotectedTxs: DefaultAllowUnprotectedTxs,
 		EIP712AllowedMsgs:   nil,
+		EnabledPrecompiles:  nil,
 	}
 }
 
 // Validate performs basic validation on evm parameters.
 func (p Params) Validate() error {
-	if err := validateEVMDenom(p.EvmDenom); err != nil {
+	if err := sdk.ValidateDenom(p.EvmDenom); err != nil {
 		return err
 	}
 
-	if err := validateEIPs(p.ExtraEIPs); err != nil {
+	for _, eip := range p.ExtraEIPs {
+		if !vm.ValidEip(int(eip)) {
+			return fmt.Errorf("EIP %d is not activateable, valid EIPS are: %s", eip, vm.ActivateableEips())
+		}
+	}
+
+	if err := p.ChainConfig.Validate(); err != nil {
 		return err
 	}
 
-	if err := validateBool(p.EnableCall); err != nil {
-		return err
-	}
-
-	if err := validateBool(p.EnableCreate); err != nil {
-		return err
-	}
-
-	if err := validateBool(p.AllowUnprotectedTxs); err != nil {
-		return err
-	}
-
-	if err := validateChainConfig(p.ChainConfig); err != nil {
-		return err
-	}
-
-	if err := validateEIP712AllowedMsgs(p.EIP712AllowedMsgs); err != nil {
+	if err := checkEIP712AllowedMsgsForDuplicates(p.EIP712AllowedMsgs); err != nil {
 		return err
 	}
 
@@ -138,124 +131,56 @@ func (p Params) EIPs() []int {
 	return eips
 }
 
-func validateEVMDenom(i interface{}) error {
-	denom, ok := i.(string)
-	if !ok {
-		return fmt.Errorf("invalid parameter EVM denom type: %T", i)
-	}
+func checkEIP712AllowedMsgsForDuplicates(msgs []EIP712AllowedMsg) error {
+	seenMsgTypes := make(map[string]struct{})
 
-	return sdk.ValidateDenom(denom)
-}
-
-func validateBool(i interface{}) error {
-	_, ok := i.(bool)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
-}
-
-func validateEIPs(i interface{}) error {
-	eips, ok := i.([]int64)
-	if !ok {
-		return fmt.Errorf("invalid EIP slice type: %T", i)
-	}
-
-	for _, eip := range eips {
-		if !vm.ValidEip(int(eip)) {
-			return fmt.Errorf("EIP %d is not activateable, valid EIPS are: %s", eip, vm.ActivateableEips())
+	for _, msg := range msgs {
+		if _, ok := seenMsgTypes[msg.MsgTypeUrl]; ok {
+			return fmt.Errorf("duplicate eip712 allowed legacy msg type: %s", msg.MsgTypeUrl)
 		}
+		seenMsgTypes[msg.MsgTypeUrl] = struct{}{}
 	}
 
 	return nil
 }
 
-func validateChainConfig(i interface{}) error {
-	cfg, ok := i.(ChainConfig)
-	if !ok {
-		return fmt.Errorf("invalid chain config type: %T", i)
-	}
-
-	return cfg.Validate()
-}
-
-func validateEIP712AllowedMsgs(i interface{}) error {
-	allowedMsgs, ok := i.([]EIP712AllowedMsg)
-	if !ok {
-		return fmt.Errorf("invalid EIP712AllowedMsg slice type: %T", i)
-	}
-
-	// ensure no duplicate msg type urls
-	msgTypes := make(map[string]bool)
-	for _, allowedMsg := range allowedMsgs {
-		if _, ok := msgTypes[allowedMsg.MsgTypeUrl]; ok {
-			return fmt.Errorf("duplicate eip712 allowed legacy msg type: %s", allowedMsg.MsgTypeUrl)
-		}
-		msgTypes[allowedMsg.MsgTypeUrl] = true
-	}
-
-	return nil
-}
-
+// validateEnabledPrecompiles asserts that the enabled precompiles are valid
+// hex addresses, sorted in byte format ascending, and unique in byte format
 func validateEnabledPrecompiles(enabledPrecompiles []string) error {
-	for _, addr := range enabledPrecompiles {
-		if !common.IsHexAddress(addr) {
-			return fmt.Errorf("invalid hex address: %v in enabled precompiles list", addr)
-		}
-	}
-
 	addrs := make([]common.Address, len(enabledPrecompiles))
-	for i, precompile := range enabledPrecompiles {
-		addrs[i] = common.HexToAddress(precompile)
+
+	for index, hexAddr := range enabledPrecompiles {
+		if !common.IsHexAddress(hexAddr) {
+			return fmt.Errorf("invalid hex address: %v in enabled precompiles list", hexAddr)
+		}
+		addrs[index] = common.HexToAddress(hexAddr)
 	}
 
-	if err := validateSortingInBytesRepr(addrs); err != nil {
-		return fmt.Errorf("enabled precompiles are not sorted: %v", err)
-	}
-
-	if err := validateUniquenessInBytesRepr(addrs); err != nil {
-		return fmt.Errorf("enabled precompiles are not unique: %v", err)
-	}
-
-	return nil
-}
-
-// validateSortingInBytesRepr checks if bytes representation of addresses are sorted in ascending order
-func validateSortingInBytesRepr(addrs []common.Address) error {
-	n := len(addrs)
-
-	for i := 0; i < n-1; i++ {
+	for i := 0; i < len(addrs)-1; i++ {
 		cmp := bytes.Compare(addrs[i].Bytes(), addrs[i+1].Bytes())
+
+		// addrs[i] > addrs[i+1], not ascending order
 		if cmp == 1 {
-			return fmt.Errorf("addresses are not sorted, %v > %v", addrs[i].Hex(), addrs[i+1].Hex())
-		}
-	}
-
-	return nil
-}
-
-// validateUniquenessInBytesRepr checks if bytes representation of addresses are unique
-func validateUniquenessInBytesRepr(addrs []common.Address) error {
-	n := len(addrs)
-
-	exists := make(map[common.Address]struct{}, n)
-	for _, addr := range addrs {
-		if _, ok := exists[addr]; ok {
-			return fmt.Errorf("addr %v not unique", addr.Hex())
+			return fmt.Errorf("enabled precompiles are not sorted, %v > %v", addrs[i].Hex(), addrs[i+1].Hex())
 		}
 
-		exists[addr] = struct{}{}
+		// addrs[i] == addrs[i+1]
+		if cmp == 0 {
+			return fmt.Errorf("enabled precompiles are not unique, %v is duplicated", addrs[i].Hex())
+		}
 	}
 
 	return nil
 }
 
 // IsLondon returns if london hardfork is enabled.
+// TODO(nddeluca): does this belong in params?
 func IsLondon(ethConfig *params.ChainConfig, height int64) bool {
 	return ethConfig.IsLondon(big.NewInt(height))
 }
 
 // ValidatePrecompileRegistration checks that all enabled precompiles are registered.
+// TODO(nddeluca): does this belong in params?
 func ValidatePrecompileRegistration(registeredModules []precompile_modules.Module, enabledPrecompiles []string) error {
 	registeredAddrs := make(map[string]struct{}, len(registeredModules))
 
