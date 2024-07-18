@@ -123,35 +123,6 @@ func TestStorageValidate(t *testing.T) {
 	}
 }
 
-func TestStorageCopy(t *testing.T) {
-	testCases := []struct {
-		name    string
-		storage types.Storage
-	}{
-		{
-			"single storage",
-			types.Storage{
-				types.NewState(common.BytesToHash([]byte{1, 2, 3}), common.BytesToHash([]byte{1, 2, 3})),
-			},
-		},
-		{
-			"empty storage key value bytes",
-			types.Storage{
-				{Key: common.Hash{}.String(), Value: common.Hash{}.String()},
-			},
-		},
-		{
-			"empty storage",
-			types.Storage{},
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		require.Equal(t, tc.storage, tc.storage.Copy(), tc.name)
-	}
-}
-
 func TestStorageString(t *testing.T) {
 	storage := types.Storage{types.NewState(common.BytesToHash([]byte("key")), common.BytesToHash([]byte("value")))}
 	str := "key:\"0x00000000000000000000000000000000000000000000000000000000006b6579\" value:\"0x00000000000000000000000000000000000000000000000000000076616c7565\" \n"

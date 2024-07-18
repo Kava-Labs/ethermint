@@ -55,14 +55,6 @@ func (s Storage) String() string {
 	return str
 }
 
-// Copy returns a copy of storage.
-func (s Storage) Copy() Storage {
-	cpy := make(Storage, len(s))
-	copy(cpy, s)
-
-	return cpy
-}
-
 // NewState creates a new State instance
 func NewState(key, value common.Hash) State {
 	return State{
