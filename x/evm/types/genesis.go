@@ -49,16 +49,23 @@ func (ga GenesisAccount) Validate() error {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	seenAccounts := make(map[string]bool)
+	seenAccounts := make(map[string]struct{})
+
 	for _, acc := range gs.Accounts {
-		if seenAccounts[acc.Address] {
-			return fmt.Errorf("duplicated genesis account %s", acc.Address)
-		}
 		if err := acc.Validate(); err != nil {
 			return fmt.Errorf("invalid genesis account %s: %w", acc.Address, err)
 		}
-		seenAccounts[acc.Address] = true
+
+		if _, ok := seenAccounts[acc.Address]; ok {
+			return fmt.Errorf("duplicated genesis account %s", acc.Address)
+		}
+
+		seenAccounts[acc.Address] = struct{}{}
 	}
 
-	return gs.Params.Validate()
+	if err := gs.Params.Validate(); err != nil {
+		return fmt.Errorf("invalid params: %w", err)
+	}
+
+	return nil
 }
