@@ -233,6 +233,8 @@ github.com/Kava-Labs/opendb v0.0.0-20240711202006-a704c1f501f7 h1:6BDmJ1buHbeJom
 github.com/Kava-Labs/opendb v0.0.0-20240711202006-a704c1f501f7/go.mod h1:LbPsJiWvj90NT3Y9YV8EFPkWfvp8A15Tp88qqKa3LxA=
 github.com/Kava-Labs/opendb v0.0.0-20240715194257-36fd81dc1423 h1:DviscVBwfAEruLIzNY1XowKIETXZ1F0wMq7jijYvkME=
 github.com/Kava-Labs/opendb v0.0.0-20240715194257-36fd81dc1423/go.mod h1:LbPsJiWvj90NT3Y9YV8EFPkWfvp8A15Tp88qqKa3LxA=
+github.com/Kava-Labs/opendb v0.0.0-20240719173129-a2f11f6d7e51 h1:tMTENCeSPIJO8yCpEQbT15XYXt4EFNQUx3s334uxVts=
+github.com/Kava-Labs/opendb v0.0.0-20240719173129-a2f11f6d7e51/go.mod h1:LbPsJiWvj90NT3Y9YV8EFPkWfvp8A15Tp88qqKa3LxA=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Microsoft/go-winio v0.6.0 h1:slsWYD/zyx7lCXoZVlvQrj0hPTM1HI4+v1sIda2yDvg=
 github.com/Microsoft/go-winio v0.6.0/go.mod h1:cTAf44im0RAYeL23bpB+fzCyDH2MJiz2BO69KH/soAE=

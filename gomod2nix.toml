@@ -57,8 +57,8 @@ schema = 3
     version = "v1.5.5"
     hash = "sha256-tSw0aq0pPyroZtQYYb9lWOtPVNaQOt8skYQ4TMXGvAQ="
   [mod."github.com/Kava-Labs/opendb"]
-    version = "v0.0.0-20240715194257-36fd81dc1423"
-    hash = "sha256-80i8SeMCaWBe9/PBfaJpaAgKzG+c7GYsu9vanQHZANQ="
+    version = "v0.0.0-20240719173129-a2f11f6d7e51"
+    hash = "sha256-3pDVxrVMO3RNWOZMpmc9ffy6veUUp0KC5C/LUKxbesU="
   [mod."github.com/StackExchange/wmi"]
     version = "v0.0.0-20180116203802-5d049714c4a6"
     hash = "sha256-0yUxhZB3v3ZE3QY36zHs2cJ1S4GXptXIhyAi6sI2nOo="
