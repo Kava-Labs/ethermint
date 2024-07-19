@@ -50,6 +50,17 @@ For prerequisites and detailed build instructions please read the Evmos [Install
 make install
 ```
 
+## Testing
+
+Integration tests rely on nix-shell -- install from Nix from https://nixos.org/download/
+
+```
+make test-unit
+make test-import
+make test-rpc
+make run-integration-tests
+```
+
 Or check out the latest [release](https://github.com/evmos/ethermint/releases).
 
 ## Quick Start
