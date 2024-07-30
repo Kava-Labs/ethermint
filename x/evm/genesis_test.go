@@ -52,7 +52,7 @@ func TestInitGenesis(t *testing.T) {
 		genFixture func(*testing.T, sdk.Context, *app.EthermintApp) testFixture
 	}{
 		{
-			name: "default genesis does not panic",
+			name: "Default genesis does not panic",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				state := types.DefaultGenesisState()
 
@@ -66,7 +66,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "the chain id is set from the context",
+			name: "The chain id is set from the context",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				expectFunc := func() {
 					ctxChainID, err := ethermint.ParseChainID(ctx.ChainID())
@@ -86,7 +86,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "an invalid chain id panics",
+			name: "An invalid chain id panics",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				ctx = ctx.WithChainID("ethermint-1")
 
@@ -103,7 +103,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "parameters are set",
+			name: "Parameters are set",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				state := types.DefaultGenesisState()
 
@@ -126,7 +126,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid parameters cause a panic",
+			name: "Invalid parameters cause a panic",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				state := types.DefaultGenesisState()
 
@@ -143,7 +143,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "panics if the evm module account is not already set",
+			name: "Panics if the evm module account is not already set",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				// Init genesis checks for the module accounts address existance in
 				// the module account list of permissions (what GetModuleAddress checks).
@@ -162,7 +162,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "panics when a genesis account references an account not does not exist",
+			name: "Panics when a genesis account references an account not does not exist",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				// generate a random address that will not collide with any existing state or accounts
 				address := generateRandomAddress(t)
@@ -182,7 +182,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "panics when a genesis account references a non ethereum account",
+			name: "Panics when a genesis account references a non ethereum account",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				address := generateRandomAddress(t)
 
@@ -206,7 +206,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "panics when there is a code hash mismatch between auth and evm accounts",
+			name: "Panics when there is a code hash mismatch between auth and evm accounts",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				address := generateRandomAddress(t)
 
@@ -229,7 +229,7 @@ func TestInitGenesis(t *testing.T) {
 				}
 				tApp.AccountKeeper.SetAccount(ctx, &acc)
 
-				s := "the evm state code doesn't match with the codehash\n"
+				s := "The evm state code doesn't match with the codehash\n"
 				expectedPanic := fmt.Sprintf("%s account: %s , evm state codehash: %v, ethAccount codehash: %v, evm state code: %s\n", s, address, codeHash, incorrectCodeHash, codeHex)
 
 				return testFixture{
@@ -242,7 +242,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "does not panic when there is a code hash mismatch and matching genesis account contains no code",
+			name: "Does not panic when there is a code hash mismatch and matching genesis account contains no code",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				address := generateRandomAddress(t)
 
@@ -271,7 +271,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "panics when code is set and code hash is empty",
+			name: "Panics when code is set and code hash is empty",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				address := generateRandomAddress(t)
 
@@ -305,7 +305,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "genesis account code is stored by hash in the keeper state",
+			name: "Genesis account code is stored by hash in the keeper state",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				address := generateRandomAddress(t)
 
@@ -343,7 +343,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "genesis account storage keys are decoded and stored as bytes in keeper",
+			name: "Genesis account storage keys are decoded and stored as bytes in keeper",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				address := generateRandomAddress(t)
 
@@ -397,7 +397,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "panics when enabled precompiles are not sorted ascending",
+			name: "Panics when enabled precompiles are not sorted ascending",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				state := types.DefaultGenesisState()
 
@@ -421,7 +421,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "panics when enabled precompiles are not unique",
+			name: "Panics when enabled precompiles are not unique",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				state := types.DefaultGenesisState()
 
@@ -442,7 +442,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "panics when enabled precompiles exists but is not registered",
+			name: "Panics when enabled precompiles exists but is not registered",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				state := types.DefaultGenesisState()
 
@@ -465,7 +465,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "valid enabled precompiles are set in params",
+			name: "Valid enabled precompiles are set in params",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				state := types.DefaultGenesisState()
 
