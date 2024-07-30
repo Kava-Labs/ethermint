@@ -1,233 +1,556 @@
 package evm_test
 
 import (
-	"math/big"
+	"errors"
+	"fmt"
+	"testing"
+	"time"
 
+	"cosmossdk.io/simapp"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	precompile_modules "github.com/ethereum/go-ethereum/precompile/modules"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	etherminttypes "github.com/evmos/ethermint/types"
+	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm"
-	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
 )
 
-func (suite *EvmTestSuite) TestInitGenesis() {
-	privkey, err := ethsecp256k1.GenerateKey()
-	suite.Require().NoError(err)
-
-	address := common.HexToAddress(privkey.PubKey().Address().String())
-	hexAddr1 := "0x1000000000000000000000000000000000000000"
-	hexAddr2 := "0x2000000000000000000000000000000000000000"
-
-	var vmdb *statedb.StateDB
+// TestInitGenesis performs various tests of the x/evm InitGenesis function.
+//
+// Each test case has a name and a function to generate a test fixture.
+// The test fixture is given a complete and fresh app with context and returns
+// an updated context, a genesis state to test against, the mocked registered
+// precompiles, an expectation function, and a panic value (if expected).
+//
+// The expectFunc has a closure of the context, application state, state,
+// and registered precompiles and is called after InitGenesis.  Therefore,
+// it may use any of this information to define it's expectations and is
+// able to verify the application state.
+//
+// The expected panic value should be nil if no panic is expected, and
+// is checked by value, so it must be a string, error, or exact type given
+// to the panic.
+func TestInitGenesis(t *testing.T) {
+	type testFixture struct {
+		ctx         sdk.Context
+		state       *types.GenesisState
+		precompiles []precompile_modules.Module
+		expectFunc  func()
+		expectPanic any
+	}
 
 	testCases := []struct {
-		name              string
-		malleate          func()
-		getGenState       func() *types.GenesisState
-		registeredModules []precompile_modules.Module
-		expPanic          bool
+		name       string
+		genFixture func(*testing.T, sdk.Context, *app.EthermintApp) testFixture
 	}{
 		{
-			name:     "default",
-			malleate: func() {},
-			getGenState: func() *types.GenesisState {
-				return types.DefaultGenesisState()
-			},
-			expPanic: false,
-		},
-		{
-			name: "valid account",
-			malleate: func() {
-				vmdb.AddBalance(address, big.NewInt(1))
-			},
-			getGenState: func() *types.GenesisState {
-				return &types.GenesisState{
-					Params: types.DefaultParams(),
-					Accounts: []types.GenesisAccount{
-						{
-							Address: address.String(),
-							Storage: types.Storage{
-								{Key: common.BytesToHash([]byte("key")).String(), Value: common.BytesToHash([]byte("value")).String()},
-							},
-						},
-					},
-				}
-			},
-			expPanic: false,
-		},
-		{
-			name:     "account not found",
-			malleate: func() {},
-			getGenState: func() *types.GenesisState {
-				return &types.GenesisState{
-					Params: types.DefaultParams(),
-					Accounts: []types.GenesisAccount{
-						{
-							Address: address.String(),
-						},
-					},
-				}
-			},
-			expPanic: true,
-		},
-		{
-			name: "invalid account type",
-			malleate: func() {
-				acc := authtypes.NewBaseAccountWithAddress(address.Bytes())
-				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-			},
-			getGenState: func() *types.GenesisState {
-				return &types.GenesisState{
-					Params: types.DefaultParams(),
-					Accounts: []types.GenesisAccount{
-						{
-							Address: address.String(),
-						},
-					},
-				}
-			},
-			expPanic: true,
-		},
-		{
-			name: "invalid code hash",
-			malleate: func() {
-				acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, address.Bytes())
-				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-			},
-			getGenState: func() *types.GenesisState {
-				return &types.GenesisState{
-					Params: types.DefaultParams(),
-					Accounts: []types.GenesisAccount{
-						{
-							Address: address.String(),
-							Code:    "ffffffff",
-						},
-					},
-				}
-			},
-			expPanic: true,
-		},
-		{
-			name: "ignore empty account code checking",
-			malleate: func() {
-				acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, address.Bytes())
+			name: "default genesis does not panic",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				state := types.DefaultGenesisState()
 
-				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-			},
-			getGenState: func() *types.GenesisState {
-				return &types.GenesisState{
-					Params: types.DefaultParams(),
-					Accounts: []types.GenesisAccount{
-						{
-							Address: address.String(),
-							Code:    "",
-						},
-					},
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  func() {},
+					expectPanic: nil,
 				}
 			},
-			expPanic: false,
 		},
 		{
-			name: "ignore empty account code checking with non-empty codehash",
-			malleate: func() {
-				ethAcc := &etherminttypes.EthAccount{
-					BaseAccount: authtypes.NewBaseAccount(address.Bytes(), nil, 0, 0),
-					CodeHash:    common.BytesToHash([]byte{1, 2, 3}).Hex(),
+			name: "the chain id is set from the context",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				expectFunc := func() {
+					ctxChainID, err := ethermint.ParseChainID(ctx.ChainID())
+					require.NoError(t, err)
+
+					require.NotNil(t, tApp.EvmKeeper.ChainID(), "expected keeper chain id to be set")
+					assert.True(t, tApp.EvmKeeper.ChainID().Cmp(ctxChainID) == 0, "expected keeper chain id to match context")
 				}
 
-				suite.app.AccountKeeper.SetAccount(suite.ctx, ethAcc)
-			},
-			getGenState: func() *types.GenesisState {
-				return &types.GenesisState{
-					Params: types.DefaultParams(),
-					Accounts: []types.GenesisAccount{
-						{
-							Address: address.String(),
-							Code:    "",
-						},
-					},
+				return testFixture{
+					ctx:         ctx,
+					state:       types.DefaultGenesisState(),
+					precompiles: nil,
+					expectFunc:  expectFunc,
+					expectPanic: nil,
 				}
 			},
-			expPanic: false,
 		},
 		{
-			name:     "precompile is enabled and registered",
-			malleate: func() {},
-			getGenState: func() *types.GenesisState {
-				defaultGen := types.DefaultGenesisState()
-				defaultGen.Params.EnabledPrecompiles = []string{hexAddr1}
-				return defaultGen
+			name: "an invalid chain id panics",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				ctx = ctx.WithChainID("ethermint-1")
+
+				_, err := ethermint.ParseChainID("ethermint-1")
+				require.Error(t, err)
+
+				return testFixture{
+					ctx:         ctx,
+					state:       types.DefaultGenesisState(),
+					precompiles: nil,
+					expectFunc:  func() {},
+					expectPanic: err,
+				}
 			},
-			registeredModules: []precompile_modules.Module{
-				{Address: common.HexToAddress(hexAddr1)},
-			},
-			expPanic: false,
 		},
 		{
-			name:     "precompile is enabled, but not registered",
-			malleate: func() {},
-			getGenState: func() *types.GenesisState {
-				defaultGen := types.DefaultGenesisState()
-				defaultGen.Params.EnabledPrecompiles = []string{hexAddr1}
-				return defaultGen
+			name: "parameters are set",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				state := types.DefaultGenesisState()
+
+				// Ensure parameters change to gain confidence entire param set is stored
+				state.Params.EvmDenom = state.Params.EvmDenom + "/test"
+				state.Params.EnableCall = !state.Params.EnableCall
+				state.Params.EnableCreate = !state.Params.EnableCreate
+
+				expectFunc := func() {
+					assert.Equal(t, state.Params, tApp.EvmKeeper.GetParams(ctx), "expected stored params to match genesis params")
+				}
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  expectFunc,
+					expectPanic: nil,
+				}
 			},
-			registeredModules: nil,
-			expPanic:          true,
 		},
 		{
-			name:     "enabled precompiles are not sorted",
-			malleate: func() {},
-			getGenState: func() *types.GenesisState {
-				defaultGen := types.DefaultGenesisState()
-				defaultGen.Params.EnabledPrecompiles = []string{hexAddr2, hexAddr1}
-				return defaultGen
+			name: "invalid parameters cause a panic",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				state := types.DefaultGenesisState()
+
+				// evm denom must always be set
+				state.Params.EvmDenom = ""
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  func() {},
+					expectPanic: errors.New("error setting params invalid denom: "),
+				}
 			},
-			registeredModules: []precompile_modules.Module{
-				{Address: common.HexToAddress(hexAddr1)},
-				{Address: common.HexToAddress(hexAddr2)},
-			},
-			expPanic: true,
 		},
 		{
-			name:     "enabled precompiles are not unique",
-			malleate: func() {},
-			getGenState: func() *types.GenesisState {
-				defaultGen := types.DefaultGenesisState()
-				defaultGen.Params.EnabledPrecompiles = []string{hexAddr1, hexAddr1}
-				return defaultGen
+			name: "panics if the evm module account is not already set",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				// Init genesis checks for the module accounts address existance in
+				// the module account list of permissions (what GetModuleAddress checks).
+				//
+				// If this is not set in app.go, then we will see a panic.  Here
+				// we delete the entry to mimic the behavior of incorrect app setup.
+				delete(tApp.AccountKeeper.GetModulePermissions(), types.ModuleName)
+
+				return testFixture{
+					ctx:         ctx,
+					state:       types.DefaultGenesisState(),
+					precompiles: nil,
+					expectFunc:  func() {},
+					expectPanic: "the EVM module account has not been set",
+				}
 			},
-			registeredModules: []precompile_modules.Module{
-				{Address: common.HexToAddress(hexAddr1)},
+		},
+		{
+			name: "panics when a genesis account references an account not does not exist",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				// generate a random address that will not collide with any existing state or accounts
+				address := generateRandomAddress(t)
+
+				state := types.DefaultGenesisState()
+				state.Accounts = append(state.Accounts, types.GenesisAccount{
+					Address: address,
+				})
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  func() {},
+					expectPanic: fmt.Errorf("account not found for address %s", address),
+				}
 			},
-			expPanic: true,
+		},
+		{
+			name: "panics when a genesis account references a non ethereum account",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				address := generateRandomAddress(t)
+
+				state := types.DefaultGenesisState()
+				state.Accounts = append(state.Accounts, types.GenesisAccount{
+					Address: address,
+				})
+
+				accAddr := sdk.AccAddress(common.HexToAddress(address).Bytes())
+
+				acc := authtypes.NewBaseAccountWithAddress(accAddr)
+				tApp.AccountKeeper.SetAccount(ctx, acc)
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  func() {},
+					expectPanic: fmt.Errorf("account %s must be an EthAccount interface, got %T", address, acc),
+				}
+			},
+		},
+		{
+			name: "panics when there is a code hash mismatch between auth and evm accounts",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				address := generateRandomAddress(t)
+
+				code := []byte{0x01, 0x02, 0x03}
+				codeHash := crypto.Keccak256Hash(code)
+				codeHex := common.Bytes2Hex(code)
+
+				incorrectCodeHash := crypto.Keccak256Hash([]byte("incorrect code"))
+
+				state := types.DefaultGenesisState()
+				state.Accounts = append(state.Accounts, types.GenesisAccount{
+					Address: address,
+					Code:    codeHex,
+				})
+
+				accAddr := sdk.AccAddress(common.HexToAddress(address).Bytes())
+				acc := ethermint.EthAccount{
+					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
+					CodeHash:    incorrectCodeHash.String(),
+				}
+				tApp.AccountKeeper.SetAccount(ctx, &acc)
+
+				s := "the evm state code doesn't match with the codehash\n"
+				expectedPanic := fmt.Sprintf("%s account: %s , evm state codehash: %v, ethAccount codehash: %v, evm state code: %s\n", s, address, codeHash, incorrectCodeHash, codeHex)
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  func() {},
+					expectPanic: expectedPanic,
+				}
+			},
+		},
+		{
+			name: "does not panic when there is a code hash mismatch and matching genesis account contains no code",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				address := generateRandomAddress(t)
+
+				someCodeHash := crypto.Keccak256Hash([]byte("an outdated codehash from a delete error"))
+
+				state := types.DefaultGenesisState()
+				state.Accounts = append(state.Accounts, types.GenesisAccount{
+					Address: address,
+					Code:    "", // this does not panic
+				})
+
+				accAddr := sdk.AccAddress(common.HexToAddress(address).Bytes())
+				acc := ethermint.EthAccount{
+					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
+					CodeHash:    someCodeHash.String(),
+				}
+				tApp.AccountKeeper.SetAccount(ctx, &acc)
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  func() {},
+					expectPanic: nil,
+				}
+			},
+		},
+		{
+			name: "panics when code is set and code hash is empty",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				address := generateRandomAddress(t)
+
+				code := []byte{0x01, 0x02, 0x03}
+				codeHash := crypto.Keccak256Hash(code)
+				codeHex := common.Bytes2Hex(code)
+
+				state := types.DefaultGenesisState()
+				state.Accounts = append(state.Accounts, types.GenesisAccount{
+					Address: address,
+					Code:    codeHex,
+				})
+
+				accAddr := sdk.AccAddress(common.HexToAddress(address).Bytes())
+				acc := ethermint.EthAccount{
+					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
+					CodeHash:    "", // we do not allow empty code hash when code is set
+				}
+				tApp.AccountKeeper.SetAccount(ctx, &acc)
+
+				s := "the evm state code doesn't match with the codehash\n"
+				expectedPanic := fmt.Sprintf("%s account: %s , evm state codehash: %v, ethAccount codehash: %v, evm state code: %s\n", s, address, codeHash, acc.GetCodeHash(), codeHex)
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  func() {},
+					expectPanic: expectedPanic,
+				}
+			},
+		},
+		{
+			name: "genesis account code is stored by hash in the keeper state",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				address := generateRandomAddress(t)
+
+				code := []byte{0x01, 0x02, 0x03}
+				codeHash := crypto.Keccak256Hash(code)
+				codeHex := common.Bytes2Hex(code)
+
+				state := types.DefaultGenesisState()
+				state.Accounts = append(state.Accounts, types.GenesisAccount{
+					Address: address,
+					Code:    codeHex,
+				})
+
+				accAddr := sdk.AccAddress(common.HexToAddress(address).Bytes())
+				acc := ethermint.EthAccount{
+					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
+					CodeHash:    codeHash.String(),
+				}
+				tApp.AccountKeeper.SetAccount(ctx, &acc)
+
+				expectFunc := func() {
+					storedCode := tApp.EvmKeeper.GetCode(ctx, codeHash)
+
+					require.NotNil(t, storedCode, "expected code to be stored by hash in keeper")
+					require.Equal(t, code, storedCode, "expected stored code to match hex decoded code in genesis account")
+				}
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  expectFunc,
+					expectPanic: nil,
+				}
+			},
+		},
+		{
+			name: "genesis account storage keys are decoded and stored as bytes in keeper",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				address := generateRandomAddress(t)
+
+				code := []byte{0x01, 0x02, 0x03}
+				codeHash := crypto.Keccak256Hash(code)
+				codeHex := common.Bytes2Hex(code)
+
+				rawStorage := [][2][]byte{
+					{common.BytesToHash([]byte{0x01}).Bytes(), common.BytesToHash([]byte{0x02}).Bytes()},
+					{common.BytesToHash([]byte{0x03}).Bytes(), common.BytesToHash([]byte{0x04}).Bytes()},
+					{common.BytesToHash([]byte{0x04}).Bytes(), common.BytesToHash([]byte{0x05}).Bytes()},
+				}
+
+				storage := []types.State{}
+				for _, rs := range rawStorage {
+					storage = append(storage, types.State{
+						Key:   common.Bytes2Hex(rs[0]),
+						Value: common.Bytes2Hex(rs[1]),
+					})
+				}
+
+				state := types.DefaultGenesisState()
+				state.Accounts = append(state.Accounts, types.GenesisAccount{
+					Address: address,
+					Code:    codeHex,
+					Storage: storage,
+				})
+
+				evmAddr := common.HexToAddress(address)
+				accAddr := sdk.AccAddress(evmAddr.Bytes())
+				acc := ethermint.EthAccount{
+					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
+					CodeHash:    codeHash.String(),
+				}
+				tApp.AccountKeeper.SetAccount(ctx, &acc)
+
+				expectFunc := func() {
+					for _, rs := range rawStorage {
+						expectedValue := tApp.EvmKeeper.GetState(ctx, evmAddr, common.BytesToHash(rs[0]))
+						assert.Equalf(t, common.BytesToHash(rs[1]), expectedValue, "expected value at account %s and key %s to match expected value", evmAddr, common.Bytes2Hex(rs[0]))
+					}
+				}
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  expectFunc,
+					expectPanic: nil,
+				}
+			},
+		},
+		{
+			name: "panics when enabled precompiles are not sorted ascending",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				state := types.DefaultGenesisState()
+
+				addr1 := common.BytesToAddress([]byte{0x02})
+				addr2 := common.BytesToAddress([]byte{0x01})
+
+				state.Params.EnabledPrecompiles = []string{addr1.String(), addr2.String()}
+
+				registeredPrecompiles := []precompile_modules.Module{
+					{Address: addr1},
+					{Address: addr2},
+				}
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: registeredPrecompiles,
+					expectFunc:  func() {},
+					expectPanic: fmt.Errorf("error setting params enabled precompiles are not sorted, %s > %s", addr1.String(), addr2.String()),
+				}
+			},
+		},
+		{
+			name: "panics when enabled precompiles are not unique",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				state := types.DefaultGenesisState()
+
+				addr1 := common.BytesToAddress([]byte{0x01})
+				state.Params.EnabledPrecompiles = []string{addr1.String(), addr1.String()}
+
+				registeredPrecompiles := []precompile_modules.Module{
+					{Address: addr1},
+				}
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: registeredPrecompiles,
+					expectFunc:  func() {},
+					expectPanic: fmt.Errorf("error setting params enabled precompiles are not unique, %s is duplicated", addr1.String()),
+				}
+			},
+		},
+		{
+			name: "panics when enabled precompiles exists but is not registered",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				state := types.DefaultGenesisState()
+
+				addr1 := common.BytesToAddress([]byte{0x01})
+				addr2 := common.BytesToAddress([]byte{0x02})
+
+				state.Params.EnabledPrecompiles = []string{addr1.String(), addr2.String()}
+
+				registeredPrecompiles := []precompile_modules.Module{
+					{Address: addr1},
+				}
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: registeredPrecompiles,
+					expectFunc:  func() {},
+					expectPanic: fmt.Errorf("precompile %s is enabled but not registered", addr2.String()),
+				}
+			},
+		},
+		{
+			name: "valid enabled precompiles are set in params",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				state := types.DefaultGenesisState()
+
+				addr1 := common.BytesToAddress([]byte{0x01})
+				addr2 := common.BytesToAddress([]byte{0x02})
+
+				state.Params.EnabledPrecompiles = []string{addr1.String(), addr2.String()}
+
+				registeredPrecompiles := []precompile_modules.Module{
+					{Address: addr1},
+					{Address: addr2},
+				}
+
+				expectFunc := func() {
+					assert.Equal(t,
+						state.Params.EnabledPrecompiles,
+						tApp.EvmKeeper.GetParams(ctx).EnabledPrecompiles,
+						"expected enabled precompiles to be set in state",
+					)
+				}
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: registeredPrecompiles,
+					expectFunc:  expectFunc,
+					expectPanic: nil,
+				}
+			},
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(tc.name, func() {
-			suite.SetupTest() // reset values
-			vmdb = suite.StateDB()
+		// For each test case, create a sdk context and app for each test, run init genesis, check panics,
+		// then run any expectations included in the test case.
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a context with test app to instantiate keepers to pass to init genesis.
+			ctx, tApp := setupApp()
 
-			tc.malleate()
-			vmdb.Commit()
+			// Get the genesis state to import, the registered precompiled to validate against,
+			// and the function that will make assertions about the state after init genesis has run.
+			tf := tc.genFixture(t, ctx, tApp)
 
-			if tc.expPanic {
-				suite.Require().Panics(
-					func() {
-						_ = evm.InitGenesis(suite.ctx, suite.app.EvmKeeper, suite.app.AccountKeeper, *tc.getGenState(), tc.registeredModules)
-					},
-				)
-			} else {
-				suite.Require().NotPanics(
-					func() {
-						_ = evm.InitGenesis(suite.ctx, suite.app.EvmKeeper, suite.app.AccountKeeper, *tc.getGenState(), tc.registeredModules)
-					},
-				)
+			// Perform init genesis and validate we never provide validator updates
+			testFunc := func() {
+				validatorUpdates := evm.InitGenesis(tf.ctx, tApp.EvmKeeper, tApp.AccountKeeper, *tf.state, tf.precompiles)
+				require.Equal(t, 0, len(validatorUpdates), "expected no validator updates in all init genesis scenarios")
 			}
+
+			// Check panic or no panic -- these are required expectations.
+			if tf.expectPanic == nil {
+				require.NotPanics(t, testFunc, "expected init genesis to not panic")
+			} else {
+				// It's important here to test full panic assertions to ensure that our test is
+				// raising a panic for the correct account address, code hash, etc.
+				switch expectedPanicValue := tf.expectPanic.(type) {
+				case error:
+					require.PanicsWithError(t, expectedPanicValue.Error(), testFunc, "expected init genesis to panic with correct error")
+				default:
+					require.PanicsWithValue(t, expectedPanicValue, testFunc, "expected init genesis to panic with correct value")
+				}
+			}
+
+			// Run test specific assertions
+			tf.expectFunc()
 		})
 	}
+}
+
+// setupApp creates a app and context with an in-memory database for testing
+func setupApp() (sdk.Context, *app.EthermintApp) {
+	isCheckTx := false
+
+	tApp := app.Setup(isCheckTx, func(_ *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
+		return genesis
+	})
+	ctx := tApp.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: 1, Time: time.Now().UTC(), ChainID: "ethermint_9000-1"})
+
+	return ctx, tApp
+}
+
+// generateRandomAddress generates a cryptographically secure random 0x address
+func generateRandomAddress(t *testing.T) string {
+	privkey, err := ethsecp256k1.GenerateKey()
+	require.NoError(t, err)
+
+	return common.BytesToAddress(privkey.PubKey().Address()).String()
 }

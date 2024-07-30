@@ -25,12 +25,29 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	precompile_modules "github.com/ethereum/go-ethereum/precompile/modules"
+
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/evmos/ethermint/x/evm/types"
 )
 
-// InitGenesis initializes genesis state based on exported genesis
+// InitGenesis initializes genesis state based on the provided genesis state which
+// is either for a new chain, or from an exported existing chain.
+//
+// The context is used to provide context to keeper function calls and to load
+// the EVM Chain ID, which is required by EIP-155.
+//
+// The EVM Keeper is used to normalize and store the provided data or genesis state.
+//
+// The Account Keeper is used to check corresponding accounts exist for the module
+// and EVM genesis accounts.
+//
+// The registered precompiles list is used to ensure that any param enabled precompiles
+// exist and are included in the binary.
+//
+// Since the data provided is assumed to have already passed basic validations,
+// we only directly check stateful validations and assumptions of external state
+// from the Account Keeper and registered precompile list.
 func InitGenesis(
 	ctx sdk.Context,
 	k *keeper.Keeper,
@@ -40,6 +57,8 @@ func InitGenesis(
 ) []abci.ValidatorUpdate {
 	k.WithChainID(ctx)
 
+	// For an enabled precompile to be valid,
+	// it must exist in the binary and be registered
 	err := types.ValidatePrecompileRegistration(
 		registeredModules,
 		data.Params.GetEnabledPrecompiles(),
@@ -61,6 +80,7 @@ func InitGenesis(
 	for _, account := range data.Accounts {
 		address := common.HexToAddress(account.Address)
 		accAddress := sdk.AccAddress(address.Bytes())
+
 		// check that the EVM balance the matches the account balance
 		acc := accountKeeper.GetAccount(ctx, accAddress)
 		if acc == nil {
