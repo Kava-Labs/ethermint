@@ -60,7 +60,7 @@ func TestInitGenesis(t *testing.T) {
 					ctx:         ctx,
 					state:       state,
 					precompiles: nil,
-					expectFunc:  func() {},
+					expectFunc:  nil,
 					expectPanic: nil,
 				}
 			},
@@ -97,7 +97,7 @@ func TestInitGenesis(t *testing.T) {
 					ctx:         ctx,
 					state:       types.DefaultGenesisState(),
 					precompiles: nil,
-					expectFunc:  func() {},
+					expectFunc:  nil,
 					expectPanic: err,
 				}
 			},
@@ -137,7 +137,7 @@ func TestInitGenesis(t *testing.T) {
 					ctx:         ctx,
 					state:       state,
 					precompiles: nil,
-					expectFunc:  func() {},
+					expectFunc:  nil,
 					expectPanic: errors.New("error setting params invalid denom: "),
 				}
 			},
@@ -156,7 +156,7 @@ func TestInitGenesis(t *testing.T) {
 					ctx:         ctx,
 					state:       types.DefaultGenesisState(),
 					precompiles: nil,
-					expectFunc:  func() {},
+					expectFunc:  nil,
 					expectPanic: "the EVM module account has not been set",
 				}
 			},
@@ -176,7 +176,7 @@ func TestInitGenesis(t *testing.T) {
 					ctx:         ctx,
 					state:       state,
 					precompiles: nil,
-					expectFunc:  func() {},
+					expectFunc:  nil,
 					expectPanic: fmt.Errorf("account not found for address %s", address),
 				}
 			},
@@ -200,7 +200,7 @@ func TestInitGenesis(t *testing.T) {
 					ctx:         ctx,
 					state:       state,
 					precompiles: nil,
-					expectFunc:  func() {},
+					expectFunc:  nil,
 					expectPanic: fmt.Errorf("account %s must be an EthAccount interface, got %T", address, acc),
 				}
 			},
@@ -236,7 +236,7 @@ func TestInitGenesis(t *testing.T) {
 					ctx:         ctx,
 					state:       state,
 					precompiles: nil,
-					expectFunc:  func() {},
+					expectFunc:  nil,
 					expectPanic: expectedPanic,
 				}
 			},
@@ -265,7 +265,7 @@ func TestInitGenesis(t *testing.T) {
 					ctx:         ctx,
 					state:       state,
 					precompiles: nil,
-					expectFunc:  func() {},
+					expectFunc:  nil,
 					expectPanic: nil,
 				}
 			},
@@ -299,7 +299,7 @@ func TestInitGenesis(t *testing.T) {
 					ctx:         ctx,
 					state:       state,
 					precompiles: nil,
-					expectFunc:  func() {},
+					expectFunc:  nil,
 					expectPanic: expectedPanic,
 				}
 			},
@@ -530,7 +530,9 @@ func TestInitGenesis(t *testing.T) {
 			}
 
 			// Run test specific assertions
-			tf.expectFunc()
+			if tf.expectFunc != nil {
+				tf.expectFunc()
+			}
 		})
 	}
 }
