@@ -229,7 +229,7 @@ func TestInitGenesis(t *testing.T) {
 				}
 				tApp.AccountKeeper.SetAccount(ctx, &acc)
 
-				s := "The evm state code doesn't match with the codehash\n"
+				s := "the evm state code doesn't match with the codehash\n"
 				expectedPanic := fmt.Sprintf("%s account: %s , evm state codehash: %v, ethAccount codehash: %v, evm state code: %s\n", s, address, codeHash, incorrectCodeHash, codeHex)
 
 				return testFixture{
