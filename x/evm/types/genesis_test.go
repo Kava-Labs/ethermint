@@ -23,14 +23,14 @@ func TestGenesisAccountValidate(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			name: "default is valid",
+			name: "Default is valid",
 			getAccount: func() types.GenesisAccount {
 				return defaultGenesisAccount()
 			},
 			expectedErr: "",
 		},
 		{
-			name: "invalid empty address",
+			name: "Invalid empty address",
 			getAccount: func() types.GenesisAccount {
 				account := defaultGenesisAccount()
 
@@ -41,7 +41,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 			expectedErr: "invalid address",
 		},
 		{
-			name: "invalid address length",
+			name: "Invalid address length",
 			getAccount: func() types.GenesisAccount {
 				account := defaultGenesisAccount()
 
@@ -52,7 +52,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 			expectedErr: "invalid address",
 		},
 		{
-			name: "invalid empty storage key",
+			name: "Invalid empty storage key",
 			getAccount: func() types.GenesisAccount {
 				account := defaultGenesisAccount()
 
@@ -65,7 +65,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 			expectedErr: "state key hash cannot be blank",
 		},
 		{
-			name: "valid with set storage state",
+			name: "Valid with set storage state",
 			getAccount: func() types.GenesisAccount {
 				account := defaultGenesisAccount()
 
@@ -79,7 +79,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 			expectedErr: "",
 		},
 		{
-			name: "invalid with empty code",
+			name: "Invalid with empty code",
 			getAccount: func() types.GenesisAccount {
 				account := defaultGenesisAccount()
 
