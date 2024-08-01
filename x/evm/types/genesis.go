@@ -21,7 +21,8 @@ import (
 	ethermint "github.com/evmos/ethermint/types"
 )
 
-// NewGenesisState creates a new genesis state.
+// NewGenesisState creates a new genesis state with EVM configuration parameters
+// and initial contract accounts.
 func NewGenesisState(params Params, accounts []GenesisAccount) *GenesisState {
 	return &GenesisState{
 		Accounts: accounts,
@@ -29,8 +30,8 @@ func NewGenesisState(params Params, accounts []GenesisAccount) *GenesisState {
 	}
 }
 
-// DefaultGenesisState sets default evm genesis state with empty accounts and default params and
-// chain config values.
+// DefaultGenesisState sets default evm genesis state with default parameters and
+// no initial genesis accounts.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		Accounts: []GenesisAccount{},
@@ -39,15 +40,23 @@ func DefaultGenesisState() *GenesisState {
 }
 
 // Validate performs a basic validation of a GenesisAccount fields.
+// A valid genesis account has a valid address, non-empty code, and
+// valid storage.
 func (ga GenesisAccount) Validate() error {
 	if err := ethermint.ValidateAddress(ga.Address); err != nil {
 		return err
 	}
+
+	if ga.Code == "" {
+		return fmt.Errorf("code can not be empty")
+	}
+
 	return ga.Storage.Validate()
 }
 
 // Validate performs basic genesis state validation returning an error upon any
-// failure.
+// failure. It ensures the params are valid and every genesis account is unique
+// and valid.
 func (gs GenesisState) Validate() error {
 	seenAccounts := make(map[string]struct{})
 

@@ -79,7 +79,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 			expectedErr: "",
 		},
 		{
-			name: "valid with empty code",
+			name: "invalid with empty code",
 			getAccount: func() types.GenesisAccount {
 				account := defaultGenesisAccount()
 
@@ -87,7 +87,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 
 				return account
 			},
-			expectedErr: "",
+			expectedErr: "code can not be empty",
 		},
 	}
 
@@ -201,6 +201,20 @@ func TestGenesisStateValidate(t *testing.T) {
 				return state
 			},
 			expectedErr: "invalid address",
+		},
+		{
+			name: "genesis is invalid with empty code",
+			getState: func() *types.GenesisState {
+				state := types.DefaultGenesisState()
+
+				account := defaultGenesisAccount()
+				account.Code = ""
+
+				state.Accounts = append(state.Accounts, account)
+
+				return state
+			},
+			expectedErr: "code can not be empty",
 		},
 		{
 			name: "genesis is invalid with an invalid genesis account storage key",
