@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/simapp"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -194,6 +195,7 @@ func TestInitGenesis(t *testing.T) {
 				accAddr := sdk.AccAddress(common.HexToAddress(address).Bytes())
 
 				acc := authtypes.NewBaseAccountWithAddress(accAddr)
+				acc.Sequence = uint64(1)
 				tApp.AccountKeeper.SetAccount(ctx, acc)
 
 				return testFixture{
@@ -227,6 +229,7 @@ func TestInitGenesis(t *testing.T) {
 					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
 					CodeHash:    incorrectCodeHash.String(),
 				}
+				acc.Sequence = uint64(1)
 				tApp.AccountKeeper.SetAccount(ctx, &acc)
 
 				s := "the evm state code doesn't match with the codehash\n"
@@ -259,6 +262,7 @@ func TestInitGenesis(t *testing.T) {
 					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
 					CodeHash:    someCodeHash.String(),
 				}
+				acc.Sequence = uint64(1)
 				tApp.AccountKeeper.SetAccount(ctx, &acc)
 
 				s := "the evm state code doesn't match with the codehash\n"
@@ -293,6 +297,7 @@ func TestInitGenesis(t *testing.T) {
 					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
 					CodeHash:    "", // we do not allow empty code hash when code is set
 				}
+				acc.Sequence = uint64(1)
 				tApp.AccountKeeper.SetAccount(ctx, &acc)
 
 				s := "the evm state code doesn't match with the codehash\n"
@@ -327,6 +332,7 @@ func TestInitGenesis(t *testing.T) {
 					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
 					CodeHash:    codeHash.String(),
 				}
+				acc.Sequence = uint64(1)
 				tApp.AccountKeeper.SetAccount(ctx, &acc)
 
 				expectFunc := func() {
@@ -381,6 +387,7 @@ func TestInitGenesis(t *testing.T) {
 					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
 					CodeHash:    codeHash.String(),
 				}
+				acc.Sequence = uint64(1)
 				tApp.AccountKeeper.SetAccount(ctx, &acc)
 
 				expectFunc := func() {
@@ -482,6 +489,36 @@ func TestInitGenesis(t *testing.T) {
 					{Address: addr2},
 				}
 
+				code := []byte{0x01}
+				codeHash := crypto.Keccak256Hash(code)
+				codeHex := common.Bytes2Hex(code)
+				state.Accounts = append(state.Accounts,
+					types.GenesisAccount{
+						Address: addr1.String(),
+						Code:    codeHex,
+					},
+					types.GenesisAccount{
+						Address: addr2.String(),
+						Code:    codeHex,
+					},
+				)
+
+				accAddr1 := sdk.AccAddress(addr1.Bytes())
+				acc1 := ethermint.EthAccount{
+					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr1),
+					CodeHash:    codeHash.String(),
+				}
+				acc1.Sequence = uint64(1)
+				tApp.AccountKeeper.SetAccount(ctx, &acc1)
+
+				accAddr2 := sdk.AccAddress(addr2.Bytes())
+				acc2 := ethermint.EthAccount{
+					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr2),
+					CodeHash:    codeHash.String(),
+				}
+				acc2.Sequence = uint64(1)
+				tApp.AccountKeeper.SetAccount(ctx, &acc2)
+
 				expectFunc := func() {
 					assert.Equal(t,
 						state.Params.EnabledPrecompiles,
@@ -496,6 +533,142 @@ func TestInitGenesis(t *testing.T) {
 					precompiles: registeredPrecompiles,
 					expectFunc:  expectFunc,
 					expectPanic: nil,
+				}
+			},
+		},
+		{
+			name: "Panics when genesis account has a nonce equal to zero",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				address := generateRandomAddress(t)
+
+				code := []byte{0x01, 0x02, 0x03}
+				codeHash := crypto.Keccak256Hash(code)
+				codeHex := common.Bytes2Hex(code)
+
+				state := types.DefaultGenesisState()
+				state.Accounts = append(state.Accounts, types.GenesisAccount{
+					Address: address,
+					Code:    codeHex,
+				})
+
+				accAddr := sdk.AccAddress(common.HexToAddress(address).Bytes())
+				acc := ethermint.EthAccount{
+					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
+					CodeHash:    codeHash.String(),
+				}
+				acc.Sequence = uint64(0) // Not allowed for contracts
+				tApp.AccountKeeper.SetAccount(ctx, &acc)
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  nil,
+					expectPanic: fmt.Errorf("account %s must have a positive nonce", address),
+				}
+			},
+		},
+		{
+			name: "Allows a genesis account with a nonce greater than 1",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				address := generateRandomAddress(t)
+
+				code := []byte{0x01, 0x02, 0x03}
+				codeHash := crypto.Keccak256Hash(code)
+				codeHex := common.Bytes2Hex(code)
+
+				state := types.DefaultGenesisState()
+				state.Accounts = append(state.Accounts, types.GenesisAccount{
+					Address: address,
+					Code:    codeHex,
+				})
+
+				accAddr := sdk.AccAddress(common.HexToAddress(address).Bytes())
+				acc := ethermint.EthAccount{
+					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
+					CodeHash:    codeHash.String(),
+				}
+				acc.Sequence = uint64(1000)
+				tApp.AccountKeeper.SetAccount(ctx, &acc)
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  nil,
+					expectPanic: nil,
+				}
+			},
+		},
+		{
+			name: "Panics when genesis account has a public key set",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				privkey, err := ethsecp256k1.GenerateKey()
+				require.NoError(t, err)
+				address := common.BytesToAddress(privkey.PubKey().Address()).String()
+
+				code := []byte{0x01, 0x02, 0x03}
+				codeHash := crypto.Keccak256Hash(code)
+				codeHex := common.Bytes2Hex(code)
+
+				state := types.DefaultGenesisState()
+				state.Accounts = append(state.Accounts, types.GenesisAccount{
+					Address: address,
+					Code:    codeHex,
+				})
+
+				accAddr := sdk.AccAddress(common.HexToAddress(address).Bytes())
+				acc := ethermint.EthAccount{
+					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
+					CodeHash:    codeHash.String(),
+				}
+				acc.Sequence = uint64(1)
+				pubkey, err := codectypes.NewAnyWithValue(privkey.PubKey())
+				require.NoError(t, err)
+				acc.PubKey = pubkey
+				tApp.AccountKeeper.SetAccount(ctx, &acc)
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: nil,
+					expectFunc:  nil,
+					expectPanic: fmt.Errorf("account %s must not have a public key set", address),
+				}
+			},
+		},
+		{
+			name: "Panics when enabled precompile does not have a genesis account with code 0x01",
+			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
+				address := generateRandomAddress(t)
+
+				code := []byte{0x02}
+				codeHash := crypto.Keccak256Hash(code)
+				codeHex := common.Bytes2Hex(code)
+
+				state := types.DefaultGenesisState()
+				state.Params.EnabledPrecompiles = []string{address}
+				state.Accounts = append(state.Accounts, types.GenesisAccount{
+					Address: address,
+					Code:    codeHex,
+				})
+
+				accAddr := sdk.AccAddress(common.HexToAddress(address).Bytes())
+				acc := ethermint.EthAccount{
+					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
+					CodeHash:    codeHash.String(),
+				}
+				acc.Sequence = uint64(1)
+				tApp.AccountKeeper.SetAccount(ctx, &acc)
+
+				registeredPrecompiles := []precompile_modules.Module{{Address: common.HexToAddress(address)}}
+
+				return testFixture{
+					ctx:         ctx,
+					state:       state,
+					precompiles: registeredPrecompiles,
+					expectFunc:  nil,
+					expectPanic: fmt.Errorf("enabled precompile %s must have code set to 0x01, got 0x%s", address, codeHex),
 				}
 			},
 		},

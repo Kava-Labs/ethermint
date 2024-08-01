@@ -77,6 +77,11 @@ func InitGenesis(
 		panic("the EVM module account has not been set")
 	}
 
+	isEnabledPrecompile := make(map[string]struct{})
+	for _, ep := range data.Params.EnabledPrecompiles {
+		isEnabledPrecompile[ep] = struct{}{}
+	}
+
 	for _, account := range data.Accounts {
 		address := common.HexToAddress(account.Address)
 		accAddress := sdk.AccAddress(address.Bytes())
@@ -95,8 +100,21 @@ func InitGenesis(
 				),
 			)
 		}
+
+		if ethAcct.GetSequence() == 0 {
+			panic(fmt.Errorf("account %s must have a positive nonce", account.Address))
+		}
+
+		if ethAcct.GetPubKey() != nil {
+			panic(fmt.Errorf("account %s must not have a public key set", account.Address))
+		}
+
 		code := common.Hex2Bytes(account.Code)
 		codeHash := crypto.Keccak256Hash(code)
+
+		if _, ok := isEnabledPrecompile[account.Address]; ok && !bytes.Equal(code, []byte{0x01}) {
+			panic(fmt.Errorf("enabled precompile %s must have code set to 0x01, got 0x%s", account.Address, account.Code))
+		}
 
 		if !bytes.Equal(ethAcct.GetCodeHash().Bytes(), codeHash.Bytes()) {
 			s := "the evm state code doesn't match with the codehash\n"

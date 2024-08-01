@@ -309,6 +309,18 @@ func TestGenesisStateValidate(t *testing.T) {
 			},
 			expectedErr: "invalid hex address",
 		},
+		{
+			name: "genesis is invalid if enabled precompile does not have a matching genesis account",
+			getState: func() *types.GenesisState {
+				state := types.DefaultGenesisState()
+
+				account := defaultGenesisAccount()
+				state.Params.EnabledPrecompiles = append(state.Params.EnabledPrecompiles, account.Address)
+
+				return state
+			},
+			expectedErr: "must have a matching genesis account",
+		},
 	}
 
 	for _, tc := range testCases {
