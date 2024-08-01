@@ -242,7 +242,7 @@ func TestInitGenesis(t *testing.T) {
 			},
 		},
 		{
-			name: "Does not panic when there is a code hash mismatch and matching genesis account contains no code",
+			name: "Panics when there is a code hash mismatch and matching genesis account contains no code",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				address := generateRandomAddress(t)
 
@@ -261,12 +261,15 @@ func TestInitGenesis(t *testing.T) {
 				}
 				tApp.AccountKeeper.SetAccount(ctx, &acc)
 
+				s := "the evm state code doesn't match with the codehash\n"
+				expectedPanic := fmt.Sprintf("%s account: %s , evm state codehash: %v, ethAccount codehash: %v, evm state code: %s\n", s, address, common.BytesToHash(types.EmptyCodeHash), acc.GetCodeHash(), "")
+
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
 					precompiles: nil,
 					expectFunc:  nil,
-					expectPanic: nil,
+					expectPanic: expectedPanic,
 				}
 			},
 		},
