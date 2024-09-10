@@ -7,6 +7,13 @@ on:
   push:
     branches:
       - main
+permissions:
+  # Required: allow read access to the content for analysis.
+  contents: read
+  # Optional: allow read access to pull request. Use with `only-new-issues` option.
+  pull-requests: read
+  # Optional: allow write access to checks to allow the action to annotate code in the PR.
+  checks: write
 jobs:
   golangci:
     name: Run golangci-lint
@@ -19,7 +26,6 @@ jobs:
           go-version: '1.21'
           check-latest: true
       - uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
             **/**.go
@@ -27,8 +33,10 @@ jobs:
             go.sum
       - uses: golangci/golangci-lint-action@v3.3.1
         with:
-          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: latest
+          # Required: the version of golangci-lint is required and must be
+          # specified without patch version: Newer versions are currently not
+          # passing.
+          version: v1.59
           args: --timeout 10m
           github-token: ${{ secrets.github_token }}
         # Check only if there are differences in the source code
