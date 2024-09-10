@@ -44,14 +44,6 @@ func getRootTypes() apitypes.Types {
 				Name: "chainId",
 				Type: "uint256",
 			},
-			{
-				Name: "verifyingContract",
-				Type: "address",
-			},
-			{
-				Name: "salt",
-				Type: "string",
-			},
 		},
 		"Tx": {
 			{Name: "account_number", Type: "string"},
