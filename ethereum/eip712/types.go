@@ -7,11 +7,25 @@ import (
 
 func getTypedDataDomain(chainID uint64) apitypes.TypedDataDomain {
 	return apitypes.TypedDataDomain{
-		Name:              "Kava Cosmos",
-		Version:           "1.0.0",
-		ChainId:           math.NewHexOrDecimal256(int64(chainID)),
-		VerifyingContract: "kavaCosmos",
-		Salt:              "0",
+		Name:    "Kava Cosmos",
+		Version: "1.0.0",
+		ChainId: math.NewHexOrDecimal256(int64(chainID)),
+
+		// Fields below are not used signature verification so they are
+		// explicitly set empty to exclude them from the hash to be signed.
+
+		// Salt in most cases is not used, other chains sometimes set the
+		// chainID as the salt instead of using the chainId field and not
+		// together.
+		// Discussion on salt usage:
+		// https://github.com/OpenZeppelin/openzeppelin-contracts/issues/4318
+		Salt: "",
+
+		// VerifyingContract is empty as there is no contract that is verifying
+		// the signature. Signature verification is done in the ante handler.
+		// Smart contracts that handle EIP712 signatures will include their own
+		// address in the domain separator.
+		VerifyingContract: "",
 	}
 }
 
@@ -29,14 +43,6 @@ func getRootTypes() apitypes.Types {
 			{
 				Name: "chainId",
 				Type: "uint256",
-			},
-			{
-				Name: "verifyingContract",
-				Type: "string",
-			},
-			{
-				Name: "salt",
-				Type: "string",
 			},
 		},
 		"Tx": {
