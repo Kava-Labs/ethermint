@@ -17,8 +17,10 @@ package server
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/cometbft/cometbft/libs/service"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cometbft/cometbft/types"
@@ -54,6 +56,14 @@ func NewEVMIndexerService(
 // and indexing them by events.
 func (eis *EVMIndexerService) OnStart() error {
 	ctx := context.Background()
+
+	// when kava in state-sync mode, it returns zero as latest_block_height, which leads to undesired behavior, more
+	// details here: https://kava-labs.atlassian.net/wiki/spaces/ENG/pages/1623687169/EVM-Indexer+State+Sync+Issue
+	// to prevent this we wait until state-sync will finish
+	if err := waitUntilClientReady(ctx, eis.client, backoff.NewConstantBackOff(time.Second)); err != nil {
+		return err
+	}
+
 	status, err := eis.client.Status(ctx)
 	if err != nil {
 		return err
@@ -121,4 +131,25 @@ func (eis *EVMIndexerService) OnStart() error {
 			lastBlock = blockResult.Height
 		}
 	}
+}
+
+// waitUntilClientReady waits until StatusClient is ready to serve requests
+func waitUntilClientReady(ctx context.Context, client rpcclient.StatusClient, b backoff.BackOff) error {
+	err := backoff.Retry(func() error {
+		status, err := client.Status(ctx)
+		if err != nil {
+			return err
+		}
+
+		if status.SyncInfo.LatestBlockHeight == 0 {
+			return errors.New("node isn't ready, possibly in state sync process")
+		}
+
+		return nil
+	}, b)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
