@@ -24,7 +24,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	precompile_modules "github.com/ethereum/go-ethereum/precompile/modules"
 
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/keeper"
@@ -42,32 +41,20 @@ import (
 // The Account Keeper is used to check corresponding accounts exist for the module
 // and EVM genesis accounts.
 //
-// The registered precompiles list is used to ensure that any param enabled precompiles
-// exist and are included in the binary.
+// The enabled precompile parameters are validated to have code set in genesis.
 //
 // Since the data provided is assumed to have already passed basic validations,
 // we only directly check stateful validations and assumptions of external state
-// from the Account Keeper and registered precompile list.
+// from the Account Keeper.
 func InitGenesis(
 	ctx sdk.Context,
 	k *keeper.Keeper,
 	accountKeeper types.AccountKeeper,
 	data types.GenesisState,
-	registeredModules []precompile_modules.Module,
 ) []abci.ValidatorUpdate {
 	k.WithChainID(ctx)
 
-	// For an enabled precompile to be valid,
-	// it must exist in the binary and be registered
-	err := types.ValidatePrecompileRegistration(
-		registeredModules,
-		data.Params.GetEnabledPrecompiles(),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	err = k.SetParams(ctx, data.Params)
+	err := k.SetParams(ctx, data.Params)
 	if err != nil {
 		panic(fmt.Errorf("error setting params %s", err))
 	}
@@ -112,8 +99,8 @@ func InitGenesis(
 		code := common.Hex2Bytes(account.Code)
 		codeHash := crypto.Keccak256Hash(code)
 
-		if _, ok := isEnabledPrecompile[account.Address]; ok && !bytes.Equal(code, []byte{0x01}) {
-			panic(fmt.Errorf("enabled precompile %s must have code set to 0x01, got 0x%s", account.Address, account.Code))
+		if _, ok := isEnabledPrecompile[account.Address]; ok && len(code) == 0 {
+			panic(fmt.Errorf("enabled precompile %s must have code set", account.Address))
 		}
 
 		if !bytes.Equal(ethAcct.GetCodeHash().Bytes(), codeHash.Bytes()) {

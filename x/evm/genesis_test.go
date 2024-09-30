@@ -13,7 +13,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	precompile_modules "github.com/ethereum/go-ethereum/precompile/modules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -28,11 +27,11 @@ import (
 //
 // Each test case has a name and a function to generate a test fixture.
 // The test fixture is given a complete and fresh app with context and returns
-// an updated context, a genesis state to test against, the mocked registered
-// precompiles, an expectation function, and a panic value (if expected).
+// an updated context, a genesis state to test against, an expectation function,
+// and a panic value (if expected).
 //
-// The expectFunc has a closure of the context, application state, state,
-// and registered precompiles and is called after InitGenesis.  Therefore,
+// The expectFunc has a closure of the context, application state, state
+// and is called after InitGenesis.  Therefore,
 // it may use any of this information to define it's expectations and is
 // able to verify the application state.
 //
@@ -43,7 +42,6 @@ func TestInitGenesis(t *testing.T) {
 	type testFixture struct {
 		ctx         sdk.Context
 		state       *types.GenesisState
-		precompiles []precompile_modules.Module
 		expectFunc  func()
 		expectPanic any
 	}
@@ -60,7 +58,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: nil,
 				}
@@ -80,7 +77,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       types.DefaultGenesisState(),
-					precompiles: nil,
 					expectFunc:  expectFunc,
 					expectPanic: nil,
 				}
@@ -97,7 +93,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       types.DefaultGenesisState(),
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: err,
 				}
@@ -120,7 +115,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  expectFunc,
 					expectPanic: nil,
 				}
@@ -137,7 +131,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: errors.New("error setting params invalid denom: "),
 				}
@@ -156,7 +149,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       types.DefaultGenesisState(),
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: "the EVM module account has not been set",
 				}
@@ -176,7 +168,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: fmt.Errorf("account not found for address %s", address),
 				}
@@ -201,7 +192,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: fmt.Errorf("account %s must be an EthAccount interface, got %T", address, acc),
 				}
@@ -238,7 +228,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: expectedPanic,
 				}
@@ -271,7 +260,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: expectedPanic,
 				}
@@ -306,7 +294,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: expectedPanic,
 				}
@@ -345,7 +332,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  expectFunc,
 					expectPanic: nil,
 				}
@@ -400,7 +386,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  expectFunc,
 					expectPanic: nil,
 				}
@@ -416,15 +401,9 @@ func TestInitGenesis(t *testing.T) {
 
 				state.Params.EnabledPrecompiles = []string{addr1.String(), addr2.String()}
 
-				registeredPrecompiles := []precompile_modules.Module{
-					{Address: addr1},
-					{Address: addr2},
-				}
-
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: registeredPrecompiles,
 					expectFunc:  func() {},
 					expectPanic: fmt.Errorf("error setting params enabled precompiles are not sorted, %s > %s", addr1.String(), addr2.String()),
 				}
@@ -438,39 +417,11 @@ func TestInitGenesis(t *testing.T) {
 				addr1 := common.BytesToAddress([]byte{0x01})
 				state.Params.EnabledPrecompiles = []string{addr1.String(), addr1.String()}
 
-				registeredPrecompiles := []precompile_modules.Module{
-					{Address: addr1},
-				}
-
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: registeredPrecompiles,
 					expectFunc:  func() {},
 					expectPanic: fmt.Errorf("error setting params enabled precompiles are not unique, %s is duplicated", addr1.String()),
-				}
-			},
-		},
-		{
-			name: "Panics when enabled precompiles exists but is not registered",
-			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
-				state := types.DefaultGenesisState()
-
-				addr1 := common.BytesToAddress([]byte{0x01})
-				addr2 := common.BytesToAddress([]byte{0x02})
-
-				state.Params.EnabledPrecompiles = []string{addr1.String(), addr2.String()}
-
-				registeredPrecompiles := []precompile_modules.Module{
-					{Address: addr1},
-				}
-
-				return testFixture{
-					ctx:         ctx,
-					state:       state,
-					precompiles: registeredPrecompiles,
-					expectFunc:  func() {},
-					expectPanic: fmt.Errorf("precompile %s is enabled but not registered", addr2.String()),
 				}
 			},
 		},
@@ -483,11 +434,6 @@ func TestInitGenesis(t *testing.T) {
 				addr2 := common.BytesToAddress([]byte{0x02})
 
 				state.Params.EnabledPrecompiles = []string{addr1.String(), addr2.String()}
-
-				registeredPrecompiles := []precompile_modules.Module{
-					{Address: addr1},
-					{Address: addr2},
-				}
 
 				code := []byte{0x01}
 				codeHash := crypto.Keccak256Hash(code)
@@ -530,7 +476,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: registeredPrecompiles,
 					expectFunc:  expectFunc,
 					expectPanic: nil,
 				}
@@ -562,7 +507,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: fmt.Errorf("account %s must have a positive nonce", address),
 				}
@@ -594,7 +538,6 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: nil,
 				}
@@ -631,44 +574,40 @@ func TestInitGenesis(t *testing.T) {
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: nil,
 					expectFunc:  nil,
 					expectPanic: fmt.Errorf("account %s must not have a public key set", address),
 				}
 			},
 		},
 		{
-			name: "Panics when enabled precompile does not have a genesis account with code 0x01",
+			name: "Panics when enabled precompile does not have a genesis account with code set",
 			genFixture: func(t *testing.T, ctx sdk.Context, tApp *app.EthermintApp) testFixture {
 				address := generateRandomAddress(t)
 
-				code := []byte{0x02}
-				codeHash := crypto.Keccak256Hash(code)
-				codeHex := common.Bytes2Hex(code)
+				//code := []byte{0x01}
+				//codeHash := crypto.Keccak256Hash(code)
+				//codeHex := common.Bytes2Hex(code)
 
 				state := types.DefaultGenesisState()
 				state.Params.EnabledPrecompiles = []string{address}
 				state.Accounts = append(state.Accounts, types.GenesisAccount{
 					Address: address,
-					Code:    codeHex,
+					Code:    "",
 				})
 
 				accAddr := sdk.AccAddress(common.HexToAddress(address).Bytes())
 				acc := ethermint.EthAccount{
 					BaseAccount: authtypes.NewBaseAccountWithAddress(accAddr),
-					CodeHash:    codeHash.String(),
+					CodeHash:    common.BytesToHash(types.EmptyCodeHash).String(),
 				}
 				acc.Sequence = uint64(1)
 				tApp.AccountKeeper.SetAccount(ctx, &acc)
 
-				registeredPrecompiles := []precompile_modules.Module{{Address: common.HexToAddress(address)}}
-
 				return testFixture{
 					ctx:         ctx,
 					state:       state,
-					precompiles: registeredPrecompiles,
 					expectFunc:  nil,
-					expectPanic: fmt.Errorf("enabled precompile %s must have code set to 0x01, got 0x%s", address, codeHex),
+					expectPanic: fmt.Errorf("enabled precompile %s must have code set", address),
 				}
 			},
 		},
@@ -687,7 +626,7 @@ func TestInitGenesis(t *testing.T) {
 
 			// Perform init genesis and validate we never provide validator updates
 			testFunc := func() {
-				validatorUpdates := evm.InitGenesis(tf.ctx, tApp.EvmKeeper, tApp.AccountKeeper, *tf.state, tf.precompiles)
+				validatorUpdates := evm.InitGenesis(tf.ctx, tApp.EvmKeeper, tApp.AccountKeeper, *tf.state)
 				require.Equal(t, 0, len(validatorUpdates), "expected no validator updates in all init genesis scenarios")
 			}
 

@@ -1,13 +1,10 @@
 package types_test
 
 import (
-	"fmt"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/params"
-	precompile_modules "github.com/ethereum/go-ethereum/precompile/modules"
 	"github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -327,68 +324,6 @@ func TestIsLondon(t *testing.T) {
 				assert.True(t, types.IsLondon(config, tc.height), "expected height to be on or after london fork")
 			} else {
 				assert.False(t, types.IsLondon(config, tc.height), "expected height to be before london fork")
-			}
-		})
-	}
-}
-
-func TestValidatePrecompileRegistration(t *testing.T) {
-	m := func(addr string) precompile_modules.Module {
-		return precompile_modules.Module{
-			Address: common.HexToAddress(addr),
-		}
-	}
-	a := func(addr string) string {
-		return common.HexToAddress(addr).String()
-	}
-
-	testCases := []struct {
-		name               string
-		registeredModules  []precompile_modules.Module
-		enabledPrecompiles []string
-		errorMsg           string
-	}{
-		{
-			name:               "success: all enabled precompiles are registered #1",
-			registeredModules:  []precompile_modules.Module{m("0x1"), m("0x2"), m("0x3")},
-			enabledPrecompiles: []string{a("0x1"), a("0x2"), a("0x3")},
-			errorMsg:           "",
-		},
-		{
-			name:               "success: all enabled precompiles are registered #2",
-			registeredModules:  []precompile_modules.Module{m("0x1"), m("0x2"), m("0x3")},
-			enabledPrecompiles: []string{a("0x1"), a("0x3")},
-			errorMsg:           "",
-		},
-		{
-			name:               "success: no enabled precompiles",
-			registeredModules:  []precompile_modules.Module{m("0x1"), m("0x2"), m("0x3")},
-			enabledPrecompiles: []string{},
-			errorMsg:           "",
-		},
-		{
-			name:               "success: no enabled precompiles and no registered modules",
-			registeredModules:  []precompile_modules.Module{},
-			enabledPrecompiles: []string{},
-			errorMsg:           "",
-		},
-		{
-			name:               "failure: precompile is enabled, but not registered",
-			registeredModules:  []precompile_modules.Module{m("0x1"), m("0x2"), m("0x3")},
-			enabledPrecompiles: []string{a("0x4")},
-			errorMsg:           fmt.Sprintf("precompile %v is enabled but not registered", a("0x4")),
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := types.ValidatePrecompileRegistration(tc.registeredModules, tc.enabledPrecompiles)
-
-			if tc.errorMsg != "" {
-				require.Error(t, err, tc.name)
-				require.Contains(t, err.Error(), tc.errorMsg)
-			} else {
-				require.NoError(t, err, tc.name)
 			}
 		})
 	}

@@ -24,7 +24,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/params"
-	precompile_modules "github.com/ethereum/go-ethereum/precompile/modules"
 
 	"github.com/evmos/ethermint/types"
 )
@@ -177,22 +176,4 @@ func validateEnabledPrecompiles(enabledPrecompiles []string) error {
 // TODO(nddeluca): does this belong in params?
 func IsLondon(ethConfig *params.ChainConfig, height int64) bool {
 	return ethConfig.IsLondon(big.NewInt(height))
-}
-
-// ValidatePrecompileRegistration checks that all enabled precompiles are registered.
-// TODO(nddeluca): does this belong in params?
-func ValidatePrecompileRegistration(registeredModules []precompile_modules.Module, enabledPrecompiles []string) error {
-	registeredAddrs := make(map[string]struct{}, len(registeredModules))
-
-	for _, module := range registeredModules {
-		registeredAddrs[module.Address.String()] = struct{}{}
-	}
-
-	for _, enabledPrecompile := range enabledPrecompiles {
-		if _, ok := registeredAddrs[enabledPrecompile]; !ok {
-			return fmt.Errorf("precompile %v is enabled but not registered", enabledPrecompile)
-		}
-	}
-
-	return nil
 }
