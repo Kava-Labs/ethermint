@@ -32,6 +32,9 @@ const (
 	ServiceName = "EVMIndexerService"
 
 	NewBlockWaitTimeout = 60 * time.Second
+
+	statusClientMaxRetryInterval = time.Second * 10
+	statusClientTimeout          = time.Hour * 3
 )
 
 // EVMIndexerService indexes transactions for json-rpc service.
@@ -60,8 +63,8 @@ func (eis *EVMIndexerService) OnStart() error {
 	// when kava in state-sync mode, it returns zero as latest_block_height, which leads to undesired behavior, more
 	// details here: https://github.com/Kava-Labs/ethermint/issues/79 to prevent this we wait until state-sync will finish
 	exponentialBackOff := backoff.NewExponentialBackOff(
-		backoff.WithMaxInterval(time.Second*10), // set max retry interval
-		backoff.WithMaxElapsedTime(time.Hour*3), // set timeout
+		backoff.WithMaxInterval(statusClientMaxRetryInterval), // set max retry interval
+		backoff.WithMaxElapsedTime(statusClientTimeout),       // set timeout
 	)
 	if err := waitUntilClientReady(ctx, eis.client, exponentialBackOff); err != nil {
 		return err
