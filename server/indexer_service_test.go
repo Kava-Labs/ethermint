@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"math"
 	"testing"
 	"time"
 
@@ -72,4 +73,21 @@ func TestWaitUntilClientReady(t *testing.T) {
 			require.Equal(t, uint(0), mock.retriesLeft)
 		})
 	}
+}
+
+func TestWaitUntilClientReadyTimeout(t *testing.T) {
+	ctxb := context.Background()
+	// create a mock client which always returns an error
+	mock := newStatusClientMock(math.MaxUint)
+
+	exponentialBackOff := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(time.Millisecond),
+		backoff.WithMaxInterval(time.Millisecond*10),
+		backoff.WithMaxElapsedTime(time.Millisecond*100),
+	)
+
+	err := waitUntilClientReady(ctxb, mock, exponentialBackOff)
+	// make sure error is propagated in case of timeout
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "node isn't ready, possibly in state sync process")
 }

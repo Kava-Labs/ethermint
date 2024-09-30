@@ -59,7 +59,11 @@ func (eis *EVMIndexerService) OnStart() error {
 
 	// when kava in state-sync mode, it returns zero as latest_block_height, which leads to undesired behavior, more
 	// details here: https://github.com/Kava-Labs/ethermint/issues/79 to prevent this we wait until state-sync will finish
-	if err := waitUntilClientReady(ctx, eis.client, backoff.NewConstantBackOff(time.Second)); err != nil {
+	exponentialBackOff := backoff.NewExponentialBackOff(
+		backoff.WithMaxInterval(time.Second*10), // set max retry interval
+		backoff.WithMaxElapsedTime(time.Hour*3), // set timeout
+	)
+	if err := waitUntilClientReady(ctx, eis.client, exponentialBackOff); err != nil {
 		return err
 	}
 
