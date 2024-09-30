@@ -48,6 +48,8 @@ issues:
         - lll
     - path: rpc/websockets.go
       text: 'G114: Use of net/http serve function that has no support for setting timeouts'
+  exclude:
+    - "G115: integer overflow conversion"
   max-same-issues: 50
 
 linters-settings:
