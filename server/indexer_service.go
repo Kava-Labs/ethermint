@@ -58,8 +58,7 @@ func (eis *EVMIndexerService) OnStart() error {
 	ctx := context.Background()
 
 	// when kava in state-sync mode, it returns zero as latest_block_height, which leads to undesired behavior, more
-	// details here: https://kava-labs.atlassian.net/wiki/spaces/ENG/pages/1623687169/EVM-Indexer+State+Sync+Issue
-	// to prevent this we wait until state-sync will finish
+	// details here: https://github.com/Kava-Labs/ethermint/issues/79 to prevent this we wait until state-sync will finish
 	if err := waitUntilClientReady(ctx, eis.client, backoff.NewConstantBackOff(time.Second)); err != nil {
 		return err
 	}
