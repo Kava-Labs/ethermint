@@ -51,15 +51,15 @@ func TestWaitUntilClientReady(t *testing.T) {
 		retriesLeft uint
 	}{
 		{
-			desc:        "test case #1",
+			desc:        "return successful response right away",
 			retriesLeft: 0,
 		},
 		{
-			desc:        "test case #2",
+			desc:        "return successful response after one retry",
 			retriesLeft: 1,
 		},
 		{
-			desc:        "test case #3",
+			desc:        "return successful response after 10 retries",
 			retriesLeft: 10,
 		},
 	} {
