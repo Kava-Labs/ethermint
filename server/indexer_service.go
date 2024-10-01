@@ -34,7 +34,7 @@ const (
 	NewBlockWaitTimeout = 60 * time.Second
 
 	statusClientMaxRetryInterval = time.Second * 10
-	statusClientTimeout          = time.Hour * 3
+	statusClientTimeout          = time.Hour * 48
 )
 
 // EVMIndexerService indexes transactions for json-rpc service.
