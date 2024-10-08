@@ -18,6 +18,7 @@ package server
 import (
 	"context"
 	"fmt"
+	cmtconfig "github.com/cometbft/cometbft/config"
 	"io"
 	"net"
 	"net/http"
@@ -44,6 +45,7 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 
 	"cosmossdk.io/tools/rosetta"
 	crgserver "cosmossdk.io/tools/rosetta/lib/server"
@@ -51,6 +53,7 @@ import (
 	ethmetricsexp "github.com/ethereum/go-ethereum/metrics/exp"
 
 	errorsmod "cosmossdk.io/errors"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -59,7 +62,6 @@ import (
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 
 	"github.com/evmos/ethermint/indexer"
 	ethdebug "github.com/evmos/ethermint/rpc/namespaces/ethereum/debug"
@@ -278,7 +280,7 @@ func startStandAlone(ctx *server.Context, opts StartOptions) error {
 		return fmt.Errorf("error creating listener: %v", err)
 	}
 
-	svr.SetLogger(ctx.Logger.With("server", "abci"))
+	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: ctx.Logger.With("server", "abci")})
 
 	err = svr.Start()
 	if err != nil {
@@ -385,9 +387,9 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 			nodeKey,
 			proxy.NewLocalClientCreator(app),
 			genDocProvider,
-			node.DefaultDBProvider,
+			cmtconfig.DefaultDBProvider,
 			node.DefaultMetricsProvider(cfg.Instrumentation),
-			ctx.Logger.With("server", "node"),
+			servercmtlog.CometLoggerWrapper{Logger: ctx.Logger.With("server", "node")},
 		)
 		if err != nil {
 			logger.Error("failed init node", "error", err.Error())
@@ -414,7 +416,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
-		app.RegisterNodeService(clientCtx)
+		app.RegisterNodeService(clientCtx, config.Config)
 	}
 
 	metrics, err := startTelemetry(config)
@@ -439,7 +441,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		idxLogger := ctx.Logger.With("indexer", "evm")
 		idxer = indexer.NewKVIndexer(idxDB, idxLogger, clientCtx)
 		indexerService := NewEVMIndexerService(idxer, clientCtx.Client.(rpcclient.Client))
-		indexerService.SetLogger(idxLogger)
+		indexerService.SetLogger(servercmtlog.CometLoggerWrapper{Logger: idxLogger})
 
 		errCh := make(chan error)
 		go func() {
@@ -451,7 +453,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		select {
 		case err := <-errCh:
 			return err
-		case <-time.After(types.ServerStartTime): // assume server started successfully
+		case <-time.After(ServerStartTime): // assume server started successfully
 		}
 	}
 
@@ -515,7 +517,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 
 		errCh := make(chan error)
 		go func() {
-			if err := apiSrv.Start(config.Config); err != nil {
+			if err := apiSrv.Start(clientCtx.CmdContext, config.Config); err != nil {
 				errCh <- err
 			}
 		}()
@@ -523,15 +525,15 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		select {
 		case err := <-errCh:
 			return err
-		case <-time.After(types.ServerStartTime): // assume server started successfully
+		case <-time.After(ServerStartTime): // assume server started successfully
 		}
 
 		defer apiSrv.Close()
 	}
 
 	var (
-		grpcSrv    *grpc.Server
-		grpcWebSrv *http.Server
+		grpcSrv *grpc.Server
+		//grpcWebSrv *http.Server
 	)
 
 	if config.GRPC.Enable {
@@ -540,19 +542,21 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 			return err
 		}
 		defer grpcSrv.Stop()
-		if config.GRPCWeb.Enable {
-			grpcWebSrv, err = servergrpc.StartGRPCWeb(grpcSrv, config.Config)
-			if err != nil {
-				ctx.Logger.Error("failed to start grpc-web http server", "error", err.Error())
-				return err
-			}
 
-			defer func() {
-				if err := grpcWebSrv.Close(); err != nil {
-					logger.Error("failed to close the grpc-web http server", "error", err.Error())
-				}
-			}()
-		}
+		// TODO(boodyvo): should we remove this?
+		//if config.GRPCWeb.Enable {
+		//	grpcWebSrv, err = servergrpc.StartGRPCWeb(grpcSrv, config.Config)
+		//	if err != nil {
+		//		ctx.Logger.Error("failed to start grpc-web http server", "error", err.Error())
+		//		return err
+		//	}
+		//
+		//	defer func() {
+		//		if err := grpcWebSrv.Close(); err != nil {
+		//			logger.Error("failed to close the grpc-web http server", "error", err.Error())
+		//		}
+		//	}()
+		//}
 	}
 
 	var (
@@ -635,7 +639,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		select {
 		case err := <-errCh:
 			return err
-		case <-time.After(types.ServerStartTime): // assume server started successfully
+		case <-time.After(ServerStartTime): // assume server started successfully
 		}
 	}
 	// Wait for SIGINT or SIGTERM signal

@@ -18,6 +18,7 @@ package network
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"path/filepath"
 	"time"
 
@@ -34,6 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -277,4 +279,22 @@ func WriteFile(name string, dir string, contents []byte) error {
 	}
 
 	return tmos.WriteFile(file, contents, 0o644)
+}
+
+// Get a free address for a test tendermint server
+// protocol is either tcp, http, etc
+func FreeTCPAddr() (addr, port string, err error) {
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		return "", "", err
+	}
+
+	if err := l.Close(); err != nil {
+		return "", "", sdkerrors.Wrap(err, "couldn't close the listener")
+	}
+
+	portI := l.Addr().(*net.TCPAddr).Port
+	port = fmt.Sprintf("%d", portI)
+	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+	return
 }
