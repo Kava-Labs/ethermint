@@ -16,8 +16,10 @@
 package app
 
 import (
+	upgradecli "cosmossdk.io/x/upgrade/client/cli"
 	"encoding/json"
-	"fmt"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/spf13/cobra"
 	"io"
 	"net/http"
 	"os"
@@ -34,7 +36,6 @@ import (
 
 	"cosmossdk.io/simapp"
 	simappparams "cosmossdk.io/simapp/params"
-	"cosmossdk.io/store/streaming"
 	sdkstore "cosmossdk.io/store/types"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
@@ -51,6 +52,7 @@ import (
 	tmservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -59,6 +61,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -152,8 +155,10 @@ var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
 
-	//LegacyProposalHandler       = govclient.NewProposalHandler(upgradecli.NewCmdSubmitUpgradeProposal(nil))
-	//LegacyCancelProposalHandler = govclient.NewProposalHandler(upgradecli.NewCmdSubmitCancelUpgradeProposal())
+	ac = addresscodec.NewBech32Codec("cosmos")
+
+	LegacyProposalHandler       = govclient.NewProposalHandler(func() *cobra.Command { return upgradecli.NewCmdSubmitUpgradeProposal(ac) })
+	LegacyCancelProposalHandler = govclient.NewProposalHandler(func() *cobra.Command { return upgradecli.NewCmdSubmitCancelUpgradeProposal(ac) })
 
 	appGov         = gov.NewAppModuleBasic(nil)
 	legacyHandlers = appGov.GetTxCmd
@@ -171,8 +176,9 @@ var (
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic([]govclient.ProposalHandler{
 			paramsclient.ProposalHandler,
-			//govclient.NewProposalHandler(upgradecli.NewCmdSubmitUpgradeProposal),
-			govclient.NewProposalHandler(ibcclientclient.NewTxCmd),
+			LegacyProposalHandler,
+			LegacyCancelProposalHandler,
+			govclient.NewProposalHandler(ibcclientclient.NewTxCmd), // there are few other, as they were switched to internal
 			//upgradecli.NewCmdSubmitUpgradeProposal,
 			//upgradeclient.LegacyCancelProposalHandler,
 			//ibcclientclient.UpdateClientProposalHandler,
@@ -310,11 +316,12 @@ func NewEthermintApp(
 	tkeys := sdkstore.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdkstore.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
+	// TODO(boodyvo): this was changed, need to check if we need this
 	// load state streaming if enabled
-	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, logger, keys); err != nil {
-		fmt.Printf("failed to load state streaming: %s", err)
-		os.Exit(1)
-	}
+	//if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, logger, keys); err != nil {
+	//	fmt.Printf("failed to load state streaming: %s", err)
+	//	os.Exit(1)
+	//}
 
 	app := &EthermintApp{
 		BaseApp:           bApp,
@@ -332,10 +339,10 @@ func NewEthermintApp(
 
 	// allow x/gov to modify consensus parameters
 	authAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamtypes.StoreKey], authAddr)
+	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authAddr, runtime.EventService{})
 
 	// set the BaseApp's parameter store to the consensus keeper
-	bApp.SetParamStore(&app.ConsensusParamsKeeper)
+	bApp.SetParamStore(&app.ConsensusParamsKeeper.ParamsStore)
 
 	// add capability keeper and ScopeToModule for ibc module
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
@@ -358,28 +365,43 @@ func NewEthermintApp(
 	// use custom Ethermint account for contracts
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,
-		keys[authtypes.StoreKey],
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		ethermint.ProtoAccount,
 		maccPerms,
+		ac,
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		authAddr,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
-		keys[banktypes.StoreKey],
+		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		app.AccountKeeper,
 		app.BlockedAddrs(),
 		authAddr,
+		logger,
 	)
+
+	//cdc codec.BinaryCodec,
+	//storeService storetypes.KVStoreService,
+	//ak types.AccountKeeper,
+	//bk types.BankKeeper,
+	//authority string,
+	//validatorAddressCodec addresscodec.Codec,
+	//consensusAddressCodec addresscodec.Codec,
+
+	// TODO(boodyvo): check what codecs should be there
 	stakingKeeper := stakingkeeper.NewKeeper(
-		appCodec, keys[stakingtypes.StoreKey],
+		appCodec,
+		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		authAddr,
+		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
+		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,
-		keys[minttypes.StoreKey],
+		runtime.NewKVStoreService(keys[minttypes.StoreKey]),
 		stakingKeeper,
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -388,7 +410,7 @@ func NewEthermintApp(
 	)
 	app.DistrKeeper = distrkeeper.NewKeeper(
 		appCodec,
-		keys[distrtypes.StoreKey],
+		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		stakingKeeper,
@@ -398,19 +420,19 @@ func NewEthermintApp(
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
 		app.LegacyAmino(),
-		keys[slashingtypes.StoreKey],
+		runtime.NewKVStoreService(keys[slashingtypes.StoreKey]),
 		stakingKeeper,
 		authAddr,
 	)
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(
 		appCodec,
-		keys[feegrant.StoreKey],
+		runtime.NewKVStoreService(keys[feegrant.StoreKey]),
 		app.AccountKeeper)
 
 	// set the governance module account as the authority for conducting upgrades
 	app.UpgradeKeeper = *upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
-		keys[upgradetypes.StoreKey],
+		runtime.NewKVStoreService(keys[upgradetypes.StoreKey]),
 		appCodec,
 		homePath,
 		app.BaseApp,
@@ -426,7 +448,7 @@ func NewEthermintApp(
 	app.StakingKeeper = *stakingKeeper
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
-		keys[authzkeeper.StoreKey],
+		runtime.NewKVStoreService(keys[authzkeeper.StoreKey]),
 		appCodec,
 		app.MsgServiceRouter(),
 		app.AccountKeeper)
@@ -443,31 +465,44 @@ func NewEthermintApp(
 	// Set authority to x/gov module account to only expect the module account to update params
 	evmSs := app.GetSubspace(evmtypes.ModuleName)
 	app.EvmKeeper = evmkeeper.NewKeeper(
-		appCodec, keys[evmtypes.StoreKey], tkeys[evmtypes.TransientKey],
+		appCodec,
+		keys[evmtypes.StoreKey],
+		tkeys[evmtypes.TransientKey],
 		authtypes.NewModuleAddress(govtypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper, stakingKeeper, app.FeeMarketKeeper,
-		nil, geth.NewEVM, tracer, evmSs,
+		app.AccountKeeper,
+		app.BankKeeper,
+		stakingKeeper,
+		app.FeeMarketKeeper,
+		nil,
+		geth.NewEVM,
+		tracer,
+		evmSs,
 	)
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibcexported.StoreKey], app.GetSubspace(ibcexported.ModuleName), stakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
+		appCodec, keys[ibcexported.StoreKey], app.GetSubspace(ibcexported.ModuleName), stakingKeeper, app.UpgradeKeeper, scopedIBCKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// register the proposal types
 	govRouter := govv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(&app.UpgradeKeeper)).
+		// TODO(boodyvo): check thie software upgrade proposal, it looks like it is now implemented as a plugin
+		//AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(&app.UpgradeKeeper)).
+		// TODO(boodyvo): this one was deprecated: "Please use MsgRecoverClient and MsgIBCSoftwareUpgrade in favour of this legacy Handler."
 		AddRoute(ibcexported.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
 	govConfig := govtypes.DefaultConfig()
 	/*
 		Example of setting gov params:
 		govConfig.MaxMetadataLen = 10000
 	*/
+	// cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
+	//	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrKeeper types.DistributionKeeper,
+	//	router baseapp.MessageRouter, config types.Config, authority string,
 	govKeeper := govkeeper.NewKeeper(
-		appCodec, keys[govtypes.StoreKey], app.AccountKeeper, app.BankKeeper,
-		stakingKeeper, app.MsgServiceRouter(), govConfig, authAddr,
+		appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AccountKeeper, app.BankKeeper,
+		stakingKeeper, app.DistrKeeper, app.MsgServiceRouter(), govConfig, authAddr,
 	)
 
 	app.StakingKeeper = *stakingKeeper
@@ -481,8 +516,8 @@ func NewEthermintApp(
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
-		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
+		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.PortKeeper,
+		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	transferModule := ibctransfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := ibctransfer.NewIBCModule(app.TransferKeeper)
@@ -492,6 +527,7 @@ func NewEthermintApp(
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
+	// TODO(boodyvo): unknown at the moment BlockInfoService
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
@@ -515,10 +551,11 @@ func NewEthermintApp(
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
 		staking.NewAppModule(appCodec, &app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
-		upgrade.NewAppModule(&app.UpgradeKeeper),
+		// TODO(boodyvo): check is this is correct ac
+		upgrade.NewAppModule(&app.UpgradeKeeper, ac),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -838,6 +875,7 @@ func (app *EthermintApp) RegisterTendermintService(clientCtx client.Context) {
 	)
 }
 
+// TODO(boodyvo): do we use this one?
 // RegisterNodeService registers the node gRPC service on the provided
 // application gRPC query router.
 func (app *EthermintApp) RegisterNodeService(clientCtx client.Context) {

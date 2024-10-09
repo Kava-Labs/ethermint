@@ -5,6 +5,9 @@ go 1.23.1
 toolchain go1.23.2
 
 require (
+	//cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212
+	cosmossdk.io/core v0.12.0
+	//cosmossdk.io/core v0.11.1
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
 	//cosmossdk.io/simapp v0.0.0-20230608160436-666c345ad23d
@@ -14,7 +17,8 @@ require (
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcutil v1.1.6
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
-	github.com/cometbft/cometbft-db v0.15.0
+	//github.com/cometbft/cometbft-db v0.15.0
+	github.com/cometbft/cometbft-db v0.11.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/go-bip39 v1.0.0
@@ -54,7 +58,7 @@ require (
 	cloud.google.com/go/iam v1.1.13 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
 	cosmossdk.io/api v0.7.6 // indirect
-	cosmossdk.io/core v1.0.0-alpha.4 // indirect
+	//cosmossdk.io/core v1.0.0-alpha.4 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/log v1.4.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -216,6 +220,11 @@ require (
 )
 
 replace (
+	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
+	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
+
+	cosmossdk.io/simapp => ./simapp
+	cosmossdk.io/simapp/params => /simapp/params
 	// use cosmos keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Use cosmos-sdk fork with staking transfer events, and custom tally handler support
@@ -232,11 +241,6 @@ replace (
 	github.com/cosmos/cosmos-sdk/x/evidence => cosmossdk.io/x/evidence v0.1.1
 	github.com/cosmos/cosmos-sdk/x/feegrant => cosmossdk.io/x/feegrant v0.1.1
 	github.com/cosmos/cosmos-sdk/x/upgrade => cosmossdk.io/x/upgrade v0.1.4
-	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
-	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
-
-	cosmossdk.io/simapp => ./simapp
-	cosmossdk.io/simapp/params => /simapp/params
 
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
