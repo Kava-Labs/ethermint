@@ -5,9 +5,7 @@ go 1.23.1
 toolchain go1.23.2
 
 require (
-	//cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212
-	cosmossdk.io/core v0.12.0
-	//cosmossdk.io/core v0.11.1
+	cosmossdk.io/core v0.12.1-0.20240725072823-6a2d039e1212
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
 	//cosmossdk.io/simapp v0.0.0-20230608160436-666c345ad23d

@@ -18,6 +18,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -46,6 +47,11 @@ type MsgEthereumTx struct {
 	// against the address derived from the signature (V, R, S) using the
 	// secp256k1 elliptic curve
 	From string `protobuf:"bytes,4,opt,name=from,proto3" json:"from,omitempty"`
+}
+
+func (msg *MsgEthereumTx) ProtoReflect() protoreflect.Message {
+	//TODO(boodyvo): regenerate and implement me
+	panic("implement me")
 }
 
 func (m *MsgEthereumTx) Reset()         { *m = MsgEthereumTx{} }
