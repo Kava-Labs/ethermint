@@ -317,7 +317,7 @@ func NewEthermintApp(
 	tkeys := sdkstore.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdkstore.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
-	// TODO(boodyvo): this was changed, need to check if we need this
+	// TODO(boodyvo): streaming was changed, updated to register streaming service
 	// load state streaming if enabled
 	//if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, logger, keys); err != nil {
 	//	fmt.Printf("failed to load state streaming: %s", err)
@@ -333,6 +333,10 @@ func NewEthermintApp(
 		keys:              keys,
 		tkeys:             tkeys,
 		memKeys:           memKeys,
+	}
+
+	if err := app.RegisterStreamingServices(appOpts, app.keys); err != nil {
+		panic(err)
 	}
 
 	// init params keeper and subspaces

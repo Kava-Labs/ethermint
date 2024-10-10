@@ -595,7 +595,7 @@ the Tracer type used to collect execution traces from the EVM transaction execut
 
 * (proto) [tharsis#448](https://github.com/evmos/ethermint/pull/448) Bump version for all Ethermint messages to `v1`
 * (server) [tharsis#434](https://github.com/evmos/ethermint/pull/434) `evm-rpc` flags and app config have been renamed to `json-rpc`.
-* (proto, evm) [tharsis#207](https://github.com/evmos/ethermint/issues/207) Replace `big.Int` in favor of `sdk.Int` for `TxData` fields
+* (proto, evm) [tharsis#207](https://github.com/evmos/ethermint/issues/207) Replace `big.Int` in favor of `sdkmath.Int` for `TxData` fields
 * (proto, evm) [tharsis#81](https://github.com/evmos/ethermint/pull/81) gRPC Query and Tx service changes:
   * The `TxReceipt`, `TxReceiptsByBlockHeight` endpoints have been removed from the Query service.
   * The `ContractAddress`, `Bloom` have been removed from the `MsgEthereumTxResponse` and the

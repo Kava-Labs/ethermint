@@ -104,9 +104,7 @@ func (p Params) Validate() error {
 		return fmt.Errorf("base fee change denominator cannot be 0")
 	}
 
-	// TODO(boodyvo): update to a correct validation
-	baseFee := sdkmath.NewIntFromUint64(p.BaseFee)
-	if baseFee.IsNegative() {
+	if p.BaseFee.IsNegative() {
 		return fmt.Errorf("initial base fee cannot be negative: %s", p.BaseFee)
 	}
 

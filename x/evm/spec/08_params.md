@@ -55,7 +55,7 @@ The supported activateable EIPS are:
 
 ## Chain Config
 
-The `ChainConfig` is a protobuf wrapper type that contains the same fields as the go-ethereum `ChainConfig` parameters, but using `*sdk.Int` types instead of `*big.Int`.
+The `ChainConfig` is a protobuf wrapper type that contains the same fields as the go-ethereum `ChainConfig` parameters, but using `*sdkmath.Int` types instead of `*big.Int`.
 
 By default, all block configuration fields but `ConstantinopleBlock`, are enabled at genesis (height 0).
 

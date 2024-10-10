@@ -1,10 +1,10 @@
 package keeper_test
 
 import (
+	"context"
 	"errors"
 	"math/big"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -19,7 +19,7 @@ type LogRecordHook struct {
 	Logs []*ethtypes.Log
 }
 
-func (dh *LogRecordHook) PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *ethtypes.Receipt) error {
+func (dh *LogRecordHook) PostTxProcessing(ctx context.Context, msg core.Message, receipt *ethtypes.Receipt) error {
 	dh.Logs = receipt.Logs
 	return nil
 }
@@ -27,7 +27,7 @@ func (dh *LogRecordHook) PostTxProcessing(ctx sdk.Context, msg core.Message, rec
 // FailureHook always fail
 type FailureHook struct{}
 
-func (dh FailureHook) PostTxProcessing(ctx sdk.Context, msg core.Message, receipt *ethtypes.Receipt) error {
+func (dh FailureHook) PostTxProcessing(ctx context.Context, msg core.Message, receipt *ethtypes.Receipt) error {
 	return errors.New("post tx processing failed")
 }
 
@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestEvmHooks() {
 		ctx := suite.ctx
 		txHash := common.BigToHash(big.NewInt(1))
 		vmdb := statedb.New(ctx, k, statedb.NewTxConfig(
-			common.BytesToHash(ctx.HeaderHash().Bytes()),
+			common.BytesToHash(ctx.HeaderHash()),
 			txHash,
 			0,
 			0,

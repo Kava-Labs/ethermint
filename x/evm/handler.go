@@ -21,10 +21,14 @@ import (
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/evmos/ethermint/x/evm/types"
+	///Users/vlad/dev/go/cosmos-sdk/x/gov/types/v1beta1/content.go
 )
 
+// Handler defines the core of the state transition function of an application.
+type Handler func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error)
+
 // NewHandler returns a handler for Ethermint type messages.
-func NewHandler(server types.MsgServer) sdk.Handler {
+func NewHandler(server types.MsgServer) Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (result *sdk.Result, err error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 

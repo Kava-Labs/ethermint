@@ -32,7 +32,7 @@ type LegacyParams struct {
 	EIP712AllowedMsgs []types.EIP712AllowedMsg `protobuf:"bytes,6,rep,name=eip712_allowed_msgs,json=eip712AllowedMsgs,proto3" json:"eip712_allowed_msgs"`
 }
 
-// LegacyChainConfig defines the Ethereum ChainConfig parameters using *sdk.Int values
+// LegacyChainConfig defines the Ethereum ChainConfig parameters using *sdkmath.Int values
 // instead of *big.Int.
 type LegacyChainConfig struct {
 	// Homestead switch block (nil no fork, 0 = already homestead)

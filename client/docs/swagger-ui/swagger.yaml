@@ -1770,7 +1770,7 @@ paths:
                           splitter
                     description: >-
                       ChainConfig defines the Ethereum ChainConfig parameters
-                      using *sdk.Int values
+                      using *sdkmath.Int values
 
                       instead of *big.Int.
                   allow_unprotected_txs:
@@ -3367,7 +3367,7 @@ definitions:
         type: string
         title: Virtual fork after The Merge to use as a network splitter
     description: >-
-      ChainConfig defines the Ethereum ChainConfig parameters using *sdk.Int
+      ChainConfig defines the Ethereum ChainConfig parameters using *sdkmath.Int
       values
 
       instead of *big.Int.
@@ -3777,7 +3777,7 @@ definitions:
             type: string
             title: Virtual fork after The Merge to use as a network splitter
         description: >-
-          ChainConfig defines the Ethereum ChainConfig parameters using *sdk.Int
+          ChainConfig defines the Ethereum ChainConfig parameters using *sdkmath.Int
           values
 
           instead of *big.Int.
@@ -3950,7 +3950,7 @@ definitions:
                 title: Virtual fork after The Merge to use as a network splitter
             description: >-
               ChainConfig defines the Ethereum ChainConfig parameters using
-              *sdk.Int values
+              *sdkmath.Int values
 
               instead of *big.Int.
           allow_unprotected_txs:
@@ -4107,7 +4107,7 @@ definitions:
             type: string
             title: Virtual fork after The Merge to use as a network splitter
         description: >-
-          ChainConfig defines the Ethereum ChainConfig parameters using *sdk.Int
+          ChainConfig defines the Ethereum ChainConfig parameters using *sdkmath.Int
           values
 
           instead of *big.Int.

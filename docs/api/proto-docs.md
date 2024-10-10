@@ -170,7 +170,7 @@ AccessTuple is the element type of an access list.
 <a name="ethermint.evm.v1.ChainConfig"></a>
 
 ### ChainConfig
-ChainConfig defines the Ethereum ChainConfig parameters using *sdk.Int values
+ChainConfig defines the Ethereum ChainConfig parameters using *sdkmath.Int values
 instead of *big.Int.
 
 

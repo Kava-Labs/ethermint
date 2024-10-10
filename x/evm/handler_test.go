@@ -52,7 +52,7 @@ type EvmTestSuite struct {
 	suite.Suite
 
 	ctx     sdk.Context
-	handler sdk.Handler
+	handler evm.Handler
 	app     *app.EthermintApp
 	codec   codec.Codec
 	chainID *big.Int
@@ -182,7 +182,7 @@ func (suite *EvmTestSuite) SignTx(tx *types.MsgEthereumTx) {
 }
 
 func (suite *EvmTestSuite) StateDB() *statedb.StateDB {
-	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash().Bytes())))
+	return statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(suite.ctx.HeaderHash())))
 }
 
 func TestEvmTestSuite(t *testing.T) {
