@@ -1277,7 +1277,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	}
 
 	type args struct {
-		meter  sdk.GasMeter
+		meter  sdkstore.GasMeter
 		sig    signing.SignatureData
 		pubkey cryptotypes.PubKey
 		params authtypes.Params
