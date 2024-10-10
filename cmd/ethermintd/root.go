@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	tmlog "cosmossdk.io/log"
-	//dbm "github.com/cometbft/cometbft-db"
+	//dbm "github.com/cosmos/cosmos-db"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"

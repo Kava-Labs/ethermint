@@ -18,7 +18,6 @@ package types
 import (
 	"errors"
 	"fmt"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"math/big"
 
 	sdkmath "cosmossdk.io/math"
@@ -224,13 +223,13 @@ func (msg *MsgEthereumTx) GetMsgs() []sdk.Msg {
 
 // TODO(boodyvo): should be implemented if we use
 func (msg *MsgEthereumTx) GetMsgsV2() ([]protov2.Message, error) {
-	return []protov2.Message{msg}, nil
+	return nil, nil
 }
 
 // TODO(boodyvo): should be implemented if we use
-func (msg *MsgEthereumTx) ProtoReflect() protoreflect.Message {
-	return msg.Re
-}
+//func (msg *MsgEthereumTx) ProtoReflect() protoreflect.Message {
+//	return msg.ProtoReflect()
+//}
 
 // GetSigners returns the expected signers for an Ethereum transaction message.
 // For such a message, there should exist only a single 'signer'.

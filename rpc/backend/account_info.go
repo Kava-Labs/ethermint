@@ -107,9 +107,10 @@ func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNr
 		return nil, err
 	}
 
+	// TODO(boodyvo): was it correct transformation?
+	acc := authtypes.NewBaseAccountWithAddress(address.Bytes())
 	// query account proofs
-	accountKey := authtypes.AddressStoreKey(sdk.AccAddress(address.Bytes()))
-	_, proof, err := b.queryClient.GetProof(clientCtx, authtypes.StoreKey, accountKey)
+	_, proof, err := b.queryClient.GetProof(clientCtx, authtypes.StoreKey, acc.GetAddress())
 	if err != nil {
 		return nil, err
 	}

@@ -17,12 +17,11 @@ require (
 	cosmossdk.io/x/feegrant v0.1.1
 	cosmossdk.io/x/tx v0.13.5
 	cosmossdk.io/x/upgrade v0.1.4
-	github.com/armon/go-metrics v0.4.1
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcutil v1.1.6
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	//github.com/cometbft/cometbft-db v0.15.0
-	github.com/cometbft/cometbft-db v0.11.0
+	github.com/cometbft/cometbft-db v0.11.0 // indirect
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
@@ -60,6 +59,7 @@ require (
 require (
 	cosmossdk.io/core v0.11.1
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
+	github.com/hashicorp/go-metrics v0.5.3
 )
 
 require (
@@ -151,7 +151,6 @@ require (
 	github.com/hashicorp/go-getter v1.7.6 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-metrics v0.5.3 // indirect
 	github.com/hashicorp/go-plugin v1.5.2 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect

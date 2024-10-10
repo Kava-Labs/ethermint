@@ -10,7 +10,7 @@ import (
 
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
-	log "cosmossdk.io/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	mock "github.com/stretchr/testify/mock"
 
@@ -650,6 +650,9 @@ func (_m *Client) Reset() error {
 
 	return r0
 }
+
+//need the method: SetLogger(log.Logger)
+//have the method: SetLogger(_a0 log.Logger)
 
 // SetLogger provides a mock function with given fields: _a0
 func (_m *Client) SetLogger(_a0 log.Logger) {

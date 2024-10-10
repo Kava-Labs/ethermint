@@ -26,8 +26,8 @@ import (
 	"github.com/evmos/ethermint/x/feemarket/types"
 
 	"cosmossdk.io/log"
-	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
+	dbm "github.com/cosmos/cosmos-db"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -42,7 +42,7 @@ var _ = Describe("Feemarket", func() {
 	Describe("Performing Cosmos transactions", func() {
 		Context("with min-gas-prices (local) < MinGasPrices (feemarket param)", func() {
 			BeforeEach(func() {
-				privKey, msg = setupTestWithContext("1", sdkmath.LegacyNewDec(3), sdk.ZeroInt())
+				privKey, msg = setupTestWithContext("1", sdkmath.LegacyNewDec(3), sdkmath.ZeroInt())
 			})
 
 			Context("during CheckTx", func() {
@@ -84,7 +84,7 @@ var _ = Describe("Feemarket", func() {
 
 		Context("with min-gas-prices (local) == MinGasPrices (feemarket param)", func() {
 			BeforeEach(func() {
-				privKey, msg = setupTestWithContext("3", sdkmath.LegacyNewDec(3), sdk.ZeroInt())
+				privKey, msg = setupTestWithContext("3", sdkmath.LegacyNewDec(3), sdkmath.ZeroInt())
 			})
 
 			Context("during CheckTx", func() {
@@ -444,7 +444,7 @@ var _ = Describe("Feemarket", func() {
 
 // setupTestWithContext sets up a test chain with an example Cosmos send msg,
 // given a local (validator config) and a gloabl (feemarket param) minGasPrice
-func setupTestWithContext(valMinGasPrice string, minGasPrice sdk.Dec, baseFee sdkmath.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
+func setupTestWithContext(valMinGasPrice string, minGasPrice sdkmath.LegacyDec, baseFee sdkmath.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
 	privKey, msg := setupTest(valMinGasPrice + s.denom)
 	params := types.DefaultParams()
 	params.MinGasPrice = minGasPrice
@@ -505,7 +505,7 @@ func setupChain(localMinGasPricesStr string) {
 
 	// Initialize the chain
 	newapp.InitChain(
-		abci.RequestInitChain{
+		&abci.RequestInitChain{
 			ChainId:         "ethermint_9000-1",
 			Validators:      []abci.ValidatorUpdate{},
 			AppStateBytes:   stateBytes,
@@ -590,18 +590,24 @@ func prepareEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereu
 	return bz
 }
 
-func checkEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) abci.ResponseCheckTx {
+func checkEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) *abci.ResponseCheckTx {
 	bz := prepareEthTx(priv, msgEthereumTx)
-	req := abci.RequestCheckTx{Tx: bz}
-	res := s.app.BaseApp.CheckTx(req)
+	res, _ := s.app.BaseApp.CheckTx(&abci.RequestCheckTx{Tx: bz})
+
 	return res
 }
 
-func deliverEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) abci.ExecTxResult {
+func deliverEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) *abci.ExecTxResult {
 	bz := prepareEthTx(priv, msgEthereumTx)
-	req := abci.RequestDeliverTx{Tx: bz}
-	res := s.app.BaseApp.DeliverTx(req)
-	return res
+	res, err := s.app.BaseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{bz}})
+	if err != nil {
+		return nil
+	}
+	if len(res.TxResults) == 0 {
+		return nil
+	}
+
+	return res.TxResults[0]
 }
 
 func prepareCosmosTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg) []byte {
@@ -628,7 +634,7 @@ func prepareCosmosTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...
 	sigV2 := signing.SignatureV2{
 		PubKey: priv.PubKey(),
 		Data: &signing.SingleSignatureData{
-			SignMode:  encodingConfig.TxConfig.SignModeHandler().DefaultMode(),
+			SignMode:  signing.SignMode(encodingConfig.TxConfig.SignModeHandler().DefaultMode()),
 			Signature: nil,
 		},
 		Sequence: seq,
@@ -647,7 +653,8 @@ func prepareCosmosTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...
 		Sequence:      seq,
 	}
 	sigV2, err = tx.SignWithPrivKey(
-		encodingConfig.TxConfig.SignModeHandler().DefaultMode(), signerData,
+		s.ctx,
+		signing.SignMode(encodingConfig.TxConfig.SignModeHandler().DefaultMode()), signerData,
 		txBuilder, priv, encodingConfig.TxConfig,
 		seq,
 	)
@@ -663,16 +670,27 @@ func prepareCosmosTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...
 	return bz
 }
 
-func checkTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg) abci.ResponseCheckTx {
+func checkTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg) *abci.ResponseCheckTx {
 	bz := prepareCosmosTx(priv, gasPrice, msgs...)
 	req := abci.RequestCheckTx{Tx: bz}
-	res := s.app.BaseApp.CheckTx(req)
+	res, err := s.app.BaseApp.CheckTx(&req)
+	if err != nil {
+		// TODO(boodyvo): should we return error
+		return nil
+	}
+
 	return res
 }
 
-func deliverTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg) abci.ExecTxResult {
+func deliverTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg) *abci.ExecTxResult {
 	bz := prepareCosmosTx(priv, gasPrice, msgs...)
-	req := abci.RequestDeliverTx{Tx: bz}
-	res := s.app.BaseApp.DeliverTx(req)
-	return res
+	res, err := s.app.BaseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{bz}})
+	if err != nil {
+		return nil
+	}
+	if len(res.TxResults) == 0 {
+		return nil
+	}
+
+	return res.TxResults[0]
 }

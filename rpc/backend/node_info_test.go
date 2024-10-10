@@ -1,6 +1,7 @@
 package backend
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"math/big"
 
@@ -251,7 +252,7 @@ func (suite *BackendTestSuite) TestSetEtherbase() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				RegisterStatus(client)
 				RegisterValidatorAccount(queryClient, suite.acc)
-				c := sdk.NewDecCoin("aphoton", sdk.NewIntFromBigInt(big.NewInt(1)))
+				c := sdk.NewDecCoin("aphoton", sdkmath.NewIntFromBigInt(big.NewInt(1)))
 				suite.backend.cfg.SetMinGasPrices(sdk.DecCoins{c})
 				delAddr, _ := suite.backend.GetCoinbase()
 				// account, _ := suite.backend.clientCtx.AccountRetriever.GetAccount(suite.backend.clientCtx, delAddr)

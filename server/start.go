@@ -36,7 +36,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	dbm "github.com/cometbft/cometbft-db"
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	tcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	tmos "github.com/cometbft/cometbft/libs/os"
@@ -45,6 +44,7 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
+	dbm "github.com/cosmos/cosmos-db"
 	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 
 	"cosmossdk.io/tools/rosetta"

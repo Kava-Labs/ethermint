@@ -1,6 +1,7 @@
 package backend
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"math/big"
 
@@ -43,7 +44,7 @@ func (suite *BackendTestSuite) TestBaseFee() {
 			"fail - grpc BaseFee error - with non feemarket block event",
 			&tmrpctypes.ResultBlockResults{
 				Height: 1,
-				BeginBlockEvents: []types.Event{
+				FinalizeBlockEvents: []types.Event{
 					{
 						Type: evmtypes.EventTypeBlockBloom,
 					},
@@ -60,7 +61,7 @@ func (suite *BackendTestSuite) TestBaseFee() {
 			"fail - grpc BaseFee error - with feemarket block event",
 			&tmrpctypes.ResultBlockResults{
 				Height: 1,
-				BeginBlockEvents: []types.Event{
+				FinalizeBlockEvents: []types.Event{
 					{
 						Type: feemarkettypes.EventTypeFeeMarket,
 					},
@@ -77,7 +78,7 @@ func (suite *BackendTestSuite) TestBaseFee() {
 			"fail - grpc BaseFee error - with feemarket block event with wrong attribute value",
 			&tmrpctypes.ResultBlockResults{
 				Height: 1,
-				BeginBlockEvents: []types.Event{
+				FinalizeBlockEvents: []types.Event{
 					{
 						Type: feemarkettypes.EventTypeFeeMarket,
 						Attributes: []types.EventAttribute{
@@ -97,7 +98,7 @@ func (suite *BackendTestSuite) TestBaseFee() {
 			"fail - grpc baseFee error - with feemarket block event with baseFee attribute value",
 			&tmrpctypes.ResultBlockResults{
 				Height: 1,
-				BeginBlockEvents: []types.Event{
+				FinalizeBlockEvents: []types.Event{
 					{
 						Type: feemarkettypes.EventTypeFeeMarket,
 						Attributes: []types.EventAttribute{
@@ -288,7 +289,7 @@ func (suite *BackendTestSuite) TestGlobalMinGasPrice() {
 	testCases := []struct {
 		name           string
 		registerMock   func()
-		expMinGasPrice sdk.Dec
+		expMinGasPrice sdkmath.LegacyDec
 		expPass        bool
 	}{
 		{
@@ -297,7 +298,7 @@ func (suite *BackendTestSuite) TestGlobalMinGasPrice() {
 				feeMarketCleint := suite.backend.queryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
 				RegisterFeeMarketParamsError(feeMarketCleint, int64(1))
 			},
-			sdk.ZeroDec(),
+			sdkmath.LegacyZeroDec(),
 			false,
 		},
 	}

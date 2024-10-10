@@ -32,12 +32,12 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	dbm "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmflags "github.com/cometbft/cometbft/libs/cli/flags"
 	tmrand "github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/node"
 	tmclient "github.com/cometbft/cometbft/rpc/client"
+	dbm "github.com/cosmos/cosmos-db"
 	simutils "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"

@@ -18,6 +18,7 @@ package backend
 import (
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -130,7 +131,7 @@ func (b *Backend) Sign(address common.Address, data hexutil.Bytes) (hexutil.Byte
 	}
 
 	// Sign the requested hash with the wallet
-	signature, _, err := b.clientCtx.Keyring.SignByAddress(from, data)
+	signature, _, err := b.clientCtx.Keyring.SignByAddress(from, data, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	if err != nil {
 		b.logger.Error("keyring.SignByAddress failed", "address", address.Hex())
 		return nil, err
@@ -156,7 +157,8 @@ func (b *Backend) SignTypedData(address common.Address, typedData apitypes.Typed
 	}
 
 	// Sign the requested hash with the wallet
-	signature, _, err := b.clientCtx.Keyring.SignByAddress(from, sigHash)
+	// TODO(boodyvo): what mode to use?
+	signature, _, err := b.clientCtx.Keyring.SignByAddress(from, sigHash, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	if err != nil {
 		b.logger.Error("keyring.SignByAddress failed", "address", address.Hex())
 		return nil, err

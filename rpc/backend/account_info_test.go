@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -80,6 +79,8 @@ func (suite *BackendTestSuite) TestGetProof() {
 	blockNr := rpctypes.NewBlockNumber(big.NewInt(4))
 	address1 := tests.GenerateAddress()
 
+	acc := authtypes.NewBaseAccountWithAddress(address1.Bytes())
+
 	testCases := []struct {
 		name          string
 		addr          common.Address
@@ -141,7 +142,8 @@ func (suite *BackendTestSuite) TestGetProof() {
 					client,
 					bn.Int64(),
 					"store/acc/key",
-					authtypes.AddressStoreKey(sdk.AccAddress(address1.Bytes())),
+					acc.GetAddress().Bytes(),
+					//authtypes.AddressStoreKey(sdk.AccAddress(address1.Bytes())),
 					tmrpcclient.ABCIQueryOptions{Height: ivalHeight, Prove: true},
 				)
 			},
