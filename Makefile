@@ -305,6 +305,10 @@ godocs:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
+print-go-version:
+	@go version
+
+
 test: test-unit
 test-all: test-unit test-race
 PACKAGES_UNIT=$(shell go list ./... | grep -Ev 'vendor|importer')
