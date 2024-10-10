@@ -25,7 +25,7 @@ func (suite *BackendTestSuite) TestGetTransactionByHash() {
 
 	txBz := suite.signAndEncodeEthTx(msgEthereumTx)
 	block := &types.Block{Header: types.Header{Height: 1, ChainID: "test"}, Data: types.Data{Txs: []types.Tx{txBz}}}
-	responseDeliver := []*abci.ResponseDeliverTx{
+	responseDeliver := []*abci.ExecTxResult{
 		{
 			Code: 0,
 			Events: []abci.Event{
@@ -277,7 +277,7 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 	msgEthTx, bz := suite.buildEthereumTx()
 
 	defaultBlock := types.MakeBlock(1, []types.Tx{bz}, nil, nil)
-	defaultResponseDeliverTx := []*abci.ResponseDeliverTx{
+	defaultResponseDeliverTx := []*abci.ExecTxResult{
 		{
 			Code: 0,
 			Events: []abci.Event{
@@ -540,7 +540,7 @@ func (suite *BackendTestSuite) TestGetTransactionReceipt() {
 		registerMock func()
 		tx           *evmtypes.MsgEthereumTx
 		block        *types.Block
-		blockResult  []*abci.ResponseDeliverTx
+		blockResult  []*abci.ExecTxResult
 		expTxReceipt map[string]interface{}
 		expPass      bool
 	}{
@@ -557,7 +557,7 @@ func (suite *BackendTestSuite) TestGetTransactionReceipt() {
 			},
 			msgEthereumTx,
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code: 0,
 					Events: []abci.Event{

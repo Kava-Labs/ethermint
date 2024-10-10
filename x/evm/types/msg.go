@@ -229,7 +229,7 @@ func (msg *MsgEthereumTx) GetMsgsV2() ([]protov2.Message, error) {
 
 // TODO(boodyvo): should be implemented if we use
 func (msg *MsgEthereumTx) ProtoReflect() protoreflect.Message {
-	return nil
+	return msg.Re
 }
 
 // GetSigners returns the expected signers for an Ethereum transaction message.

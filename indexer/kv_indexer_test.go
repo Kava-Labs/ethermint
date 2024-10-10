@@ -55,13 +55,13 @@ func TestKVIndexer(t *testing.T) {
 	testCases := []struct {
 		name        string
 		block       *tmtypes.Block
-		blockResult []*abci.ResponseDeliverTx
+		blockResult []*abci.ExecTxResult
 		expSuccess  bool
 	}{
 		{
 			"success, format 1",
 			&tmtypes.Block{Header: tmtypes.Header{Height: 1}, Data: tmtypes.Data{Txs: []tmtypes.Tx{txBz}}},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code: 0,
 					Events: []abci.Event{
@@ -81,7 +81,7 @@ func TestKVIndexer(t *testing.T) {
 		{
 			"success, format 2",
 			&tmtypes.Block{Header: tmtypes.Header{Height: 1}, Data: tmtypes.Data{Txs: []tmtypes.Tx{txBz}}},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code: 0,
 					Events: []abci.Event{
@@ -103,7 +103,7 @@ func TestKVIndexer(t *testing.T) {
 		{
 			"success, exceed block gas limit",
 			&tmtypes.Block{Header: tmtypes.Header{Height: 1}, Data: tmtypes.Data{Txs: []tmtypes.Tx{txBz}}},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code:   11,
 					Log:    "out of gas in location: block gas meter; gasWanted: 21000",
@@ -115,7 +115,7 @@ func TestKVIndexer(t *testing.T) {
 		{
 			"fail, failed eth tx",
 			&tmtypes.Block{Header: tmtypes.Header{Height: 1}, Data: tmtypes.Data{Txs: []tmtypes.Tx{txBz}}},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code:   15,
 					Log:    "nonce mismatch",
@@ -127,7 +127,7 @@ func TestKVIndexer(t *testing.T) {
 		{
 			"fail, invalid events",
 			&tmtypes.Block{Header: tmtypes.Header{Height: 1}, Data: tmtypes.Data{Txs: []tmtypes.Tx{txBz}}},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code:   0,
 					Events: []abci.Event{},
@@ -138,7 +138,7 @@ func TestKVIndexer(t *testing.T) {
 		{
 			"fail, not eth tx",
 			&tmtypes.Block{Header: tmtypes.Header{Height: 1}, Data: tmtypes.Data{Txs: []tmtypes.Tx{txBz2}}},
-			[]*abci.ResponseDeliverTx{
+			[]*abci.ExecTxResult{
 				{
 					Code:   0,
 					Events: []abci.Event{},

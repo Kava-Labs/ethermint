@@ -17,6 +17,7 @@ package encoding
 
 import (
 	"cosmossdk.io/simapp/params"
+	"fmt"
 	amino "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -41,6 +42,9 @@ func MakeConfig(mb module.BasicManager) params.EncodingConfig {
 	enccodec.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	mb.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	enccodec.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+
+	fmt.Println(encodingConfig.InterfaceRegistry)
+
 	mb.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	return encodingConfig
 }

@@ -53,6 +53,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*tx.TxExtensionOptionI)(nil),
 		&ExtensionOptionsEthereumTx{},
 	)
+	//&MsgEthereumTx{}.GetMsgsV2()
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgEthereumTx{},
