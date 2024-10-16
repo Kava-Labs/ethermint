@@ -58,7 +58,6 @@ require (
 
 require (
 	cosmossdk.io/core v0.11.1
-	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	github.com/hashicorp/go-metrics v0.5.3
 )
 
@@ -248,8 +247,8 @@ replace (
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 
-	cosmossdk.io/simapp => ./simapp
-	cosmossdk.io/simapp/params => /simapp/params
+	//cosmossdk.io/simapp => ./simapp
+	//cosmossdk.io/simapp/params => /simapp/params
 	// use cosmos keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Use cosmos-sdk fork with staking transfer events, and custom tally handler support

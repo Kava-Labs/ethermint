@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	tmlog "cosmossdk.io/log"
-	"cosmossdk.io/simapp/params"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -16,6 +15,7 @@ import (
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	evmenc "github.com/evmos/ethermint/encoding"
 	"github.com/evmos/ethermint/indexer"
+	"github.com/evmos/ethermint/simapp/params"
 	"github.com/evmos/ethermint/tests"
 	"github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
