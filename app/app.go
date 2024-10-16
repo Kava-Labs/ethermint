@@ -16,7 +16,6 @@
 package app
 
 import (
-	upgradecli "cosmossdk.io/x/upgrade/client/cli"
 	"encoding/json"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/spf13/cobra"
@@ -46,6 +45,7 @@ import (
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
+	upgradecli "cosmossdk.io/x/upgrade/client/cli"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"

@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	sdkstore "cosmossdk.io/store/types"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -54,8 +55,6 @@ import (
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
-
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 type AnteTestSuite struct {
@@ -109,12 +108,16 @@ func (suite *AnteTestSuite) SetupTest() {
 		return genesis
 	})
 
-	suite.ctx = suite.app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 2, ChainID: "ethermint_9000-1", Time: time.Now().UTC()})
-	suite.ctx = suite.ctx.WithMinGasPrices(sdk.NewDecCoins(sdk.NewDecCoin(evmtypes.DefaultEVMDenom, sdk.OneInt())))
-	suite.ctx = suite.ctx.WithBlockGasMeter(sdk.NewGasMeter(1000000000000000000))
+	suite.ctx = suite.app.BaseApp.NewContext(checkTx)
+	suite.ctx = suite.ctx.WithChainID("ethermint_9000-1")
+	suite.ctx = suite.ctx.WithBlockHeight(2)
+	suite.ctx = suite.ctx.WithBlockTime(time.Now().UTC())
+	suite.ctx = suite.ctx.WithMinGasPrices(sdk.NewDecCoins(sdk.NewDecCoin(evmtypes.DefaultEVMDenom, sdkmath.OneInt())))
+	suite.ctx = suite.ctx.WithBlockGasMeter(sdkstore.NewGasMeter(1000000000000000000))
+
 	suite.app.EvmKeeper.WithChainID(suite.ctx)
 
-	infCtx := suite.ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	infCtx := suite.ctx.WithGasMeter(sdkstore.NewInfiniteGasMeter())
 	suite.app.AccountKeeper.SetParams(infCtx, authtypes.DefaultParams())
 
 	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
