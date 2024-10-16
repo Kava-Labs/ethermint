@@ -68,14 +68,3 @@ type EVM interface {
 		ret []byte, remainingGas uint64, err error,
 	)
 }
-
-// Constructor defines the function used to instantiate the EVM on
-// each state transition.
-type Constructor func(
-	blockCtx vm.BlockContext,
-	txCtx vm.TxContext,
-	stateDB vm.StateDB,
-	chainConfig *params.ChainConfig,
-	config vm.Config,
-	customPrecompiles PrecompiledContracts,
-) EVM

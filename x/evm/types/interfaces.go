@@ -18,6 +18,8 @@ package types
 import (
 	"context"
 	"cosmossdk.io/core/address"
+	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/params"
 	"math/big"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -90,3 +92,13 @@ type (
 		WithKeyTable(table paramtypes.KeyTable) paramtypes.Subspace
 	}
 )
+
+// Constructor defines the function used to instantiate the EVM on
+// each state transition.
+type Constructor func(
+	blockCtx vm.BlockContext,
+	txCtx vm.TxContext,
+	stateDB vm.StateDB,
+	chainConfig *params.ChainConfig,
+	config vm.Config,
+) *vm.EVM
