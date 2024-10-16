@@ -77,7 +77,7 @@ type Keeper struct {
 	customPrecompiles evm.PrecompiledContracts
 
 	// evm constructor function
-	evmConstructor evm.Constructor
+	evmConstructor types.Constructor
 	// Legacy subspace
 	ss paramstypes.Subspace
 }
@@ -92,7 +92,7 @@ func NewKeeper(
 	sk types.StakingKeeper,
 	fmk types.FeeMarketKeeper,
 	customPrecompiles evm.PrecompiledContracts,
-	evmConstructor evm.Constructor,
+	evmConstructor types.Constructor,
 	tracer string,
 	ss paramstypes.Subspace,
 ) *Keeper {
