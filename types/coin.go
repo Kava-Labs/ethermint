@@ -53,7 +53,7 @@ func NewPhotonCoin(amount sdkmath.Int) sdk.Coin {
 // NewPhotonDecCoin is a utility function that returns an "aphoton" decimal coin with the given sdkmath.Int amount.
 // The function will panic if the provided amount is negative.
 func NewPhotonDecCoin(amount sdkmath.Int) sdk.DecCoin {
-	return sdkmath.LegacyNewDecCoin(AttoPhoton, amount)
+	return sdk.NewDecCoin(AttoPhoton, amount)
 }
 
 // NewPhotonCoinInt64 is a utility function that returns an "aphoton" coin with the given int64 amount.

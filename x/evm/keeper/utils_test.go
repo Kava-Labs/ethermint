@@ -14,7 +14,7 @@ import (
 
 func (suite *KeeperTestSuite) TestCheckSenderBalance() {
 	hundredInt := sdkmath.NewInt(100)
-	zeroInt := sdk.ZeroInt()
+	zeroInt := sdkmath.ZeroInt()
 	oneInt := sdk.OneInt()
 	fiveInt := sdkmath.NewInt(5)
 	fiftyInt := sdkmath.NewInt(50)
@@ -260,7 +260,7 @@ func (suite *KeeperTestSuite) TestCheckSenderBalance() {
 // In practice, the two tested functions will also be sequentially executed.
 func (suite *KeeperTestSuite) TestVerifyFeeAndDeductTxCostsFromUserBalance() {
 	hundredInt := sdkmath.NewInt(100)
-	zeroInt := sdk.ZeroInt()
+	zeroInt := sdkmath.ZeroInt()
 	oneInt := sdkmath.NewInt(1)
 	fiveInt := sdkmath.NewInt(5)
 	fiftyInt := sdkmath.NewInt(50)
