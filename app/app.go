@@ -18,6 +18,7 @@ package app
 import (
 	"encoding/json"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/spf13/cobra"
 	"io"
 	"net/http"
@@ -131,7 +132,6 @@ import (
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	legacyevmtypes "github.com/evmos/ethermint/x/evm/types/legacy"
-	"github.com/evmos/ethermint/x/evm/vm/geth"
 	"github.com/evmos/ethermint/x/feemarket"
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
@@ -479,7 +479,7 @@ func NewEthermintApp(
 		stakingKeeper,
 		app.FeeMarketKeeper,
 		nil,
-		geth.NewEVM,
+		vm.NewEVM,
 		tracer,
 		evmSs,
 	)

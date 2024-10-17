@@ -244,8 +244,8 @@ github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3
 github.com/DataDog/zstd v1.5.0/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=
 github.com/DataDog/zstd v1.5.5 h1:oWf5W7GtOLgp6bciQYDmhHHjdhYkALu6S/5Ni9ZgSvQ=
 github.com/DataDog/zstd v1.5.5/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=
-github.com/Kava-Labs/go-ethereum v1.10.27-0.20240513233504-6e038346780b h1:gTLS1VJL+6TEcttEmQ9rAmm/UZZw23WlQf6n8R/Xjx0=
-github.com/Kava-Labs/go-ethereum v1.10.27-0.20240513233504-6e038346780b/go.mod h1:tvRm5KYJQ6LT+uss34spIP1oi6JgCfsFYiMKwJLZr6M=
+github.com/Kava-Labs/go-ethereum v1.10.27-0.20240308170502-da7973e5eee0 h1:pPFzOjEZmihLk70TQRPUCWs8uar6nfh4vZ/I1r0zeso=
+github.com/Kava-Labs/go-ethereum v1.10.27-0.20240308170502-da7973e5eee0/go.mod h1:/6CsT5Ceen2WPLI/oCA3xMcZ5sWMF/D46SjM/ayY0Oo=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migciow=
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
