@@ -114,6 +114,15 @@ type AppModule struct {
 	ak     types.AccountKeeper
 }
 
+func (am AppModule) IsOnePerModuleType() {
+
+}
+
+func (am AppModule) IsAppModule() {
+	//TODO implement me
+	panic("implement me")
+}
+
 // NewAppModule creates a new AppModule object
 func NewAppModule(k *keeper.Keeper, ak types.AccountKeeper) AppModule {
 	return AppModule{

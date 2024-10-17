@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/simapp"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	precompile_modules "github.com/ethereum/go-ethereum/precompile/modules"
+	"github.com/evmos/ethermint/simapp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
