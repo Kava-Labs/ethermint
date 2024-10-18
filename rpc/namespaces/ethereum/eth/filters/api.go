@@ -355,8 +355,13 @@ func (api *PublicFilterAPI) NewHeads(ctx context.Context) (*rpc.Subscription, er
 					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
 					continue
 				}
+				dataBlock, ok := ev.Data.(tmtypes.EventDataNewBlock)
+				if !ok {
+					api.logger.Debug("event data type mismatch", "type", fmt.Sprintf("%T", ev.Data))
+					continue
+				}
 
-				baseFee := types.BaseFeeFromEvents(data.ResultBeginBlock.Events)
+				baseFee := types.BaseFeeFromEvents(dataBlock.ResultFinalizeBlock.Events)
 
 				// TODO: fetch bloom from events
 				header := types.EthHeaderFromTendermint(data.Header, ethtypes.Bloom{}, baseFee)
