@@ -29,8 +29,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/tools/rosetta"
-	crgserver "cosmossdk.io/tools/rosetta/lib/server"
 	"github.com/Kava-Labs/opendb"
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	tcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
@@ -52,6 +50,8 @@ import (
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/cosmos/rosetta"
+	crgserver "github.com/cosmos/rosetta/lib/server"
 	ethmetricsexp "github.com/ethereum/go-ethereum/metrics/exp"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"

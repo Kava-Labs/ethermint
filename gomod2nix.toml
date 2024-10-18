@@ -37,9 +37,6 @@ schema = 3
   [mod."github.com/evmos/ethermint/simapp"]
     version = "v0.0.0-20230608160436-666c345ad23d"
     hash = "sha256-6BMBA98BpK3jG6++ZE4LdPQwwpS+lZ0GLMRF1fO4UfM="
-  [mod."cosmossdk.io/tools/rosetta"]
-    version = "v0.2.1"
-    hash = "sha256-TrkXwA1ZdwSyu3te0DLMBynCb7CGEtefo2wzFvxeyU8="
   [mod."filippo.io/edwards25519"]
     version = "v1.0.0"
     hash = "sha256-APnPAcmItvtJ5Zsy863lzR2TjEBF9Y66TY1e4M1ap98="

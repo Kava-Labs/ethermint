@@ -34,7 +34,6 @@ import (
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -50,6 +49,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	rosettaCmd "github.com/cosmos/rosetta/cmd"
 	"github.com/evmos/ethermint/simapp/params"
 
 	"github.com/evmos/ethermint/app"
