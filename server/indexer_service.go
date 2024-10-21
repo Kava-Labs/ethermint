@@ -23,6 +23,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/cometbft/cometbft/libs/service"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/types"
 
 	ethermint "github.com/evmos/ethermint/types"
@@ -112,8 +113,15 @@ func (eis *EVMIndexerService) OnStart() error {
 		lastBlock = latestBlock
 	}
 	for {
-		if latestBlock <= lastBlock {
-			// nothing to index. wait for signal of new block
+		var block *coretypes.ResultBlock
+		var blockResult *coretypes.ResultBlockResults
+		if latestBlock <= lastBlock || err != nil {
+			// two cases:
+			// 1. nothing to index (indexer is caught up). wait for signal of new block.
+			// 2. previous attempt to index errored (failed to fetch the Block or BlockResults).
+			//    in this case, wait before retrying the data fetching, rather than infinite looping
+			//    a failing fetch. this can occur due to drive latency between the block existing and its
+			//    block_results getting saved.
 			select {
 			case <-newBlockSignal:
 			case <-time.After(NewBlockWaitTimeout):
@@ -121,12 +129,12 @@ func (eis *EVMIndexerService) OnStart() error {
 			continue
 		}
 		for i := lastBlock + 1; i <= latestBlock; i++ {
-			block, err := eis.client.Block(ctx, &i)
+			block, err = eis.client.Block(ctx, &i)
 			if err != nil {
 				eis.Logger.Error("failed to fetch block", "height", i, "err", err)
 				break
 			}
-			blockResult, err := eis.client.BlockResults(ctx, &i)
+			blockResult, err = eis.client.BlockResults(ctx, &i)
 			if err != nil {
 				eis.Logger.Error("failed to fetch block result", "height", i, "err", err)
 				break
