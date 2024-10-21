@@ -112,10 +112,12 @@ func (eis *EVMIndexerService) OnStart() error {
 	if lastBlock == -1 {
 		lastBlock = latestBlock
 	}
+	// blockErr indicates an error fetching an expected block or its results
+	var blockErr error
 	for {
 		var block *coretypes.ResultBlock
 		var blockResult *coretypes.ResultBlockResults
-		if latestBlock <= lastBlock || err != nil {
+		if latestBlock <= lastBlock || blockErr != nil {
 			// two cases:
 			// 1. nothing to index (indexer is caught up). wait for signal of new block.
 			// 2. previous attempt to index errored (failed to fetch the Block or BlockResults).
@@ -129,14 +131,14 @@ func (eis *EVMIndexerService) OnStart() error {
 			continue
 		}
 		for i := lastBlock + 1; i <= latestBlock; i++ {
-			block, err = eis.client.Block(ctx, &i)
-			if err != nil {
-				eis.Logger.Error("failed to fetch block", "height", i, "err", err)
+			block, blockErr = eis.client.Block(ctx, &i)
+			if blockErr != nil {
+				eis.Logger.Error("failed to fetch block", "height", i, "err", blockErr)
 				break
 			}
-			blockResult, err = eis.client.BlockResults(ctx, &i)
-			if err != nil {
-				eis.Logger.Error("failed to fetch block result", "height", i, "err", err)
+			blockResult, blockErr = eis.client.BlockResults(ctx, &i)
+			if blockErr != nil {
+				eis.Logger.Error("failed to fetch block result", "height", i, "err", blockErr)
 				break
 			}
 			if err := eis.txIdxr.IndexBlock(block.Block, blockResult.TxsResults); err != nil {
