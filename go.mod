@@ -3,7 +3,7 @@ module github.com/evmos/ethermint
 go 1.21
 
 require (
-	cosmossdk.io/core v0.12.0
+	cosmossdk.io/core v0.11.1
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
@@ -25,7 +25,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/v8 v8.5.1
-	github.com/cosmos/rosetta v0.50.2
+	github.com/cosmos/rosetta v0.50.6
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/gogo/protobuf v1.3.2
@@ -68,6 +68,8 @@ require (
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
+	github.com/PuerkitoBio/purell v1.1.1 // indirect
+	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/VictoriaMetrics/fastcache v1.6.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
@@ -136,6 +138,7 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.5 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
+	github.com/goware/urlx v0.3.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -242,11 +245,13 @@ replace (
 	//cosmossdk.io/x/upgrade => cosmossdk.io/x/upgrade v0.1.4
 	// use cosmos keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	//github.com/cometbft/cometbft => github.com/kava-labs/cometbft v0.0.0-20241007151334-8345af773eb9
 	github.com/cometbft/cometbft => github.com/kava-labs/cometbft v0.0.0-20241007151334-8345af773eb9
 
 	//github.com/cosmos/cosmos-sdk => github.com/kava-labs/cosmos-sdk v0.47.10-iavl-v1-kava.1
 	//github.com/cosmos/cosmos-sdk => github.com/kava-labs/cosmos-sdk v0.50.10-test-patch 5f9239e3147358ef034bfc4d19aacb34e5ea2064
-	github.com/cosmos/cosmos-sdk => github.com/kava-labs/cosmos-sdk v0.0.0-20241007153930-5f9239e31473
+	//github.com/cosmos/cosmos-sdk => github.com/kava-labs/cosmos-sdk v0.0.0-20241007153930-5f9239e31473
+	github.com/cosmos/cosmos-sdk => ../cosmos-sdk
 	// Use cosmos-sdk fork with staking transfer events, and custom tally handler support
 	//github.com/cosmos/cosmos-sdk => github.com/kava-labs/cosmos-sdk v0.47.10-iavl-v1-kava.1
 	github.com/ethereum/go-ethereum => github.com/Kava-Labs/go-ethereum v1.10.27-0.20240308170502-da7973e5eee0

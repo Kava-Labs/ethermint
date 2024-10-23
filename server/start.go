@@ -18,6 +18,7 @@ package server
 import (
 	"context"
 	"fmt"
+	cmtconfig "github.com/cometbft/cometbft/config"
 	"io"
 	"net"
 	"net/http"
@@ -48,6 +49,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/rosetta"
@@ -287,7 +289,7 @@ func startStandAlone(ctx *server.Context, opts StartOptions) error {
 		return fmt.Errorf("error creating listener: %v", err)
 	}
 
-	svr.SetLogger(ctx.Logger.With("server", "abci"))
+	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: ctx.Logger.With("server", "abci")})
 
 	err = svr.Start()
 	if err != nil {
@@ -306,8 +308,8 @@ func startStandAlone(ctx *server.Context, opts StartOptions) error {
 
 // DBProviderFromAppOpts returns a database using the DBBackend and DBDir specified in the ctx.Config.
 // It uses opendb package which takes into account appOpts and provides configurability and observability.
-func DBProviderFromAppOpts(appOpts types.AppOptions) node.DBProvider {
-	return func(ctx *node.DBContext) (dbm.DB, error) {
+func DBProviderFromAppOpts(appOpts types.AppOptions) cmtconfig.DBProvider {
+	return func(ctx *cmtconfig.DBContext) (dbm.DB, error) {
 		dbType := dbm.BackendType(ctx.Config.DBBackend)
 
 		return opendb.OpenDB(appOpts, ctx.Config.DBDir(), ctx.ID, dbType)
@@ -406,7 +408,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 			genDocProvider,
 			DBProviderFromAppOpts(ctx.Viper),
 			node.DefaultMetricsProvider(cfg.Instrumentation),
-			ctx.Logger.With("server", "node"),
+			servercmtlog.CometLoggerWrapper{ctx.Logger.With("server", "node")},
 		)
 		if err != nil {
 			logger.Error("failed init node", "error", err.Error())
@@ -458,7 +460,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		idxLogger := ctx.Logger.With("indexer", "evm")
 		idxer = indexer.NewKVIndexer(idxDB, idxLogger, clientCtx)
 		indexerService := NewEVMIndexerService(idxer, clientCtx.Client.(rpcclient.Client))
-		indexerService.SetLogger(idxLogger)
+		indexerService.SetLogger(servercmtlog.CometLoggerWrapper{Logger: idxLogger})
 
 		errCh := make(chan error)
 		go func() {
@@ -525,7 +527,8 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 
 	var apiSrv *api.Server
 	if config.API.Enable {
-		apiSrv = api.New(clientCtx, ctx.Logger.With("server", "api"))
+		//
+		apiSrv = api.New(clientCtx, servercmtlog.CometLoggerWrapper{Logger: ctx.Logger.With("server", "api")})
 		app.RegisterAPIRoutes(apiSrv, config.API)
 
 		if config.Telemetry.Enabled {
@@ -542,7 +545,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		select {
 		case err := <-errCh:
 			return err
-		case <-time.After(types.ServerStartTime): // assume server started successfully
+		case <-time.After(ServerStartTime): // assume server started successfully
 		}
 
 		defer apiSrv.Close()
