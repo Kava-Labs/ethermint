@@ -153,7 +153,7 @@ var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
 
-	ac = addresscodec.NewBech32Codec("cosmos")
+	ac = addresscodec.NewBech32Codec("ethermint")
 
 	LegacyProposalHandler       = govclient.NewProposalHandler(func() *cobra.Command { return upgradeclient.NewCmdSubmitUpgradeProposal(ac) })
 	LegacyCancelProposalHandler = govclient.NewProposalHandler(func() *cobra.Command { return upgradeclient.NewCmdSubmitCancelUpgradeProposal(ac) })
