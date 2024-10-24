@@ -18,6 +18,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"math/big"
 
 	sdkmath "cosmossdk.io/math"
@@ -31,8 +32,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-
 	"github.com/evmos/ethermint/types"
+	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -219,6 +220,11 @@ func (msg *MsgEthereumTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{msg}
 }
 
+// TODO(boodyvo): should be implemented if we use
+func (msg *MsgEthereumTx) GetMsgsV2() ([]protov2.Message, error) {
+	return nil, nil
+}
+
 // GetSigners returns the expected signers for an Ethereum transaction message.
 // For such a message, there should exist only a single 'signer'.
 //
@@ -263,7 +269,8 @@ func (msg *MsgEthereumTx) Sign(ethSigner ethtypes.Signer, keyringSigner keyring.
 	tx := msg.AsTransaction()
 	txHash := ethSigner.Hash(tx)
 
-	sig, _, err := keyringSigner.SignByAddress(from, txHash.Bytes())
+	// TODO(boodyvo): which one to provide here (?)
+	sig, _, err := keyringSigner.SignByAddress(from, txHash.Bytes(), signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	if err != nil {
 		return err
 	}

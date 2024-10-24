@@ -140,7 +140,7 @@ func (suite *ImporterTestSuite) TestImportBlocks() {
 		})
 		ctx := suite.app.NewContext(false, tmheader)
 		ctx = ctx.WithBlockHeight(tmheader.Height)
-		vmdb := statedb.New(ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash().Bytes())))
+		vmdb := statedb.New(ctx, suite.app.EvmKeeper, statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash())))
 
 		if chainConfig.DAOForkSupport && chainConfig.DAOForkBlock != nil && chainConfig.DAOForkBlock.Cmp(block.Number()) == 0 {
 			applyDAOHardFork(vmdb)
@@ -229,7 +229,7 @@ func applyTransaction(
 	gp *ethcore.GasPool, evmKeeper *evmkeeper.Keeper, vmdb *statedb.StateDB, header *ethtypes.Header,
 	tx *ethtypes.Transaction, usedGas *uint64, cfg ethvm.Config,
 ) (*ethtypes.Receipt, uint64, error) {
-	msg, err := tx.AsMessage(ethtypes.MakeSigner(config, header.Number), sdk.ZeroInt().BigInt())
+	msg, err := tx.AsMessage(ethtypes.MakeSigner(config, header.Number), sdkmath.ZeroInt().BigInt())
 	if err != nil {
 		return nil, 0, err
 	}

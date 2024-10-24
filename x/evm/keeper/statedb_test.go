@@ -5,9 +5,9 @@ import (
 	"math/big"
 	"time"
 
+	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -792,7 +792,7 @@ func (suite *KeeperTestSuite) TestAddLog() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 			vmdb := statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewTxConfig(
-				common.BytesToHash(suite.ctx.HeaderHash().Bytes()),
+				common.BytesToHash(suite.ctx.HeaderHash()),
 				tc.hash,
 				0, 0,
 			))

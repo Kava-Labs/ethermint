@@ -17,23 +17,11 @@ package network
 
 import (
 	"encoding/json"
-	"fmt"
-	"path/filepath"
-	"time"
-
 	tmos "github.com/cometbft/cometbft/libs/os"
-	"github.com/cometbft/cometbft/node"
-	"github.com/cometbft/cometbft/p2p"
-	pvm "github.com/cometbft/cometbft/privval"
-	"github.com/cometbft/cometbft/proxy"
-	"github.com/cometbft/cometbft/rpc/client/local"
 	"github.com/cometbft/cometbft/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/server/api"
-	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
-	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -44,122 +32,123 @@ import (
 	mintypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/evmos/ethermint/server"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
 func startInProcess(cfg Config, val *Validator) error {
-	logger := val.Ctx.Logger
-	tmCfg := val.Ctx.Config
-	tmCfg.Instrumentation.Prometheus = false
-
-	if err := val.AppConfig.ValidateBasic(); err != nil {
-		return err
-	}
-
-	nodeKey, err := p2p.LoadOrGenNodeKey(tmCfg.NodeKeyFile())
-	if err != nil {
-		return err
-	}
-
-	app := cfg.AppConstructor(*val)
-
-	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
-	tmNode, err := node.NewNode(
-		tmCfg,
-		pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),
-		nodeKey,
-		proxy.NewLocalClientCreator(app),
-		genDocProvider,
-		node.DefaultDBProvider,
-		node.DefaultMetricsProvider(tmCfg.Instrumentation),
-		logger.With("module", val.Moniker),
-	)
-	if err != nil {
-		return err
-	}
-
-	if err := tmNode.Start(); err != nil {
-		return err
-	}
-
-	val.tmNode = tmNode
-
-	if val.RPCAddress != "" {
-		val.RPCClient = local.New(tmNode)
-	}
-
-	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
-	if val.APIAddress != "" || val.AppConfig.GRPC.Enable {
-		val.ClientCtx = val.ClientCtx.
-			WithClient(val.RPCClient)
-
-		// Add the tx service in the gRPC router.
-		app.RegisterTxService(val.ClientCtx)
-
-		// Add the tendermint queries service in the gRPC router.
-		app.RegisterTendermintService(val.ClientCtx)
-	}
-
-	if val.AppConfig.API.Enable && val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
-		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
-
-		errCh := make(chan error)
-
-		go func() {
-			if err := apiSrv.Start(val.AppConfig.Config); err != nil {
-				errCh <- err
-			}
-		}()
-
-		select {
-		case err := <-errCh:
-			return err
-		case <-time.After(srvtypes.ServerStartTime): // assume server started successfully
-		}
-
-		val.api = apiSrv
-	}
-
-	if val.AppConfig.GRPC.Enable {
-		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
-		if err != nil {
-			return err
-		}
-
-		val.grpc = grpcSrv
-
-		if val.AppConfig.GRPCWeb.Enable {
-			val.grpcWeb, err = servergrpc.StartGRPCWeb(grpcSrv, val.AppConfig.Config)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if val.AppConfig.JSONRPC.Enable && val.AppConfig.JSONRPC.Address != "" {
-		if val.Ctx == nil || val.Ctx.Viper == nil {
-			return fmt.Errorf("validator %s context is nil", val.Moniker)
-		}
-
-		tmEndpoint := "/websocket"
-		tmRPCAddr := val.RPCAddress
-
-		val.jsonrpc, val.jsonrpcDone, err = server.StartJSONRPC(val.Ctx, val.ClientCtx, tmRPCAddr, tmEndpoint, val.AppConfig, nil)
-		if err != nil {
-			return err
-		}
-
-		address := fmt.Sprintf("http://%s", val.AppConfig.JSONRPC.Address)
-
-		val.JSONRPCClient, err = ethclient.Dial(address)
-		if err != nil {
-			return fmt.Errorf("failed to dial JSON-RPC at %s: %w", val.AppConfig.JSONRPC.Address, err)
-		}
-	}
-
 	return nil
+	//logger := val.Ctx.Logger
+	//tmCfg := val.Ctx.Config
+	//tmCfg.Instrumentation.Prometheus = false
+	//
+	//if err := val.AppConfig.ValidateBasic(); err != nil {
+	//	return err
+	//}
+	//
+	//nodeKey, err := p2p.LoadOrGenNodeKey(tmCfg.NodeKeyFile())
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//app := cfg.AppConstructor(*val)
+	//
+	//genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
+	//tmNode, err := node.NewNode(
+	//	tmCfg,
+	//	pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),
+	//	nodeKey,
+	//	proxy.NewLocalClientCreator(app),
+	//	genDocProvider,
+	//	cmtcfg.DefaultDBProvider,
+	//	node.DefaultMetricsProvider(tmCfg.Instrumentation),
+	//	servercmtlog.CometLoggerWrapper{Logger: logger.With("module", val.Moniker)},
+	//)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//if err := tmNode.Start(); err != nil {
+	//	return err
+	//}
+	//
+	//val.tmNode = tmNode
+	//
+	//if val.RPCAddress != "" {
+	//	val.RPCClient = local.New(tmNode)
+	//}
+	//
+	//// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
+	//if val.APIAddress != "" || val.AppConfig.GRPC.Enable {
+	//	val.ClientCtx = val.ClientCtx.
+	//		WithClient(val.RPCClient)
+	//
+	//	// Add the tx service in the gRPC router.
+	//	app.RegisterTxService(val.ClientCtx)
+	//
+	//	// Add the tendermint queries service in the gRPC router.
+	//	app.RegisterTendermintService(val.ClientCtx)
+	//}
+	//
+	//// TODO(boodyvo): implement
+	////if val.AppConfig.API.Enable && val.APIAddress != "" {
+	////	apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
+	////	app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
+	////
+	////	errCh := make(chan error)
+	////
+	////	go func() {
+	////		if err := apiSrv.Start(val.AppConfig.Config); err != nil {
+	////			errCh <- err
+	////		}
+	////	}()
+	////
+	////	select {
+	////	case err := <-errCh:
+	////		return err
+	////	case <-time.After(srvtypes.ServerStartTime): // assume server started successfully
+	////	}
+	////
+	////	val.api = apiSrv
+	////}
+	////
+	////if val.AppConfig.GRPC.Enable {
+	////	grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
+	////	if err != nil {
+	////		return err
+	////	}
+	////
+	////	val.grpc = grpcSrv
+	////
+	////	if val.AppConfig.GRPCWeb.Enable {
+	////		val.grpcWeb, err = servergrpc.StartGRPCWeb(grpcSrv, val.AppConfig.Config)
+	////		if err != nil {
+	////			return err
+	////		}
+	////	}
+	////}
+	//
+	//if val.AppConfig.JSONRPC.Enable && val.AppConfig.JSONRPC.Address != "" {
+	//	if val.Ctx == nil || val.Ctx.Viper == nil {
+	//		return fmt.Errorf("validator %s context is nil", val.Moniker)
+	//	}
+	//
+	//	tmEndpoint := "/websocket"
+	//	tmRPCAddr := val.RPCAddress
+	//
+	//	val.jsonrpc, val.jsonrpcDone, err = server.StartJSONRPC(val.Ctx, val.ClientCtx, tmRPCAddr, tmEndpoint, val.AppConfig, nil)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	address := fmt.Sprintf("http://%s", val.AppConfig.JSONRPC.Address)
+	//
+	//	val.JSONRPCClient, err = ethclient.Dial(address)
+	//	if err != nil {
+	//		return fmt.Errorf("failed to dial JSON-RPC at %s: %w", val.AppConfig.JSONRPC.Address, err)
+	//	}
+	//}
+	//
+	//return nil
 }
 
 func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
@@ -177,13 +166,18 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		initCfg := genutiltypes.NewInitConfig(cfg.ChainID, gentxsDir, vals[i].NodeID, vals[i].PubKey)
 
 		genFile := tmCfg.GenesisFile()
-		genDoc, err := types.GenesisDocFromFile(genFile)
+		// Change for ethermint
+		appGenesis, err := genutiltypes.AppGenesisFromFile(genFile)
 		if err != nil {
 			return err
 		}
+		//genDoc, err := types.GenesisDocFromFile(genFile)
+		//if err != nil {
+		//	return err
+		//}
 
 		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
-			tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator)
+			tmCfg, initCfg, appGenesis, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator, cfg.TxConfig.SigningContext().ValidatorAddressCodec())
 		if err != nil {
 			return err
 		}

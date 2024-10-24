@@ -16,6 +16,7 @@
 package ante
 
 import (
+	txsigning "cosmossdk.io/x/tx/signing"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -27,7 +28,7 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
+	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
 
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/crypto/secp256k1"
@@ -76,14 +77,14 @@ func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type LegacyEip712SigVerificationDecorator struct {
 	ak              evmtypes.AccountKeeper
-	signModeHandler authsigning.SignModeHandler
+	signModeHandler *txsigning.HandlerMap
 	evmKeeper       EVMKeeper
 }
 
 // Deprecated: NewLegacyEip712SigVerificationDecorator creates a new LegacyEip712SigVerificationDecorator
 func NewLegacyEip712SigVerificationDecorator(
 	ak evmtypes.AccountKeeper,
-	signModeHandler authsigning.SignModeHandler,
+	signModeHandler *txsigning.HandlerMap,
 	ek EVMKeeper,
 ) LegacyEip712SigVerificationDecorator {
 	return LegacyEip712SigVerificationDecorator{
@@ -122,7 +123,10 @@ func (svd LegacyEip712SigVerificationDecorator) AnteHandle(ctx sdk.Context,
 		return ctx, err
 	}
 
-	signerAddrs := sigTx.GetSigners()
+	signerAddrs, err := sigTx.GetSigners()
+	if err != nil {
+		return ctx, err
+	}
 
 	// EIP712 allows just one signature
 	if len(sigs) != 1 {
@@ -196,7 +200,7 @@ func VerifySignature(
 	pubKey cryptotypes.PubKey,
 	signerData authsigning.SignerData,
 	sigData signing.SignatureData,
-	_ authsigning.SignModeHandler,
+	_ *txsigning.HandlerMap,
 	tx authsigning.Tx,
 	params evmtypes.Params,
 ) error {
@@ -229,7 +233,7 @@ func VerifySignature(
 				Gas:    tx.GetGas(),
 			},
 			msgs, tx.GetMemo(),
-			tx.GetTip(),
+			// tx.TipTx interface was removed, added types.TxWithTimeoutHeight, they have been deprecated and should not be used since v0.46.0
 		)
 
 		signerChainID, err := ethermint.ParseChainID(signerData.ChainID)
