@@ -12,7 +12,8 @@ require (
 	cosmossdk.io/x/feegrant v0.1.1
 	cosmossdk.io/x/tx v0.13.5
 	cosmossdk.io/x/upgrade v0.1.4
-	github.com/Kava-Labs/opendb v0.0.0-20240719173129-a2f11f6d7e51
+	//github.com/Kava-Labs/opendb v0.0.0-20240719173129-a2f11f6d7e51
+	github.com/Kava-Labs/opendb v0.0.0-20241024062216-dd5bc73e28f2
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcutil v1.1.6
 	github.com/cenkalti/backoff/v4 v4.3.0
@@ -52,6 +53,8 @@ require (
 	google.golang.org/protobuf v1.34.2
 	sigs.k8s.io/yaml v1.4.0
 )
+
+require golang.org/x/sync v0.8.0
 
 require (
 	cloud.google.com/go v0.115.0 // indirect
@@ -221,7 +224,6 @@ require (
 	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect

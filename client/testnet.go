@@ -19,6 +19,8 @@ package client
 
 import (
 	"bufio"
+	"context"
+	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -324,12 +326,12 @@ func initTestnetFiles(
 
 		valTokens := sdk.TokensFromConsensusPower(100, ethermint.PowerReduction)
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
-			sdk.ValAddress(addr),
+			addr.String(),
 			valPubKeys[i],
 			sdk.NewCoin(ethermint.AttoPhoton, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
-			sdk.OneInt(),
+			sdkmath.OneInt(),
 		)
 		if err != nil {
 			return err
@@ -349,7 +351,8 @@ func initTestnetFiles(
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		if err := tx.Sign(txFactory, nodeDirName, txBuilder, true); err != nil {
+		// TODO(boodyvo):
+		if err := tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}
 
@@ -486,7 +489,11 @@ func collectGenFiles(
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
 		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, nodeID, valPubKey)
 
-		genDoc, err := types.GenesisDocFromFile(nodeConfig.GenesisFile())
+		//genDoc, err := types.GenesisDocFromFile(nodeConfig.GenesisFile())
+		//if err != nil {
+		//	return err
+		//}
+		appGenesis, err := genutiltypes.AppGenesisFromFile(nodeConfig.GenesisFile())
 		if err != nil {
 			return err
 		}
@@ -496,9 +503,10 @@ func collectGenFiles(
 			clientCtx.TxConfig,
 			nodeConfig,
 			initCfg,
-			*genDoc,
+			appGenesis,
 			genBalIterator,
 			genutiltypes.DefaultMessageValidator,
+			clientCtx.TxConfig.SigningContext().ValidatorAddressCodec(),
 		)
 		if err != nil {
 			return err

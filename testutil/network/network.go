@@ -24,16 +24,16 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	tmcfg "github.com/cometbft/cometbft/config"
-	tmflags "github.com/cometbft/cometbft/libs/cli/flags"
 	tmrand "github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/node"
 	tmclient "github.com/cometbft/cometbft/rpc/client"
@@ -57,6 +57,7 @@ import (
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	networkServer "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -285,7 +286,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 				apiListenAddr = cfg.APIAddress
 			} else {
 				var err error
-				apiListenAddr, _, err = server.FreeTCPAddr()
+				apiListenAddr, _, _, err = networkServer.FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
@@ -301,7 +302,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.RPCAddress != "" {
 				tmCfg.RPC.ListenAddress = cfg.RPCAddress
 			} else {
-				rpcAddr, _, err := server.FreeTCPAddr()
+				rpcAddr, _, _, err := networkServer.FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
@@ -311,7 +312,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.GRPCAddress != "" {
 				appCfg.GRPC.Address = cfg.GRPCAddress
 			} else {
-				_, grpcPort, err := server.FreeTCPAddr()
+				_, grpcPort, _, err := networkServer.FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
@@ -319,17 +320,17 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			}
 			appCfg.GRPC.Enable = true
 
-			_, grpcWebPort, err := server.FreeTCPAddr()
-			if err != nil {
-				return nil, err
-			}
-			appCfg.GRPCWeb.Address = fmt.Sprintf("0.0.0.0:%s", grpcWebPort)
-			appCfg.GRPCWeb.Enable = true
+			//_, grpcWebPort, _, err := networkServer.FreeTCPAddr()
+			//if err != nil {
+			//	return nil, err
+			//}
+			//appCfg.GRPCWeb.Address = fmt.Sprintf("0.0.0.0:%s", grpcWebPort)
+			//appCfg.GRPCWeb.Enable = true
 
 			if cfg.JSONRPCAddress != "" {
 				appCfg.JSONRPC.Address = cfg.JSONRPCAddress
 			} else {
-				_, jsonRPCPort, err := server.FreeTCPAddr()
+				_, jsonRPCPort, _, err := networkServer.FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
@@ -341,8 +342,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 		logger := log.NewNopLogger()
 		if cfg.EnableTMLogging {
-			logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-			logger, _ = tmflags.ParseLogLevel("info", logger, tmcfg.DefaultLogLevel)
+			logger = log.NewLogger(os.Stdout)
+			//logger, _ = tmflags.ParseLogLevel("info", servercmtlog.CometLoggerWrapper{Logger: logger}, tmcfg.DefaultLogLevel)
 		}
 
 		ctx.Logger = logger
@@ -366,13 +367,13 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		tmCfg.Moniker = nodeDirName
 		monikers[i] = nodeDirName
 
-		proxyAddr, _, err := server.FreeTCPAddr()
+		proxyAddr, _, _, err := networkServer.FreeTCPAddr()
 		if err != nil {
 			return nil, err
 		}
 		tmCfg.ProxyApp = proxyAddr
 
-		p2pAddr, _, err := server.FreeTCPAddr()
+		p2pAddr, _, _, err := networkServer.FreeTCPAddr()
 		if err != nil {
 			return nil, err
 		}
@@ -439,12 +440,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		}
 
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
-			sdk.ValAddress(addr),
+			addr.String(),
 			valPubKeys[i],
 			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(commission, sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
-			sdk.OneInt(),
+			sdkmath.OneInt(),
 		)
 		if err != nil {
 			return nil, err
@@ -473,7 +474,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			WithKeybase(kb).
 			WithTxConfig(cfg.TxConfig)
 
-		if err := tx.Sign(txFactory, nodeDirName, txBuilder, true); err != nil {
+		// TODO(boodyvo): what context was
+		if err := tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true); err != nil {
 			return nil, err
 		}
 
@@ -545,9 +547,33 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 	// Ensure we cleanup incase any test was abruptly halted (e.g. SIGINT) as any
 	// defer in a test would not be called.
-	server.TrapSignal(network.Cleanup)
+	trapSignal(network.Cleanup)
 
 	return network, nil
+}
+
+// trapSignal traps SIGINT and SIGTERM and calls os.Exit once a signal is received.
+func trapSignal(cleanupFunc func()) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigs
+
+		if cleanupFunc != nil {
+			cleanupFunc()
+		}
+		exitCode := 128
+
+		switch sig {
+		case syscall.SIGINT:
+			exitCode += int(syscall.SIGINT)
+		case syscall.SIGTERM:
+			exitCode += int(syscall.SIGTERM)
+		}
+
+		os.Exit(exitCode)
+	}()
 }
 
 // LatestHeight returns the latest height of the network or an error if the
