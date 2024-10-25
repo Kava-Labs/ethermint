@@ -16,8 +16,12 @@
 package main
 
 import (
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"errors"
+	"fmt"
+	tmrand "github.com/cometbft/cometbft/libs/rand"
+	simutils "github.com/cosmos/cosmos-sdk/testutil/sims"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"io"
 	"os"
@@ -68,7 +72,7 @@ const EnvPrefix = "ETHERMINT"
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	encodingConfig := encoding.MakeConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -109,6 +113,22 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			return sdkserver.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, tmcfg.DefaultConfig())
 		},
 	}
+	// encCfg := encoding.MakeConfig()
+
+	tempDir, err := os.MkdirTemp("", "test_ethermint")
+	if err != nil {
+		panic(err)
+	}
+	chainID := fmt.Sprintf("ethermint_%d-1", tmrand.Int63n(9999999999999)+1)
+
+	// TODO(boodyvo): should add options?
+	tempApp := app.NewEthermintApp(
+		log.NewNopLogger(), dbm.NewMemDB(), nil, true, make(map[int64]bool), tempDir, 0,
+		simutils.NewAppOptionsWithFlagHome(tempDir),
+		baseapp.SetChainID(chainID),
+		//baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+		//baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+	)
 
 	// TODO: double-check
 	// authclient.Codec = encodingConfig.Codec
@@ -118,16 +138,16 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	rootCmd.AddCommand(
 		ethermintclient.ValidateChainID(
-			genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
+			genutilcli.InitCmd(tempApp.BasicModuleManager, app.DefaultNodeHome),
 		),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, genutiltypes.DefaultMessageValidator, authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr)),
 		genutilcli.MigrateGenesisCmd(genutilcli.MigrationMap), // TODO: shouldn't this include the local app version instead of the SDK?
 		// TODO(boodyvo): is it valid codec (?)
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr)),
-		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
+		genutilcli.GenTxCmd(tempApp.BasicModuleManager, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr)),
+		genutilcli.ValidateGenesisCmd(tempApp.BasicModuleManager),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		ethermintclient.NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		ethermintclient.NewTestnetCmd(tempApp.BasicModuleManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		// TODO(boodyvo): looks like it was removed, not sure if necessary, as only requests config
 		//config.Cmd(),
@@ -138,14 +158,14 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		// TODO(boodyvo): was removed, only checks status of the node
+		// TODO(boodyvo): was removed, checks status of the node
 		//rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
 		ethermintclient.KeyCommands(app.DefaultNodeHome),
 	)
 
-	rootCmd, err := srvflags.AddTxFlags(rootCmd)
+	rootCmd, err = srvflags.AddTxFlags(rootCmd)
 	if err != nil {
 		panic(err)
 	}
@@ -180,7 +200,22 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
-	app.ModuleBasics.AddQueryCommands(cmd)
+	tempDir, err := os.MkdirTemp("", "test_ethermint")
+	if err != nil {
+		panic(err)
+	}
+	// TODO(boodyvo): how to extract chainID?
+
+	// TODO(boodyvo): should add options?
+	tempApp := app.NewEthermintApp(
+		log.NewNopLogger(), dbm.NewMemDB(), nil, true, make(map[int64]bool), tempDir, 0,
+		simutils.NewAppOptionsWithFlagHome(tempDir),
+		//baseapp.SetChainID(chainID),
+		//baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+		//baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+	)
+
+	tempApp.BasicModuleManager.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -208,7 +243,22 @@ func txCommand() *cobra.Command {
 		//authcmd.GetAuxToFeeCommand(),
 	)
 
-	app.ModuleBasics.AddTxCommands(cmd)
+	tempDir, err := os.MkdirTemp("", "test_ethermint")
+	if err != nil {
+		panic(err)
+	}
+	// TODO(boodyvo): how to extract chainID?
+
+	// TODO(boodyvo): should add options?
+	tempApp := app.NewEthermintApp(
+		log.NewNopLogger(), dbm.NewMemDB(), nil, true, make(map[int64]bool), tempDir, 0,
+		simutils.NewAppOptionsWithFlagHome(tempDir),
+		//baseapp.SetChainID(chainID),
+		//baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+		//baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+	)
+
+	tempApp.BasicModuleManager.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -263,11 +313,20 @@ func (a appCreator) newApp(logger tmlog.Logger, db dbm.DB, traceStore io.Writer,
 	}
 	chainID := appGenesis.ChainID
 
+	// logger log.Logger,
+	//	db dbm.DB,
+	//	traceStore io.Writer,
+	//	loadLatest bool,
+	//	skipUpgradeHeights map[int64]bool,
+	//	homePath string,
+	//	invCheckPeriod uint,
+	//	//encodingConfig simappparams.EncodingConfig,
+	//	appOpts servertypes.AppOptions,
+	//	baseAppOptions ...func(*baseapp.BaseApp),
 	ethermintApp := app.NewEthermintApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		homeDir,
 		cast.ToUint(appOpts.Get(sdkserver.FlagInvCheckPeriod)),
-		a.encCfg,
 		appOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(sdkserver.FlagMinGasPrices))),
@@ -299,13 +358,13 @@ func (a appCreator) appExport(
 	}
 
 	if height != -1 {
-		ethermintApp = app.NewEthermintApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), a.encCfg, appOpts)
+		ethermintApp = app.NewEthermintApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), appOpts)
 
 		if err := ethermintApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		ethermintApp = app.NewEthermintApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), a.encCfg, appOpts)
+		ethermintApp = app.NewEthermintApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), appOpts)
 	}
 
 	return ethermintApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

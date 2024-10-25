@@ -16,12 +16,11 @@
 package main
 
 import (
-	"os"
-
-	"github.com/cosmos/cosmos-sdk/server"
+	"fmt"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/evmos/ethermint/app"
 	cmdcfg "github.com/evmos/ethermint/cmd/config"
+	"os"
 )
 
 func main() {
@@ -31,12 +30,14 @@ func main() {
 	rootCmd, _ := NewRootCmd()
 
 	if err := svrcmd.Execute(rootCmd, EnvPrefix, app.DefaultNodeHome); err != nil {
-		switch e := err.(type) {
-		case server.ErrorCode:
-			os.Exit(e.Code)
+		fmt.Println("Error: ", err)
+		os.Exit(1)
+		//switch e := err.(type) {
+		//case server.ErrorCode:
+		//	os.Exit(e.Code)
 
-		default:
-			os.Exit(1)
-		}
+		//default:
+		//	os.Exit(1)
+		//}
 	}
 }
