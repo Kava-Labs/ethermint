@@ -956,18 +956,18 @@ func startTelemetry(cfg config.Config) (*telemetry.Metrics, error) {
 
 // GenDocProvider returns a function which returns the genesis doc from the genesis file.
 func GenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
-	fmt.Println("cfg.GenesisFile(): ", cfg.GenesisFile())
-	file, err := os.Open(filepath.Clean(cfg.GenesisFile()))
-	if err != nil {
-		return nil
-	}
-
-	jsonBlob, err := io.ReadAll(file)
-	if err != nil {
-		return nil
-	}
-
-	fmt.Println("GenDocProvider jsonBlob: ", string(jsonBlob))
+	//fmt.Println("cfg.GenesisFile(): ", cfg.GenesisFile())
+	//file, err := os.Open(filepath.Clean(cfg.GenesisFile()))
+	//if err != nil {
+	//	return nil
+	//}
+	//
+	//jsonBlob, err := io.ReadAll(file)
+	//if err != nil {
+	//	return nil
+	//}
+	//
+	//fmt.Println("GenDocProvider jsonBlob: ", string(jsonBlob))
 
 	return func() (*cmttypes.GenesisDoc, error) {
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
