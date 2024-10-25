@@ -48,15 +48,11 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tyler-smith/go-bip39 v1.1.0
 	golang.org/x/net v0.28.0
+	golang.org/x/sync v0.8.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240624140628-dc46fd24d27d
 	google.golang.org/grpc v1.64.1
 	google.golang.org/protobuf v1.34.2
 	sigs.k8s.io/yaml v1.4.0
-)
-
-require (
-	cosmossdk.io/client/v2 v2.0.0-beta.3
-	golang.org/x/sync v0.8.0
 )
 
 require (
