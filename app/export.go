@@ -25,16 +25,14 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/evmos/ethermint/simapp"
-
-	"github.com/evmos/ethermint/encoding"
 )
 
 // NewDefaultGenesisState generates the default state for the application.
-func NewDefaultGenesisState() simapp.GenesisState {
-	encCfg := encoding.MakeConfig(ModuleBasics)
-	return ModuleBasics.DefaultGenesis(encCfg.Codec)
-}
+//func NewDefaultGenesisState() simapp.GenesisState {
+
+//encCfg := encoding.MakeConfig(ModuleBasics)
+//return ModuleBasics.DefaultGenesis(encCfg.Codec)
+//}
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
@@ -106,7 +104,12 @@ func (app *EthermintApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAd
 
 	// withdraw all validator commission
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, []byte(val.GetOperator()))
+		valAddr, err := app.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+		if err != nil {
+			// should we panic?
+			panic(err)
+		}
+		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddr)
 		return false
 	})
 
@@ -141,7 +144,12 @@ func (app *EthermintApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAd
 	// reinitialize all validators
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		// donate any unwithdrawn outstanding reward fraction tokens to the community pool
-		scraps, err := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, []byte(val.GetOperator()))
+		valAddr, err := app.StakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+		if err != nil {
+			// TODO(boodyvo): should we panic?
+			panic(err)
+		}
+		scraps, err := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, valAddr)
 		if err != nil {
 			// TODO(boodyvo): should we return stop = true here?
 			return false
@@ -160,7 +168,7 @@ func (app *EthermintApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAd
 			return false
 		}
 
-		if err := app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, []byte(val.GetOperator())); err != nil {
+		if err := app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, valAddr); err != nil {
 			return true
 		}
 		return false

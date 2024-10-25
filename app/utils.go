@@ -18,6 +18,7 @@ package app
 import (
 	sdkmath "cosmossdk.io/math"
 	"encoding/json"
+	cmdcfg "github.com/evmos/ethermint/cmd/config"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -38,7 +39,6 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/evmos/ethermint/encoding"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
@@ -67,6 +67,7 @@ func Setup(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.GenesisState)
 
 // SetupWithDB initializes a new EthermintApp. A Nop logger is set in EthermintApp.
 func SetupWithDB(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.GenesisState) simapp.GenesisState, db dbm.DB) *EthermintApp {
+	cmdcfg.SetupConfig()
 	app := NewEthermintApp(log.NewNopLogger(),
 		db,
 		nil,
@@ -74,13 +75,12 @@ func SetupWithDB(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.Genesis
 		map[int64]bool{},
 		DefaultNodeHome,
 		5,
-		encoding.MakeConfig(ModuleBasics),
 		simutils.NewAppOptionsWithFlagHome(DefaultNodeHome),
 		baseapp.SetChainID("ethermint_9000-1"),
 	)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
-		genesisState := NewTestGenesisState(app.AppCodec())
+		genesisState := NewTestGenesisState(app, app.AppCodec())
 		if patchGenesis != nil {
 			genesisState = patchGenesis(app, genesisState)
 		}
@@ -105,7 +105,7 @@ func SetupWithDB(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.Genesis
 }
 
 // NewTestGenesisState generate genesis state with single validator
-func NewTestGenesisState(codec codec.Codec) simapp.GenesisState {
+func NewTestGenesisState(app *EthermintApp, codec codec.Codec) simapp.GenesisState {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	if err != nil {
@@ -123,7 +123,7 @@ func NewTestGenesisState(codec codec.Codec) simapp.GenesisState {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 	}
 
-	genesisState := NewDefaultGenesisState()
+	genesisState := app.DefaultGenesis()
 	return genesisStateWithValSet(codec, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 }
 

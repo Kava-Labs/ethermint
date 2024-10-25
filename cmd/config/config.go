@@ -16,6 +16,7 @@
 package config
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	ethermint "github.com/evmos/ethermint/types"
@@ -43,6 +44,14 @@ const (
 	// DisplayDenom defines the denomination displayed to users in client applications.
 	DisplayDenom = "photon"
 )
+
+func SetupConfig() {
+	// set the address prefixes
+	config := sdk.GetConfig()
+	SetBech32Prefixes(config)
+	SetBip44CoinType(config)
+	config.Seal()
+}
 
 // SetBech32Prefixes sets the global prefixes to be used when serializing addresses and public keys to Bech32 strings.
 func SetBech32Prefixes(config *sdk.Config) {

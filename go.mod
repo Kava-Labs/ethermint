@@ -54,7 +54,10 @@ require (
 	sigs.k8s.io/yaml v1.4.0
 )
 
-require golang.org/x/sync v0.8.0
+require (
+	cosmossdk.io/client/v2 v2.0.0-beta.3
+	golang.org/x/sync v0.8.0
+)
 
 require (
 	cloud.google.com/go v0.115.0 // indirect

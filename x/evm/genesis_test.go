@@ -720,7 +720,7 @@ func setupApp() (sdk.Context, *app.EthermintApp) {
 	tApp := app.Setup(isCheckTx, func(_ *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
 		return genesis
 	})
-	ctx := tApp.BaseApp.NewContext(isCheckTx, tmproto.Header{Height: 1, Time: time.Now().UTC(), ChainID: "ethermint_9000-1"})
+	ctx := tApp.BaseApp.NewContextLegacy(isCheckTx, tmproto.Header{Height: 1, Time: time.Now().UTC(), ChainID: "ethermint_9000-1"})
 
 	return ctx, tApp
 }

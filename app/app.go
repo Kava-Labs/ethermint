@@ -16,8 +16,13 @@
 package app
 
 import (
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/feegrant"
 	"encoding/json"
+	"fmt"
+	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
+	"github.com/evmos/ethermint/encoding"
 	"github.com/spf13/cobra"
 	"io"
 	"net/http"
@@ -50,6 +55,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -71,7 +77,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
@@ -85,11 +90,9 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
@@ -102,19 +105,16 @@ import (
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	"github.com/evmos/ethermint/simapp"
-	simappparams "github.com/evmos/ethermint/simapp/params"
-
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client"
-	ibcclientclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/client/cli"
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	cmdconfig "github.com/evmos/ethermint/cmd/config"
+	"github.com/evmos/ethermint/simapp"
 
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -153,43 +153,44 @@ var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
 
-	ac = addresscodec.NewBech32Codec("ethermint")
+	// authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+	ac = authcodec.NewBech32Codec(cmdconfig.Bech32PrefixAccAddr)
 
 	LegacyProposalHandler       = govclient.NewProposalHandler(func() *cobra.Command { return upgradeclient.NewCmdSubmitUpgradeProposal(ac) })
 	LegacyCancelProposalHandler = govclient.NewProposalHandler(func() *cobra.Command { return upgradeclient.NewCmdSubmitCancelUpgradeProposal(ac) })
 
-	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
-	// non-dependant module elements, such as codec registration
-	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(
-		auth.AppModuleBasic{},
-		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-		bank.AppModuleBasic{},
-		capability.AppModuleBasic{},
-		staking.AppModuleBasic{},
-		mint.AppModuleBasic{},
-		distr.AppModuleBasic{},
-		gov.NewAppModuleBasic([]govclient.ProposalHandler{
-			paramsclient.ProposalHandler,
-			LegacyProposalHandler,
-			LegacyCancelProposalHandler,
-			govclient.NewProposalHandler(ibcclientclient.NewTxCmd),
-			//ibcclientclient.UpgradeProposalHandler,
-		}),
-		params.AppModuleBasic{},
-		crisis.AppModuleBasic{},
-		slashing.AppModuleBasic{},
-		ibc.AppModuleBasic{},
-		authzmodule.AppModuleBasic{},
-		feegrantmodule.AppModuleBasic{},
-		upgrade.AppModuleBasic{},
-		evidence.AppModuleBasic{},
-		ibctransfer.AppModuleBasic{},
-		vesting.AppModuleBasic{},
-		// Ethermint modules
-		evm.AppModuleBasic{},
-		feemarket.AppModuleBasic{},
-	)
+	//// ModuleBasics defines the module BasicManager is in charge of setting up basic,
+	//// non-dependant module elements, such as codec registration
+	//// and genesis verification.
+	//ModuleBasics = module.NewBasicManager(
+	//	auth.AppModuleBasic{},
+	//	genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+	//	bank.AppModuleBasic{},
+	//	capability.AppModuleBasic{},
+	//	staking.AppModuleBasic{},
+	//	mint.AppModuleBasic{},
+	//	distr.AppModuleBasic{},
+	//	gov.NewAppModuleBasic([]govclient.ProposalHandler{
+	//		paramsclient.ProposalHandler,
+	//		LegacyProposalHandler,
+	//		LegacyCancelProposalHandler,
+	//		govclient.NewProposalHandler(ibcclientclient.NewTxCmd),
+	//		//ibcclientclient.UpgradeProposalHandler,
+	//	}),
+	//	params.AppModuleBasic{},
+	//	crisis.AppModuleBasic{},
+	//	slashing.AppModuleBasic{},
+	//	ibc.AppModuleBasic{},
+	//	authzmodule.AppModuleBasic{},
+	//	feegrantmodule.AppModuleBasic{},
+	//	upgrade.AppModuleBasic{},
+	//	evidence.AppModuleBasic{},
+	//	ibctransfer.AppModuleBasic{},
+	//	vesting.AppModuleBasic{},
+	//	// Ethermint modules
+	//	evm.AppModuleBasic{},
+	//	feemarket.AppModuleBasic{},
+	//)
 
 	// module account permissions
 	maccPerms = map[string][]string{
@@ -257,7 +258,8 @@ type EthermintApp struct {
 	FeeMarketKeeper feemarketkeeper.Keeper
 
 	// the module manager
-	mm *module.Manager
+	mm                 *module.Manager
+	BasicModuleManager module.BasicManager
 
 	// the configurator
 	configurator module.Configurator
@@ -272,10 +274,11 @@ func NewEthermintApp(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	encodingConfig simappparams.EncodingConfig,
+	//encodingConfig simappparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *EthermintApp {
+	encodingConfig := encoding.MakeConfig()
 	appCodec := encodingConfig.Codec
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -335,6 +338,7 @@ func NewEthermintApp(
 
 	// allow x/gov to modify consensus parameters
 	authAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	fmt.Println("authAddr: ", authAddr)
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authAddr, runtime.EventService{})
 
 	// set the BaseApp's parameter store to the consensus keeper
@@ -354,9 +358,11 @@ func NewEthermintApp(
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		ethermint.ProtoAccount,
+		//ethermint.ProtoAccount,
+		authtypes.ProtoBaseAccount,
 		maccPerms,
 		ac,
+		//authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		authAddr,
 	)
@@ -368,14 +374,32 @@ func NewEthermintApp(
 		authAddr,
 		logger,
 	)
+	// app.stakingKeeper = stakingkeeper.NewKeeper(
+	//		appCodec,
+	//		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
+	//		app.accountKeeper,
+	//		app.bankKeeper,
+	//		govAuthAddrStr,
+	//		// TODO(boodyvo): validate which codecs to use. Looks like for validation before it used another codec, using AccAddress
+	//		addresscodec.NewBech32Codec(Bech32PrefixValAddr),
+	//		addresscodec.NewBech32Codec(Bech32PrefixConsAddr),
+	//	)
+	fmt.Println("prefix val", sdk.GetConfig().GetBech32ValidatorAddrPrefix())
+	fmt.Println("prefix cons", sdk.GetConfig().GetBech32ConsensusAddrPrefix())
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		authAddr,
-		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
-		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
+		//addresscodec.NewBech32Codec(Bech32PrefixValAddr),
+		//addresscodec.NewBech32Codec(Bech32PrefixConsAddr),
+		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+		//authcodec.NewBech32Codec(cmdconfig.Bech32PrefixValAddr),
+		//authcodec.NewBech32Codec(cmdconfig.Bech32PrefixConsAddr),
+		//authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
+		//authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,
@@ -538,6 +562,27 @@ func NewEthermintApp(
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeMarketSs),
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper),
 	)
+
+	// BasicModuleManager defines the module BasicManager which is in charge of setting up basic,
+	// non-dependant module elements, such as codec registration and genesis verification.
+	// By default, it is composed of all the modules from the module manager.
+	// Additionally, app module basics can be overwritten by passing them as an argument.
+	app.BasicModuleManager = module.NewBasicManagerFromManager(
+		app.mm,
+		map[string]module.AppModuleBasic{
+			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			// TODO(boodyvo): validate if we need this, as it requires custom changes into cosmos-sdk
+			//stakingtypes.ModuleName: staking.AppModuleBasic{AppModuleBasic: &sdkstaking.AppModuleBasic{}},
+			govtypes.ModuleName: gov.NewAppModuleBasic(
+				[]govclient.ProposalHandler{
+					paramsclient.ProposalHandler,
+				},
+			),
+			//ibctransfertypes.ModuleName: ibctransfer.AppModuleBasic{AppModuleBasic: &ibctransfer.AppModuleBasic{}},
+		},
+	)
+	app.BasicModuleManager.RegisterLegacyAminoCodec(cdc)
+	app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -782,6 +827,11 @@ func (app *EthermintApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+func (app *EthermintApp) DefaultGenesis() simapp.GenesisState {
+	return app.BasicModuleManager.DefaultGenesis(app.appCodec)
+}
+
 // GetKey returns the KVStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
@@ -823,7 +873,7 @@ func (app *EthermintApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.
 	node.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register grpc-gateway routes for all modules.
-	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	app.BasicModuleManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
 	if apiConfig.Swagger {
@@ -850,6 +900,27 @@ func (app *EthermintApp) RegisterTendermintService(clientCtx client.Context) {
 // application gRPC query router.
 func (app *EthermintApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
 	node.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
+}
+
+// AutoCliOpts returns the autocli options for the app.
+func (app *EthermintApp) AutoCliOpts() autocli.AppOptions {
+	modules := make(map[string]appmodule.AppModule, 0)
+	for _, m := range app.mm.Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.mm.Modules),
+		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+	}
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

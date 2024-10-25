@@ -18,18 +18,36 @@ package server
 import (
 	"context"
 	"fmt"
+	cmtcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/node"
+	"github.com/cometbft/cometbft/p2p"
+	"github.com/cometbft/cometbft/proxy"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/rosetta"
+	"github.com/evmos/ethermint/indexer"
+	ethermint "github.com/evmos/ethermint/types"
 	"golang.org/x/sync/errgroup"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
+	"runtime/pprof"
 	"strconv"
 	"time"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"github.com/Kava-Labs/opendb"
 	tcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	pvm "github.com/cometbft/cometbft/privval"
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	"github.com/cometbft/cometbft/rpc/client/local"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
+	ethmetricsexp "github.com/ethereum/go-ethereum/metrics/exp"
+	evmostypes "github.com/evmos/ethermint/types"
 	//dbm "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -41,6 +59,7 @@ import (
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	ethdebug "github.com/evmos/ethermint/rpc/namespaces/ethereum/debug"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -57,10 +76,6 @@ type ErrorCode struct {
 func (e ErrorCode) Error() string {
 	return strconv.Itoa(e.Code)
 }
-
-// ServerStartTime defines the time duration that the server need to stay running after startup
-// for the startup be considered successful
-const ServerStartTime = 5 * time.Second
 
 // DBOpener is a function to open `application.db`, potentially with customized options.
 type DBOpener func(opts types.AppOptions, rootDir string, backend dbm.BackendType) (dbm.DB, error)
@@ -301,168 +316,183 @@ func startStandAlone(ctx *server.Context, opts StartOptions) error {
 //}
 
 // legacyAminoCdc is used for the legacy REST API
-func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOptions) (err error) {
-	return nil
-	//cfg := ctx.Config
-	//home := cfg.RootDir
-	//logger := ctx.Logger
-	//
-	//g, ctxServ := getCtx(ctx, true)
-	//
-	//if cpuProfile := ctx.Viper.GetString(srvflags.CPUProfile); cpuProfile != "" {
-	//	fp, err := ethdebug.ExpandHome(cpuProfile)
-	//	if err != nil {
-	//		ctx.Logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
-	//		return err
-	//	}
-	//
-	//	f, err := os.Create(fp)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
-	//	if err := pprof.StartCPUProfile(f); err != nil {
-	//		return err
-	//	}
-	//
-	//	defer func() {
-	//		ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
-	//		pprof.StopCPUProfile()
-	//		if err := f.Close(); err != nil {
-	//			logger.Error("failed to close CPU profiler file", "error", err.Error())
-	//		}
-	//	}()
-	//}
-	//
-	//db, err := opts.DBOpener(ctx.Viper, home, server.GetAppDBBackend(ctx.Viper))
-	//if err != nil {
-	//	logger.Error("failed to open DB", "error", err.Error())
-	//	return err
-	//}
-	//
-	//defer func() {
-	//	if err := db.Close(); err != nil {
-	//		ctx.Logger.With("error", err).Error("error closing db")
-	//	}
-	//}()
-	//
-	//traceWriterFile := ctx.Viper.GetString(srvflags.TraceStore)
-	//traceWriter, err := openTraceWriter(traceWriterFile)
-	//if err != nil {
-	//	logger.Error("failed to open trace writer", "error", err.Error())
-	//	return err
-	//}
-	//
-	//config, err := config.GetConfig(ctx.Viper)
-	//if err != nil {
-	//	logger.Error("failed to get server config", "error", err.Error())
-	//	return err
-	//}
-	//
-	//if err := config.ValidateBasic(); err != nil {
-	//	logger.Error("invalid server config", "error", err.Error())
-	//	return err
-	//}
-	//
-	//app := opts.AppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
-	//
-	//nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
-	//if err != nil {
-	//	logger.Error("failed load or gen node key", "error", err.Error())
-	//	return err
-	//}
-	//
-	//genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
-	//
-	//var (
-	//	tmNode   *node.Node
-	//	gRPCOnly = ctx.Viper.GetBool(srvflags.GRPCOnly)
-	//)
-	//
-	//if gRPCOnly {
-	//	logger.Info("starting node in query only mode; Tendermint is disabled")
-	//	config.GRPC.Enable = true
-	//	config.JSONRPC.EnableIndexer = false
-	//} else {
-	//	logger.Info("starting node with ABCI Tendermint in-process")
-	//
-	//	tmNode, err = node.NewNode(
-	//		cfg,
-	//		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
-	//		nodeKey,
-	//		proxy.NewLocalClientCreator(app),
-	//		genDocProvider,
-	//		DBProviderFromAppOpts(ctx.Viper),
-	//		node.DefaultMetricsProvider(cfg.Instrumentation),
-	//		servercmtlog.CometLoggerWrapper{ctx.Logger.With("server", "node")},
-	//	)
-	//	if err != nil {
-	//		logger.Error("failed init node", "error", err.Error())
-	//		return err
-	//	}
-	//
-	//	if err := tmNode.Start(); err != nil {
-	//		logger.Error("failed start tendermint server", "error", err.Error())
-	//		return err
-	//	}
-	//
-	//	defer func() {
-	//		if tmNode.IsRunning() {
-	//			_ = tmNode.Stop()
-	//		}
-	//	}()
-	//}
-	//
-	//// Add the tx service to the gRPC router. We only need to register this
-	//// service if API or gRPC or JSONRPC is enabled, and avoid doing so in the general
-	//// case, because it spawns a new local tendermint RPC client.
-	//if (config.API.Enable || config.GRPC.Enable || config.JSONRPC.Enable || config.JSONRPC.EnableIndexer) && tmNode != nil {
-	//	clientCtx = clientCtx.WithClient(local.New(tmNode))
-	//
-	//	app.RegisterTxService(clientCtx)
-	//	app.RegisterTendermintService(clientCtx)
-	//	app.RegisterNodeService(clientCtx, config.Config)
-	//}
-	//
-	//metrics, err := startTelemetry(config)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//// Enable metrics if JSONRPC is enabled and --metrics is passed
-	//// Flag not added in config to avoid user enabling in config without passing in CLI
-	//if config.JSONRPC.Enable && ctx.Viper.GetBool(srvflags.JSONRPCEnableMetrics) {
-	//	ethmetricsexp.Setup(config.JSONRPC.MetricsAddress)
-	//}
-	//
-	//var idxer ethermint.EVMTxIndexer
-	//if config.JSONRPC.EnableIndexer {
-	//	idxDB, err := OpenIndexerDB(ctx.Viper, home, server.GetAppDBBackend(ctx.Viper))
-	//	if err != nil {
-	//		logger.Error("failed to open evm indexer DB", "error", err.Error())
-	//		return err
-	//	}
-	//
-	//	idxLogger := ctx.Logger.With("indexer", "evm")
-	//	idxer = indexer.NewKVIndexer(idxDB, idxLogger, clientCtx)
-	//	indexerService := NewEVMIndexerService(idxer, clientCtx.Client.(rpcclient.Client))
-	//	indexerService.SetLogger(servercmtlog.CometLoggerWrapper{Logger: idxLogger})
-	//
-	//	errCh := make(chan error)
-	//	go func() {
-	//		if err := indexerService.Start(); err != nil {
-	//			errCh <- err
-	//		}
-	//	}()
-	//
-	//	select {
-	//	case err := <-errCh:
-	//		return err
-	//	case <-time.After(ServerStartTime): // assume server started successfully
-	//	}
-	//}
-	//
+func startInProcess(svrCtx *server.Context, clientCtx client.Context, opts StartOptions) (err error) {
+	cfg := svrCtx.Config
+	home := cfg.RootDir
+	logger := svrCtx.Logger
+
+	g, ctx := getCtx(svrCtx, true)
+
+	if cpuProfile := svrCtx.Viper.GetString(srvflags.CPUProfile); cpuProfile != "" {
+		fp, err := ethdebug.ExpandHome(cpuProfile)
+		if err != nil {
+			svrCtx.Logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
+			return err
+		}
+
+		f, err := os.Create(fp)
+		if err != nil {
+			return err
+		}
+
+		svrCtx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
+		if err := pprof.StartCPUProfile(f); err != nil {
+			return err
+		}
+
+		defer func() {
+			svrCtx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
+			pprof.StopCPUProfile()
+			if err := f.Close(); err != nil {
+				logger.Error("failed to close CPU profiler file", "error", err.Error())
+			}
+		}()
+	}
+
+	db, err := opts.DBOpener(svrCtx.Viper, home, server.GetAppDBBackend(svrCtx.Viper))
+	if err != nil {
+		logger.Error("failed to open DB", "error", err.Error())
+		return err
+	}
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			svrCtx.Logger.With("error", err).Error("error closing db")
+		}
+	}()
+
+	traceWriterFile := svrCtx.Viper.GetString(srvflags.TraceStore)
+	traceWriter, err := openTraceWriter(traceWriterFile)
+	if err != nil {
+		logger.Error("failed to open trace writer", "error", err.Error())
+		return err
+	}
+
+	config, err := config.GetConfig(svrCtx.Viper)
+	if err != nil {
+		logger.Error("failed to get server config", "error", err.Error())
+		return err
+	}
+
+	if err := config.ValidateBasic(); err != nil {
+		logger.Error("invalid server config", "error", err.Error())
+		return err
+	}
+
+	app := opts.AppCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+
+	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
+	if err != nil {
+		logger.Error("failed load or gen node key", "error", err.Error())
+		return err
+	}
+
+	genDocProvider := GenDocProvider(cfg)
+
+	var (
+		tmNode   *node.Node
+		gRPCOnly = svrCtx.Viper.GetBool(srvflags.GRPCOnly)
+	)
+
+	if gRPCOnly {
+		logger.Info("starting node in query only mode; Tendermint is disabled")
+		config.GRPC.Enable = true
+		config.JSONRPC.EnableIndexer = false
+	} else {
+		logger.Info("starting node with ABCI Tendermint in-process")
+
+		cmtApp := server.NewCometABCIWrapper(app)
+		tmNode, err = node.NewNode(
+			cfg,
+			pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+			nodeKey,
+			proxy.NewLocalClientCreator(cmtApp),
+			genDocProvider,
+			cmtcfg.DefaultDBProvider,
+			//cmtcfg.DBProviderFromAppOpts(ctx.Viper),
+			node.DefaultMetricsProvider(cfg.Instrumentation),
+			servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger.With("server", "node")},
+		)
+		if err != nil {
+			logger.Error("failed init node", "error", err.Error())
+			return err
+		}
+
+		if err := tmNode.Start(); err != nil {
+			logger.Error("failed start tendermint server", "error", err.Error())
+			return err
+		}
+
+		defer func() {
+			if tmNode.IsRunning() {
+				_ = tmNode.Stop()
+			}
+		}()
+	}
+
+	// Add the tx service to the gRPC router. We only need to register this
+	// service if API or gRPC or JSONRPC is enabled, and avoid doing so in the general
+	// case, because it spawns a new local tendermint RPC client.
+	if (config.API.Enable || config.GRPC.Enable || config.JSONRPC.Enable || config.JSONRPC.EnableIndexer) && tmNode != nil {
+		clientCtx = clientCtx.WithClient(local.New(tmNode))
+
+		app.RegisterTxService(clientCtx)
+		app.RegisterTendermintService(clientCtx)
+		app.RegisterNodeService(clientCtx, config.Config)
+	}
+
+	metrics, err := startTelemetry(config)
+	if err != nil {
+		return err
+	}
+
+	// Enable metrics if JSONRPC is enabled and --metrics is passed
+	// Flag not added in config to avoid user enabling in config without passing in CLI
+	if config.JSONRPC.Enable && svrCtx.Viper.GetBool(srvflags.JSONRPCEnableMetrics) {
+		ethmetricsexp.Setup(config.JSONRPC.MetricsAddress)
+	}
+
+	var idxer ethermint.EVMTxIndexer
+	if config.JSONRPC.EnableIndexer {
+		idxDB, err := OpenIndexerDB(svrCtx.Viper, home, server.GetAppDBBackend(svrCtx.Viper))
+		if err != nil {
+			logger.Error("failed to open evm indexer DB", "error", err.Error())
+			return err
+		}
+
+		idxLogger := svrCtx.Logger.With("indexer", "evm")
+		idxer = indexer.NewKVIndexer(idxDB, idxLogger, clientCtx)
+		indexerService := NewEVMIndexerService(idxer, clientCtx.Client.(rpcclient.Client))
+		indexerService.SetLogger(servercmtlog.CometLoggerWrapper{Logger: idxLogger})
+
+		g.Go(func() error {
+			return indexerService.Start()
+		})
+
+		//errCh := make(chan error)
+		//go func() {
+		//	if err := indexerService.Start(); err != nil {
+		//		errCh <- err
+		//	}
+		//}()
+		//
+		//select {
+		//case err := <-errCh:
+		//	return err
+		//case <-time.After(ServerStartTime): // assume server started successfully
+		//}
+	}
+
+	if config.API.Enable || config.JSONRPC.Enable {
+		genDoc, err := genDocProvider()
+		if err != nil {
+			return err
+		}
+		clientCtx = clientCtx.
+			WithHomeDir(home).
+			WithChainID(genDoc.ChainID)
+	}
+
 	//if config.API.Enable || config.JSONRPC.Enable {
 	//	genDoc, err := genDocProvider()
 	//	if err != nil {
@@ -511,7 +541,30 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 	//		ctx.Logger.Debug("gRPC client assigned to client context", "address", grpcAddress)
 	//	}
 	//}
-	//
+
+	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, config.GRPC, clientCtx, svrCtx, app)
+	if err != nil {
+		return err
+	}
+	if grpcSrv != nil {
+		defer grpcSrv.GracefulStop()
+	}
+
+	// ctx context.Context,
+	//	g *errgroup.Group,
+	//	svrCfg serverconfig.Config,
+	//	clientCtx client.Context,
+	//	svrCtx *server.Context,
+	//	app types.Application,
+	//	home string,
+	//	grpcSrv *grpc.Server,
+	//	metrics *telemetry.Metrics,
+	apiSrv := startAPIServer(ctx, g, config.Config, clientCtx, svrCtx, app, grpcSrv, metrics)
+
+	if apiSrv != nil {
+		defer apiSrv.Close()
+	}
+
 	//var apiSrv *api.Server
 	//if config.API.Enable {
 	//	//
@@ -564,7 +617,24 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 	//	//	}()
 	//	//}
 	//}
-	//
+
+	clientCtx, httpSrv, httpSrvDone, err := startJSONRPCServer(svrCtx, clientCtx, g, config, genDocProvider, cfg.RPC.ListenAddress, idxer)
+	if httpSrv != nil {
+		defer func() {
+			shutdownCtx, cancelFn := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancelFn()
+			if err := httpSrv.Shutdown(shutdownCtx); err != nil {
+				logger.Error("HTTP server shutdown produced a warning", "error", err.Error())
+			} else {
+				logger.Info("HTTP server shut down, waiting 5 sec")
+				select {
+				case <-time.Tick(5 * time.Second):
+				case <-httpSrvDone:
+				}
+			}
+		}()
+	}
+
 	//var (
 	//	httpSrv     *http.Server
 	//	httpSrvDone chan struct{}
@@ -598,69 +668,73 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 	//		}
 	//	}()
 	//}
+
+	// At this point it is safe to block the process if we're in query only mode as
+	// we do not need to start Rosetta or handle any Tendermint related processes.
+	if gRPCOnly {
+		// wait for signal capture and gracefully return
+		return g.Wait()
+		//return server.WaitForQuitSignals()
+	}
+
+	//var rosettaSrv crgserver.Server
+	//if config.Rosetta.Enable {
+	//	offlineMode := config.Rosetta.Offline
 	//
-	//// At this point it is safe to block the process if we're in query only mode as
-	//// we do not need to start Rosetta or handle any Tendermint related processes.
-	//if gRPCOnly {
-	//	// wait for signal capture and gracefully return
-	//	return nil
-	//	//return server.WaitForQuitSignals()
+	//	// If GRPC is not enabled rosetta cannot work in online mode, so it works in
+	//	// offline mode.
+	//	if !config.GRPC.Enable {
+	//		offlineMode = true
+	//	}
+	//
+	//	conf := &rosetta.Config{
+	//		Blockchain:          config.Rosetta.Blockchain,
+	//		Network:             config.Rosetta.Network,
+	//		TendermintRPC:       ctx.Config.RPC.ListenAddress,
+	//		GRPCEndpoint:        config.GRPC.Address,
+	//		Addr:                config.Rosetta.Address,
+	//		Retries:             config.Rosetta.Retries,
+	//		Offline:             offlineMode,
+	//		GasToSuggest:        config.Rosetta.GasToSuggest,
+	//		EnableFeeSuggestion: config.Rosetta.EnableFeeSuggestion,
+	//		Codec:               clientCtx.Codec.(*codec.ProtoCodec),
+	//		InterfaceRegistry:   clientCtx.InterfaceRegistry,
+	//	}
+	//
+	//	rosettaSrv, err = rosetta.ServerFromConfig(conf)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	errCh := make(chan error)
+	//	go func() {
+	//		if err := rosettaSrv.Start(); err != nil {
+	//			errCh <- err
+	//		}
+	//	}()
+	//
+	//	select {
+	//	case err := <-errCh:
+	//		return err
+	//	case <-time.After(types.ServerStartTime): // assume server started successfully
+	//	}
 	//}
-	//
-	////var rosettaSrv crgserver.Server
-	////if config.Rosetta.Enable {
-	////	offlineMode := config.Rosetta.Offline
-	////
-	////	// If GRPC is not enabled rosetta cannot work in online mode, so it works in
-	////	// offline mode.
-	////	if !config.GRPC.Enable {
-	////		offlineMode = true
-	////	}
-	////
-	////	conf := &rosetta.Config{
-	////		Blockchain:          config.Rosetta.Blockchain,
-	////		Network:             config.Rosetta.Network,
-	////		TendermintRPC:       ctx.Config.RPC.ListenAddress,
-	////		GRPCEndpoint:        config.GRPC.Address,
-	////		Addr:                config.Rosetta.Address,
-	////		Retries:             config.Rosetta.Retries,
-	////		Offline:             offlineMode,
-	////		GasToSuggest:        config.Rosetta.GasToSuggest,
-	////		EnableFeeSuggestion: config.Rosetta.EnableFeeSuggestion,
-	////		Codec:               clientCtx.Codec.(*codec.ProtoCodec),
-	////		InterfaceRegistry:   clientCtx.InterfaceRegistry,
-	////	}
-	////
-	////	rosettaSrv, err = rosetta.ServerFromConfig(conf)
-	////	if err != nil {
-	////		return err
-	////	}
-	////
-	////	errCh := make(chan error)
-	////	go func() {
-	////		if err := rosettaSrv.Start(); err != nil {
-	////			errCh <- err
-	////		}
-	////	}()
-	////
-	////	select {
-	////	case err := <-errCh:
-	////		return err
-	////	case <-time.After(types.ServerStartTime): // assume server started successfully
-	////	}
-	////}
-	//
-	////func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
-	////	ctx, cancelFn := context.WithCancel(context.Background())
-	////	g, ctx := errgroup.WithContext(ctx)
-	////	// listen for quit signals so the calling parent process can gracefully exit
-	////	ListenForQuitSignals(g, block, cancelFn, svrCtx.Logger)
-	////	return g, ctx
-	////}
-	//
-	//// Wait for SIGINT or SIGTERM signal
-	//return nil
-	//return server.WaitForQuitSignals()
+
+	if err := startRosettaServer(svrCtx, clientCtx, g, config); err != nil {
+		return err
+	}
+
+	//func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
+	//	ctx, cancelFn := context.WithCancel(context.Background())
+	//	g, ctx := errgroup.WithContext(ctx)
+	//	// listen for quit signals so the calling parent process can gracefully exit
+	//	ListenForQuitSignals(g, block, cancelFn, svrCtx.Logger)
+	//	return g, ctx
+	//}
+
+	// wait for signal capture and gracefully return
+	// we are guaranteed to be waiting for the "ListenForQuitSignals" goroutine.
+	return g.Wait()
 }
 
 func startGrpcServer(
@@ -691,7 +765,7 @@ func startGrpcServer(
 	}
 
 	// if gRPC is enabled, configure gRPC client for gRPC gateway
-	grpcClient, err := grpc.Dial( //nolint: staticcheck // ignore this line for this linter
+	grpcClient, err := grpc.NewClient(
 		config.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(
@@ -727,15 +801,14 @@ func startAPIServer(
 	clientCtx client.Context,
 	svrCtx *server.Context,
 	app types.Application,
-	home string,
 	grpcSrv *grpc.Server,
 	metrics *telemetry.Metrics,
-) error {
+) *api.Server {
 	if !svrCfg.API.Enable {
 		return nil
 	}
 
-	clientCtx = clientCtx.WithHomeDir(home)
+	//clientCtx = clientCtx.WithHomeDir(home)
 
 	apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
 	app.RegisterAPIRoutes(apiSrv, svrCfg.API)
@@ -747,6 +820,97 @@ func startAPIServer(
 	g.Go(func() error {
 		return apiSrv.Start(ctx, svrCfg)
 	})
+	return apiSrv
+}
+
+// startJSONRPCServer starts a JSON-RPC server based on the provided configuration.
+// Parameters:
+// - svrCtx: The server context containing configuration, logger, and stateful components.
+// - clientCtx: The client context, which may be updated with additional chain information.
+// - g: An errgroup.Group to manage concurrent goroutines and error handling.
+// - config: The server configuration that specifies whether the JSON-RPC server is enabled and other settings.
+// - genDocProvider: A function that provides the Genesis document, used to retrieve the chain ID.
+// - cmtRPCAddr: The address of the CometBFT RPC server for WebSocket connections.
+// - idxer: The EVM transaction indexer for indexing transactions.
+func startJSONRPCServer(
+	svrCtx *server.Context,
+	clientCtx client.Context,
+	g *errgroup.Group,
+	config config.Config,
+	genDocProvider node.GenesisDocProvider,
+	cmtRPCAddr string,
+	idxer evmostypes.EVMTxIndexer,
+) (ctx client.Context, httpSrv *http.Server, httpSrvDone chan struct{}, err error) {
+	ctx = clientCtx
+	if !config.JSONRPC.Enable {
+		return
+	}
+
+	genDoc, err := genDocProvider()
+	if err != nil {
+		return ctx, httpSrv, httpSrvDone, err
+	}
+
+	ctx = clientCtx.WithChainID(genDoc.ChainID)
+	cmtEndpoint := "/websocket"
+	g.Go(func() error {
+		httpSrv, httpSrvDone, err = StartJSONRPC(svrCtx, clientCtx, cmtRPCAddr, cmtEndpoint, &config, idxer)
+		return err
+	})
+	return
+}
+
+// startRosettaServer starts a Rosetta API server based on the provided configuration.
+// Parameters:
+// - svrCtx: The server context containing configuration and logging utilities.
+// - clientCtx: The client context, which includes the codec and interface registry for the Rosetta server.
+// - g: An errgroup.Group to manage goroutines and handle errors concurrently.
+// - config: The main server configuration, including Rosetta and gRPC settings.
+func startRosettaServer(
+	svrCtx *server.Context,
+	clientCtx client.Context,
+	g *errgroup.Group,
+	config config.Config,
+) error {
+	if !config.Rosetta.Enable {
+		return nil
+	}
+
+	offlineMode := config.Rosetta.Offline
+
+	// If GRPC is not enabled rosetta cannot work in online mode, so it works in
+	// offline mode.
+	if !config.GRPC.Enable {
+		offlineMode = true
+	}
+
+	minGasPrices, err := sdk.ParseDecCoins(config.MinGasPrices)
+	if err != nil {
+		svrCtx.Logger.Error("failed to parse minimum-gas-prices", "error", err.Error())
+		return err
+	}
+
+	conf := &rosetta.Config{
+		Blockchain:          config.Rosetta.Blockchain,
+		Network:             config.Rosetta.Network,
+		TendermintRPC:       svrCtx.Config.RPC.ListenAddress,
+		GRPCEndpoint:        config.GRPC.Address,
+		Addr:                config.Rosetta.Addr,
+		Retries:             config.Rosetta.Retries,
+		Offline:             offlineMode,
+		GasToSuggest:        config.Rosetta.GasToSuggest,
+		EnableFeeSuggestion: config.Rosetta.EnableFeeSuggestion,
+		GasPrices:           minGasPrices.Sort(),
+		Codec:               clientCtx.Codec.(*codec.ProtoCodec),
+		InterfaceRegistry:   clientCtx.InterfaceRegistry,
+	}
+
+	rosettaSrv, err := rosetta.ServerFromConfig(conf)
+	if err != nil {
+		return err
+	}
+
+	g.Go(rosettaSrv.Start)
 	return nil
 }
 
@@ -755,7 +919,6 @@ func getCtx(svrCtx *server.Context, block bool) (*errgroup.Group, context.Contex
 	g, ctx := errgroup.WithContext(ctx)
 	// listen for quit signals so the calling parent process can gracefully exit
 	server.ListenForQuitSignals(g, block, cancelFn, svrCtx.Logger)
-
 	return g, ctx
 }
 
@@ -789,4 +952,16 @@ func startTelemetry(cfg config.Config) (*telemetry.Metrics, error) {
 		return nil, nil
 	}
 	return telemetry.New(cfg.Telemetry)
+}
+
+// GenDocProvider returns a function which returns the genesis doc from the genesis file.
+func GenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
+	return func() (*cmttypes.GenesisDoc, error) {
+		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+		if err != nil {
+			return nil, err
+		}
+
+		return appGenesis.ToGenesisDoc()
+	}
 }

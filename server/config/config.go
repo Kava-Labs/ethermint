@@ -16,8 +16,11 @@
 package config
 
 import (
+	"cosmossdk.io/math"
 	"errors"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/rosetta"
 	"path"
 	"time"
 
@@ -58,6 +61,10 @@ const (
 
 	DefaultBlockRangeCap int32 = 10000
 
+	// ServerStartTime defines the time duration that the server need to stay running after startup
+	// for the startup be considered successful
+	ServerStartTime = 5 * time.Second
+
 	DefaultEVMTimeout = 5 * time.Second
 	// default 1.0 eth
 	DefaultTxFeeCap float64 = 1.0
@@ -69,18 +76,39 @@ const (
 	DefaultAllowUnprotectedTxs = false
 	// DefaultMaxOpenConnections represents the amount of open connections (unlimited = 0)
 	DefaultMaxOpenConnections = 0
+
+	// TODO(boodyvo): validate
+	DefaultRosettaBlockchain = "kava"
+
+	DefaultRosettaNetwork = "kava"
+
+	DefaultRosettaGasToSuggest   = 300_000
+	DefaultRosettaDenomToSuggest = "kava"
+
+	DefaultRosettaEnable = false
 )
+
+// DefaultRosettaGasPrices defines the default list of prices to suggest
+var DefaultRosettaGasPrices = sdk.NewDecCoins(sdk.NewDecCoin(DefaultRosettaDenomToSuggest, math.NewInt(4_000_000)))
 
 var evmTracers = []string{"json", "markdown", "struct", "access_list"}
 
 // Config defines the server's top level configuration. It includes the default app config
 // from the SDK as well as the EVM configuration to enable the JSON-RPC APIs.
 type Config struct {
-	config.Config
+	config.Config `mapstructure:",squash"`
 
 	EVM     EVMConfig     `mapstructure:"evm"`
 	JSONRPC JSONRPCConfig `mapstructure:"json-rpc"`
 	TLS     TLSConfig     `mapstructure:"tls"`
+	Rosetta RosettaConfig `mapstructure:"rosetta"`
+}
+
+// RosettaConfig defines configuration for the Rosetta server.
+type RosettaConfig struct {
+	rosetta.Config
+	// Enable defines if the Rosetta server should be enabled.
+	Enable bool `mapstructure:"enable"`
 }
 
 // EVMConfig defines the application configuration values for the EVM.
@@ -168,6 +196,7 @@ func AppConfig(denom string) (string, interface{}) {
 		EVM:     *DefaultEVMConfig(),
 		JSONRPC: *DefaultJSONRPCConfig(),
 		TLS:     *DefaultTLSConfig(),
+		Rosetta: *DefaultRosettaConfig(),
 	}
 
 	customAppTemplate := config.DefaultConfigTemplate + DefaultConfigTemplate
@@ -182,6 +211,7 @@ func DefaultConfig() *Config {
 		EVM:     *DefaultEVMConfig(),
 		JSONRPC: *DefaultJSONRPCConfig(),
 		TLS:     *DefaultTLSConfig(),
+		Rosetta: *DefaultRosettaConfig(),
 	}
 }
 
@@ -309,6 +339,26 @@ func (c TLSConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// DefaultEVMConfig returns the default EVM configuration
+func DefaultRosettaConfig() *RosettaConfig {
+	return &RosettaConfig{
+		Config: rosetta.Config{
+			Blockchain:          DefaultRosettaBlockchain,
+			Network:             DefaultRosettaNetwork,
+			TendermintRPC:       rosetta.DefaultCometEndpoint,
+			GRPCEndpoint:        rosetta.DefaultGRPCEndpoint,
+			Addr:                rosetta.DefaultAddr,
+			Retries:             rosetta.DefaultRetries,
+			Offline:             rosetta.DefaultOffline,
+			EnableFeeSuggestion: rosetta.DefaultEnableFeeSuggestion,
+			GasToSuggest:        DefaultRosettaGasToSuggest,
+			DenomToSuggest:      DefaultRosettaDenomToSuggest,
+			GasPrices:           DefaultRosettaGasPrices,
+		},
+		Enable: DefaultRosettaEnable,
+	}
 }
 
 // GetConfig returns a fully parsed Config object.

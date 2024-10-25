@@ -87,7 +87,6 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
 	return func(val Validator) servertypes.Application {
 		return app.NewEthermintApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-			encodingCfg,
 			simutils.NewAppOptionsWithFlagHome(val.Ctx.Config.RootDir),
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
@@ -128,7 +127,22 @@ type Config struct {
 // DefaultConfig returns a sane default configuration suitable for nearly all
 // testing requirements.
 func DefaultConfig() Config {
-	encCfg := encoding.MakeConfig(app.ModuleBasics)
+	encCfg := encoding.MakeConfig()
+
+	tempDir, err := os.MkdirTemp("", "test_ethermint")
+	if err != nil {
+		panic(err)
+	}
+	chainID := fmt.Sprintf("ethermint_%d-1", tmrand.Int63n(9999999999999)+1)
+
+	// TODO(boodyvo): should add options?
+	tempApp := app.NewEthermintApp(
+		log.NewNopLogger(), dbm.NewMemDB(), nil, true, make(map[int64]bool), tempDir, 0,
+		simutils.NewAppOptionsWithFlagHome(tempDir),
+		baseapp.SetChainID(chainID),
+		//baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+		//baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+	)
 
 	return Config{
 		Codec:             encCfg.Codec,
@@ -137,9 +151,9 @@ func DefaultConfig() Config {
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor:    NewAppConstructor(encCfg),
-		GenesisState:      app.ModuleBasics.DefaultGenesis(encCfg.Codec),
+		GenesisState:      tempApp.DefaultGenesis(),
 		TimeoutCommit:     2 * time.Second,
-		ChainID:           fmt.Sprintf("ethermint_%d-1", tmrand.Int63n(9999999999999)+1),
+		ChainID:           chainID,
 		NumValidators:     4,
 		BondDenom:         ethermint.AttoPhoton,
 		MinGasPrices:      fmt.Sprintf("0.000006%s", ethermint.AttoPhoton),
