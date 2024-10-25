@@ -812,8 +812,8 @@ github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7V
 github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8IZAc4RVcycCCAKdM=
 github.com/kava-labs/cometbft v0.0.0-20241007151334-8345af773eb9 h1:EdyFg0j6Q8oVy3EynAEQm/M2CyMhBZrTlFjcORLjw5g=
 github.com/kava-labs/cometbft v0.0.0-20241007151334-8345af773eb9/go.mod h1:GPHp3/pehPqgX1930HmK1BpBLZPxB75v/dZg8Viwy+o=
-github.com/kava-labs/cosmos-sdk v0.0.0-20241025140408-fd0923262069 h1:0bs7coy9qNSsIEVriRjGGNHBZ+aFIB1tMh3wGBLhwQo=
-github.com/kava-labs/cosmos-sdk v0.0.0-20241025140408-fd0923262069/go.mod h1:6Eesrx3ZE7vxBZWpK++30H+Uc7Q4ahQWCL7JKU/LEdU=
+github.com/kava-labs/cosmos-sdk v0.0.0-20241025222820-2e87644687a1 h1:VU8i5OuLAP0k4LDGWZfb1TFlnjeup51+AAgQ6B7vcE8=
+github.com/kava-labs/cosmos-sdk v0.0.0-20241025222820-2e87644687a1/go.mod h1:6Eesrx3ZE7vxBZWpK++30H+Uc7Q4ahQWCL7JKU/LEdU=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
