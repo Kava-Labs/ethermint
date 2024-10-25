@@ -18,6 +18,7 @@ package ante
 import (
 	txsigning "cosmossdk.io/x/tx/signing"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -40,9 +41,12 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
+var ethCodec codec.ProtoCodecMarshaler
+
 func init() {
 	registry := codectypes.NewInterfaceRegistry()
 	ethermint.RegisterInterfaces(registry)
+	ethCodec = codec.NewProtoCodec(registry)
 }
 
 // Deprecated: NewLegacyCosmosAnteHandlerEip712 creates an AnteHandler to process legacy EIP-712
