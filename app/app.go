@@ -23,7 +23,6 @@ import (
 	"fmt"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/evmos/ethermint/encoding"
-	"github.com/spf13/cobra"
 	"io"
 	"net/http"
 	"os"
@@ -45,7 +44,6 @@ import (
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
-	upgradeclient "cosmossdk.io/x/upgrade/client/cli"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -155,42 +153,6 @@ var (
 
 	// authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 	ac = authcodec.NewBech32Codec(cmdconfig.Bech32PrefixAccAddr)
-
-	LegacyProposalHandler       = govclient.NewProposalHandler(func() *cobra.Command { return upgradeclient.NewCmdSubmitUpgradeProposal(ac) })
-	LegacyCancelProposalHandler = govclient.NewProposalHandler(func() *cobra.Command { return upgradeclient.NewCmdSubmitCancelUpgradeProposal(ac) })
-
-	//// ModuleBasics defines the module BasicManager is in charge of setting up basic,
-	//// non-dependant module elements, such as codec registration
-	//// and genesis verification.
-	//ModuleBasics = module.NewBasicManager(
-	//	auth.AppModuleBasic{},
-	//	genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-	//	bank.AppModuleBasic{},
-	//	capability.AppModuleBasic{},
-	//	staking.AppModuleBasic{},
-	//	mint.AppModuleBasic{},
-	//	distr.AppModuleBasic{},
-	//	gov.NewAppModuleBasic([]govclient.ProposalHandler{
-	//		paramsclient.ProposalHandler,
-	//		LegacyProposalHandler,
-	//		LegacyCancelProposalHandler,
-	//		govclient.NewProposalHandler(ibcclientclient.NewTxCmd),
-	//		//ibcclientclient.UpgradeProposalHandler,
-	//	}),
-	//	params.AppModuleBasic{},
-	//	crisis.AppModuleBasic{},
-	//	slashing.AppModuleBasic{},
-	//	ibc.AppModuleBasic{},
-	//	authzmodule.AppModuleBasic{},
-	//	feegrantmodule.AppModuleBasic{},
-	//	upgrade.AppModuleBasic{},
-	//	evidence.AppModuleBasic{},
-	//	ibctransfer.AppModuleBasic{},
-	//	vesting.AppModuleBasic{},
-	//	// Ethermint modules
-	//	evm.AppModuleBasic{},
-	//	feemarket.AppModuleBasic{},
-	//)
 
 	// module account permissions
 	maccPerms = map[string][]string{
@@ -475,7 +437,7 @@ func NewEthermintApp(
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibcexported.StoreKey], app.GetSubspace(ibcexported.ModuleName), stakingKeeper, app.UpgradeKeeper, scopedIBCKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, keys[ibcexported.StoreKey], app.GetSubspace(ibcexported.ModuleName), stakingKeeper, app.UpgradeKeeper, scopedIBCKeeper, authAddr,
 	)
 
 	// register the proposal types
