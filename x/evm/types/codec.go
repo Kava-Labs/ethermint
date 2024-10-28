@@ -17,6 +17,7 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,12 +44,14 @@ const (
 
 // NOTE: This is required for the GetSignBytes function
 func init() {
+	fmt.Println("init x/evm/types/codec")
 	RegisterLegacyAminoCodec(amino)
 	amino.Seal()
 }
 
 // RegisterInterfaces registers the client interfaces to protobuf Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	fmt.Println("RegisterInterfaces x/evm/types/codec")
 	registry.RegisterImplementations(
 		(*tx.TxExtensionOptionI)(nil),
 		&ExtensionOptionsEthereumTx{},

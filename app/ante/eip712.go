@@ -40,7 +40,7 @@ import (
 )
 
 func init() {
-	fmt.Println("init etip712 ante eth")
+	fmt.Println("init eip712 ante eth")
 	registry := codectypes.NewInterfaceRegistry()
 	ethermint.RegisterInterfaces(registry)
 }
