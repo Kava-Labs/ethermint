@@ -38,6 +38,9 @@ import (
 	"github.com/evmos/ethermint/ethereum/eip712"
 	ethermint "github.com/evmos/ethermint/types"
 
+	// TODO(boodyvo): test
+	_ "github.com/evmos/ethermint/types"
+
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
