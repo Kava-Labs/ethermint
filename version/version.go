@@ -18,6 +18,9 @@ package version
 import (
 	"fmt"
 	"runtime"
+
+	// TODO(boodyvo): test
+	_ "github.com/evmos/ethermint/types"
 )
 
 var (
