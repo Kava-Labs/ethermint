@@ -17,6 +17,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/spf13/cobra"
@@ -142,6 +143,7 @@ import (
 )
 
 func init() {
+	fmt.Println("init app")
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)

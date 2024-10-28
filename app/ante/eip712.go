@@ -44,6 +44,7 @@ import (
 var ethermintCodec codec.ProtoCodecMarshaler
 
 func init() {
+	fmt.Println("init eip712 ante eth")
 	registry := codectypes.NewInterfaceRegistry()
 	ethermint.RegisterInterfaces(registry)
 	ethermintCodec = codec.NewProtoCodec(registry)

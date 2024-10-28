@@ -17,6 +17,7 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,6 +44,7 @@ const (
 
 // NOTE: This is required for the GetSignBytes function
 func init() {
+	fmt.Println("init evm/types/codec eth")
 	RegisterLegacyAminoCodec(amino)
 	amino.Seal()
 }

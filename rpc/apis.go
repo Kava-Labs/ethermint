@@ -69,6 +69,7 @@ type APICreator = func(
 var apiCreators map[string]APICreator
 
 func init() {
+	fmt.Println("init apis eth")
 	apiCreators = map[string]APICreator{
 		EthNamespace: func(ctx *server.Context,
 			clientCtx client.Context,
