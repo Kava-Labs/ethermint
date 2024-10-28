@@ -138,6 +138,7 @@ import (
 )
 
 func init() {
+	fmt.Println("init app")
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)

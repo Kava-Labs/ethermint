@@ -26,6 +26,7 @@ import (
 const flagLong = "long"
 
 func init() {
+	fmt.Println("init eth flags")
 	infoCmd.Flags().Bool(flagLong, false, "Print full information")
 }
 

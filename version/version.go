@@ -30,6 +30,7 @@ var (
 )
 
 func init() {
+	fmt.Println("init eth verstion")
 	if len(AppVersion) == 0 {
 		AppVersion = "dev"
 	}

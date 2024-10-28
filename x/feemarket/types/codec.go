@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,6 +25,7 @@ const (
 
 // NOTE: This is required for the GetSignBytes function
 func init() {
+	fmt.Println("init eth feemarket")
 	RegisterLegacyAminoCodec(amino)
 	amino.Seal()
 }
