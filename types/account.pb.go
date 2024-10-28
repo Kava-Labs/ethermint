@@ -12,6 +12,7 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	"runtime/debug"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -68,6 +69,7 @@ var xxx_messageInfo_EthAccount proto.InternalMessageInfo
 
 func init() {
 	fmt.Println("init ethermint.types.v1.EthAccount")
+	debug.PrintStack()
 	proto.RegisterType((*EthAccount)(nil), "ethermint.types.v1.EthAccount")
 }
 
