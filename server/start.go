@@ -302,6 +302,7 @@ func DBProviderFromAppOpts(appOpts types.AppOptions) node.DBProvider {
 
 // legacyAminoCdc is used for the legacy REST API
 func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOptions) (err error) {
+	fmt.Println("startInProcess")
 	cfg := ctx.Config
 	home := cfg.RootDir
 	logger := ctx.Logger
@@ -594,6 +595,8 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		}()
 	}
 
+	fmt.Println("startInProcess: before rosettaSrv")
+
 	// At this point it is safe to block the process if we're in query only mode as
 	// we do not need to start Rosetta or handle any Tendermint related processes.
 	if gRPCOnly {
@@ -643,6 +646,9 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 		case <-time.After(types.ServerStartTime): // assume server started successfully
 		}
 	}
+
+	fmt.Println("finishing startInProcess")
+
 	// Wait for SIGINT or SIGTERM signal
 	return server.WaitForQuitSignals()
 }
