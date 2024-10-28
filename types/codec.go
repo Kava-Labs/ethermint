@@ -27,7 +27,7 @@ import (
 // RegisterInterfaces registers the tendermint concrete client-related
 // implementations and interfaces.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	fmt.Println("RegisterInterfaces init types")
+	fmt.Println("RegisterInterfaces eth types/codec")
 	registry.RegisterImplementations(
 		(*types.AccountI)(nil),
 		&EthAccount{},
