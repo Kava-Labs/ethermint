@@ -16,7 +16,6 @@
 package types
 
 import (
-	txsigning "cosmossdk.io/x/tx/signing"
 	"errors"
 	"fmt"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -55,11 +54,6 @@ const (
 	// TypeMsgEthereumTx defines the type string of an Ethereum transaction
 	TypeMsgEthereumTx = "ethereum_tx"
 )
-
-var MsgEthereumTxCustomGetSigner = txsigning.CustomGetSigner{
-	MsgType: protov2.MessageName(&evmapi.MsgEthereumTx{}),
-	Fn:      evmapi.GetSigners,
-}
 
 // NewTx returns a reference to a new Ethereum transaction message.
 func NewTx(
