@@ -22,12 +22,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"runtime/debug"
 )
 
 // RegisterInterfaces registers the tendermint concrete client-related
 // implementations and interfaces.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	fmt.Println("RegisterInterfaces eth types/codec")
+	debug.PrintStack()
+
 	registry.RegisterImplementations(
 		(*types.AccountI)(nil),
 		&EthAccount{},
