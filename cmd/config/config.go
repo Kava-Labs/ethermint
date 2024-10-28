@@ -17,7 +17,6 @@ package config
 
 import (
 	sdkmath "cosmossdk.io/math"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	ethermint "github.com/evmos/ethermint/types"
@@ -51,7 +50,6 @@ func SetupConfig() {
 	config := sdk.GetConfig()
 	SetBech32Prefixes(config)
 	SetBip44CoinType(config)
-	fmt.Println("config seal")
 	config.Seal()
 }
 

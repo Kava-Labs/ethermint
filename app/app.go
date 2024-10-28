@@ -20,7 +20,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/x/feegrant"
 	"encoding/json"
-	"fmt"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/evmos/ethermint/encoding"
 	"io"
@@ -300,7 +299,6 @@ func NewEthermintApp(
 
 	// allow x/gov to modify consensus parameters
 	authAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	fmt.Println("authAddr: ", authAddr)
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authAddr, runtime.EventService{})
 
 	// set the BaseApp's parameter store to the consensus keeper
@@ -378,9 +376,6 @@ func NewEthermintApp(
 	//		addresscodec.NewBech32Codec(Bech32PrefixValAddr),
 	//		addresscodec.NewBech32Codec(Bech32PrefixConsAddr),
 	//	)
-	fmt.Println("prefix val", sdk.GetConfig().GetBech32ValidatorAddrPrefix())
-	fmt.Println("prefix cons", sdk.GetConfig().GetBech32ConsensusAddrPrefix())
-
 	//authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()).StringToBytes("authAddr")
 
 	stakingKeeper := stakingkeeper.NewKeeper(

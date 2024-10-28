@@ -30,7 +30,6 @@ var (
 )
 
 func init() {
-	fmt.Println("init version")
 	if len(AppVersion) == 0 {
 		AppVersion = "dev"
 	}

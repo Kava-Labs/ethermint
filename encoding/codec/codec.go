@@ -16,7 +16,6 @@
 package codec
 
 import (
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -28,7 +27,6 @@ import (
 
 // RegisterLegacyAminoCodec registers Interfaces from types, crypto, and SDK std.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	fmt.Println("RegisterLegacyAminoCodec inside encoding/codec")
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	ethermint.RegisterLegacyAminoCodec(cdc)
@@ -37,7 +35,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers Interfaces from types, crypto, and SDK std.
 func RegisterInterfaces(interfaceRegistry codectypes.InterfaceRegistry) {
-	fmt.Println("RegisterInterfaces inside encoding/codec")
 	std.RegisterInterfaces(interfaceRegistry)
 	cryptocodec.RegisterInterfaces(interfaceRegistry)
 	ethermint.RegisterInterfaces(interfaceRegistry)
