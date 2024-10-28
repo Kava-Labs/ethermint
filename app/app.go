@@ -320,14 +320,46 @@ func NewEthermintApp(
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		//ethermint.ProtoAccount,
-		authtypes.ProtoBaseAccount,
+		ethermint.ProtoAccount,
+		//authtypes.ProtoBaseAccount,
 		maccPerms,
 		ac,
 		//authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		authAddr,
 	)
+	// // use custom Ethermint account for contracts
+	//	app.AccountKeeper = authkeeper.NewAccountKeeper(
+	//		appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+	//		authtypes.ProtoBaseAccount, maccPerms,
+	//		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+	//		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+	//		authAddr,
+	//	)
+	//	// optional: enable sign mode textual by overwriting the default tx config (after setting the bank keeper)
+	//	enabledSignModes := append(authtx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL) //nolint:gocritic
+	//	txConfigOpts := authtx.ConfigOptions{
+	//		EnabledSignModes:           enabledSignModes,
+	//		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
+	//	}
+	//	txConfig, err := authtx.NewTxConfigWithOptions(
+	//		appCodec,
+	//		txConfigOpts,
+	//	)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	app.txConfig = txConfig
+	//
+	//	stakingKeeper := stakingkeeper.NewKeeper(
+	//		appCodec,
+	//		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
+	//		app.AccountKeeper,
+	//		app.BankKeeper,
+	//		authAddr,
+	//		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+	//		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+	//	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
@@ -348,20 +380,17 @@ func NewEthermintApp(
 	//	)
 	fmt.Println("prefix val", sdk.GetConfig().GetBech32ValidatorAddrPrefix())
 	fmt.Println("prefix cons", sdk.GetConfig().GetBech32ConsensusAddrPrefix())
+
+	//authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()).StringToBytes("authAddr")
+
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		authAddr,
-		//addresscodec.NewBech32Codec(Bech32PrefixValAddr),
-		//addresscodec.NewBech32Codec(Bech32PrefixConsAddr),
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
-		//authcodec.NewBech32Codec(cmdconfig.Bech32PrefixValAddr),
-		//authcodec.NewBech32Codec(cmdconfig.Bech32PrefixConsAddr),
-		//authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
-		//authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,

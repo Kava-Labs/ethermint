@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"cosmossdk.io/store/metrics"
 	"testing"
 
 	"cosmossdk.io/log"
@@ -17,7 +18,8 @@ import (
 // NewDefaultContext with multile mounted stores
 func NewDBContext(keys []storetypes.StoreKey, tkeys []storetypes.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
+	// TODO(boodyvo): should we use the particular logger and metrics here?
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 
 	for _, key := range keys {
 		cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)

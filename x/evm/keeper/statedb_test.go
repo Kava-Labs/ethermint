@@ -228,7 +228,8 @@ func (suite *KeeperTestSuite) TestSetAccount() {
 	ethAddr := tests.GenerateAddress()
 	ethAcc := &etherminttypes.EthAccount{BaseAccount: &authtypes.BaseAccount{Address: sdk.AccAddress(ethAddr.Bytes()).String()}, CodeHash: common.BytesToHash(types.EmptyCodeHash).String()}
 	vestingAddr := tests.GenerateAddress()
-	vestingAcc := vestingtypes.NewBaseVestingAccount(&authtypes.BaseAccount{Address: sdk.AccAddress(vestingAddr.Bytes()).String()}, sdk.NewCoins(), time.Now().Unix())
+	vestingAcc, err := vestingtypes.NewBaseVestingAccount(&authtypes.BaseAccount{Address: sdk.AccAddress(vestingAddr.Bytes()).String()}, sdk.NewCoins(), time.Now().Unix())
+	suite.Require().NoError(err)
 
 	testCases := []struct {
 		name        string

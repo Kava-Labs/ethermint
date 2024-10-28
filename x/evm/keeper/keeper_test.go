@@ -149,7 +149,7 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 	if suite.mintFeeCollector {
 		// mint some coin to fee collector
 		coins := sdk.NewCoins(sdk.NewCoin(types.DefaultEVMDenom, sdkmath.NewInt(int64(params.TxGas)-1)))
-		genesisState := app.NewTestGenesisState(suite.app.AppCodec())
+		genesisState := app.NewTestGenesisState(suite.app, suite.app.AppCodec())
 		balances := []banktypes.Balance{
 			{
 				Address: suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName).String(),
@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 
 		// Initialize the chain
 		suite.app.InitChain(
-			abci.RequestInitChain{
+			&abci.RequestInitChain{
 				ChainId:         "ethermint_9000-1",
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: app.DefaultConsensusParams,
@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 		)
 	}
 
-	suite.ctx = suite.app.BaseApp.NewContext(checkTx, tmproto.Header{
+	suite.ctx = suite.app.BaseApp.NewContextLegacy(checkTx, tmproto.Header{
 		Height:          1,
 		ChainID:         "ethermint_9000-1",
 		Time:            time.Now().UTC(),
@@ -207,22 +207,96 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
 	acc := &ethermint.EthAccount{
-		BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(suite.address.Bytes()), nil, 0, 0),
+		//BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(suite.address.Bytes()), nil, 20, 20),
+		BaseAccount: authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), nil, 20, 20),
 		CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
 	}
 
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
-	valAddr := sdk.ValAddress(suite.address.Bytes())
-	validator, err := stakingtypes.NewValidator(valAddr, priv.PubKey(), stakingtypes.Description{})
-	require.NoError(t, err)
-	err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
-	require.NoError(t, err)
-	err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
-	require.NoError(t, err)
-	suite.app.StakingKeeper.SetValidator(suite.ctx, validator)
+	// valAddr := sdk.ValAddress(suite.Address.Bytes())
+	//	validator, err := stakingtypes.NewValidator(valAddr.String(), consPriv.PubKey(), stakingtypes.Description{})
+	//	suite.Require().NoError(err)
+	//	err = suite.App.GetStakingKeeper().SetValidatorByConsAddr(suite.Ctx, validator)
+	//	suite.Require().NoError(err)
+	//	suite.App.GetStakingKeeper().SetValidator(suite.Ctx, validator)
 
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	//valAddr := suite.address.String()
+	//validator, err := stakingtypes.NewValidator(valAddr, priv.PubKey(), stakingtypes.Description{})
+
+	// privVal := mock.NewPV()
+	//	pubKey, err := privVal.GetPubKey()
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	// create validator set with single validator
+	//	validator := tmtypes.NewValidator(pubKey, 1)
+	//	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	// for _, val := range valSet.Validators {
+	//		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//		pkAny, err := codectypes.NewAnyWithValue(pk)
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//		validator := stakingtypes.Validator{
+	//			OperatorAddress:   sdk.ValAddress(val.Address).String(),
+	//			ConsensusPubkey:   pkAny,
+	//			Jailed:            false,
+	//			Status:            stakingtypes.Bonded,
+	//			Tokens:            bondAmt,
+	//			DelegatorShares:   sdkmath.LegacyOneDec(),
+	//			Description:       stakingtypes.Description{},
+	//			UnbondingHeight:   int64(0),
+	//			UnbondingTime:     time.Unix(0, 0).UTC(),
+	//			Commission:        stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
+	//			MinSelfDelegation: sdkmath.ZeroInt(),
+	//		}
+	//		validators = append(validators, validator)
+	//		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), sdkmath.LegacyOneDec()))
+	//	}
+
+	// ecdsaPriv, err := crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	//	require.NoError(t, err)
+	//	priv := &ethsecp256k1.PrivKey{
+	//		Key: crypto.FromECDSA(ecdsaPriv),
+	//	}
+	//	suite.address = common.BytesToAddress(priv.PubKey().Address().Bytes())
+
+	// 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
+	//	if err != nil {
+	//		return Validator{}, err
+	//	}
+	//
+	//	return Validator{
+	//		OperatorAddress:         operator,
+	//		ConsensusPubkey:         pkAny,
+	//		Jailed:                  false,
+	//		Status:                  Unbonded,
+	//		Tokens:                  math.ZeroInt(),
+	//		DelegatorShares:         math.LegacyZeroDec(),
+	//		Description:             description,
+	//		UnbondingHeight:         int64(0),
+	//		UnbondingTime:           time.Unix(0, 0).UTC(),
+	//		Commission:              NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
+	//		MinSelfDelegation:       math.OneInt(),
+	//		UnbondingOnHoldRefCount: 0,
+	//	}, nil
+
+	vAddr := sdk.ValAddress(priv.PubKey().Bytes())
+	validator, err := stakingtypes.NewValidator(vAddr.String(), priv.PubKey(), stakingtypes.Description{})
+	require.NoError(t, err)
+	err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
+	require.NoError(t, err)
+	err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
+	require.NoError(t, err)
+	err = suite.app.StakingKeeper.SetValidator(suite.ctx, validator)
+	require.NoError(t, err)
+
+	encodingConfig := encoding.MakeConfig()
 	suite.clientCtx = client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 	suite.ethSigner = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
 	suite.appCodec = encodingConfig.Codec
@@ -235,17 +309,58 @@ func (suite *KeeperTestSuite) EvmDenom() string {
 	return rsp.Params.EvmDenom
 }
 
+// func commit(ctx sdk.Context, app *app.Evmos, t time.Duration, vs *cmttypes.ValidatorSet) (tmproto.Header, error) {
+//	header := ctx.BlockHeader()
+//	req := abci.RequestFinalizeBlock{Height: header.Height}
+//
+//	if vs != nil {
+//		res, err := app.FinalizeBlock(&req)
+//		if err != nil {
+//			return header, err
+//		}
+//
+//		nextVals, err := applyValSetChanges(vs, res.ValidatorUpdates)
+//		if err != nil {
+//			return header, err
+//		}
+//		header.ValidatorsHash = vs.Hash()
+//		header.NextValidatorsHash = nextVals.Hash()
+//	} else {
+//		if _, err := app.EndBlocker(ctx); err != nil {
+//			return header, err
+//		}
+//	}
+//
+//	if _, err := app.Commit(); err != nil {
+//		return header, err
+//	}
+//
+//	header.Height++
+//	header.Time = header.Time.Add(t)
+//	header.AppHash = app.LastCommitID().Hash
+//
+//	if _, err := app.BeginBlocker(ctx); err != nil {
+//		return header, err
+//	}
+//
+//	return header, nil
+//}
+
 // Commit and begin new block
 func (suite *KeeperTestSuite) Commit() {
-	_ = suite.app.Commit()
 	header := suite.ctx.BlockHeader()
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: header.Height})
+	suite.Require().NoError(err)
+	ctx := suite.app.BaseApp.NewContextLegacy(false, header)
+	_, err = suite.app.Commit()
+	suite.Require().NoError(err)
 	header.Height += 1
-	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: header,
-	})
+	ctx = ctx.WithBlockHeight(header.Height)
+	_, err = suite.app.BeginBlocker(ctx)
+	suite.Require().NoError(err)
 
 	// update ctx
-	suite.ctx = suite.app.BaseApp.NewContext(false, header)
+	suite.ctx = ctx
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.EvmKeeper)
@@ -442,7 +557,7 @@ func (suite *KeeperTestSuite) TestBaseFee() {
 			suite.enableFeemarket = tc.enableFeemarket
 			suite.enableLondonHF = tc.enableLondonHF
 			suite.SetupTest()
-			suite.app.EvmKeeper.BeginBlock(suite.ctx, abci.RequestBeginBlock{})
+			suite.app.EvmKeeper.BeginBlock(suite.ctx)
 			params := suite.app.EvmKeeper.GetParams(suite.ctx)
 			ethCfg := params.ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 			baseFee := suite.app.EvmKeeper.GetBaseFee(suite.ctx, ethCfg)
