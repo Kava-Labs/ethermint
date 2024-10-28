@@ -125,6 +125,7 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
 func init() {
+	fmt.Println("inti feemarket/tx.pb.go")
 	proto.RegisterType((*MsgUpdateParams)(nil), "ethermint.feemarket.v1.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "ethermint.feemarket.v1.MsgUpdateParamsResponse")
 }

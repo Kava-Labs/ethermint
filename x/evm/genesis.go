@@ -55,6 +55,7 @@ func InitGenesis(
 	data types.GenesisState,
 	registeredModules []precompile_modules.Module,
 ) []abci.ValidatorUpdate {
+	fmt.Println("init genesis for x/evm/genesis")
 	k.WithChainID(ctx)
 
 	// For an enabled precompile to be valid,

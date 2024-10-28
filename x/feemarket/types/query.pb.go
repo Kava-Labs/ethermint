@@ -275,6 +275,8 @@ func (m *QueryBlockGasResponse) GetGas() int64 {
 }
 
 func init() {
+	fmt.Println("inti QueryParamsRequest")
+
 	proto.RegisterType((*QueryParamsRequest)(nil), "ethermint.feemarket.v1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "ethermint.feemarket.v1.QueryParamsResponse")
 	proto.RegisterType((*QueryBaseFeeRequest)(nil), "ethermint.feemarket.v1.QueryBaseFeeRequest")
