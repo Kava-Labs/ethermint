@@ -22,9 +22,7 @@ import (
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/proxy"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/rosetta"
 	"github.com/evmos/ethermint/indexer"
 	ethermint "github.com/evmos/ethermint/types"
 	"golang.org/x/sync/errgroup"
@@ -669,8 +667,6 @@ func startInProcess(svrCtx *server.Context, clientCtx client.Context, opts Start
 	//	}()
 	//}
 
-	// At this point it is safe to block the process if we're in query only mode as
-	// we do not need to start Rosetta or handle any Tendermint related processes.
 	if gRPCOnly {
 		// wait for signal capture and gracefully return
 		return g.Wait()
@@ -720,20 +716,6 @@ func startInProcess(svrCtx *server.Context, clientCtx client.Context, opts Start
 	//	}
 	//}
 
-	if err := startRosettaServer(svrCtx, clientCtx, g, config); err != nil {
-		return err
-	}
-
-	//func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
-	//	ctx, cancelFn := context.WithCancel(context.Background())
-	//	g, ctx := errgroup.WithContext(ctx)
-	//	// listen for quit signals so the calling parent process can gracefully exit
-	//	ListenForQuitSignals(g, block, cancelFn, svrCtx.Logger)
-	//	return g, ctx
-	//}
-
-	// wait for signal capture and gracefully return
-	// we are guaranteed to be waiting for the "ListenForQuitSignals" goroutine.
 	return g.Wait()
 }
 
@@ -858,60 +840,6 @@ func startJSONRPCServer(
 		return err
 	})
 	return
-}
-
-// startRosettaServer starts a Rosetta API server based on the provided configuration.
-// Parameters:
-// - svrCtx: The server context containing configuration and logging utilities.
-// - clientCtx: The client context, which includes the codec and interface registry for the Rosetta server.
-// - g: An errgroup.Group to manage goroutines and handle errors concurrently.
-// - config: The main server configuration, including Rosetta and gRPC settings.
-func startRosettaServer(
-	svrCtx *server.Context,
-	clientCtx client.Context,
-	g *errgroup.Group,
-	config config.Config,
-) error {
-	if !config.Rosetta.Enable {
-		return nil
-	}
-
-	offlineMode := config.Rosetta.Offline
-
-	// If GRPC is not enabled rosetta cannot work in online mode, so it works in
-	// offline mode.
-	if !config.GRPC.Enable {
-		offlineMode = true
-	}
-
-	minGasPrices, err := sdk.ParseDecCoins(config.MinGasPrices)
-	if err != nil {
-		svrCtx.Logger.Error("failed to parse minimum-gas-prices", "error", err.Error())
-		return err
-	}
-
-	conf := &rosetta.Config{
-		Blockchain:          config.Rosetta.Blockchain,
-		Network:             config.Rosetta.Network,
-		TendermintRPC:       svrCtx.Config.RPC.ListenAddress,
-		GRPCEndpoint:        config.GRPC.Address,
-		Addr:                config.Rosetta.Addr,
-		Retries:             config.Rosetta.Retries,
-		Offline:             offlineMode,
-		GasToSuggest:        config.Rosetta.GasToSuggest,
-		EnableFeeSuggestion: config.Rosetta.EnableFeeSuggestion,
-		GasPrices:           minGasPrices.Sort(),
-		Codec:               clientCtx.Codec.(*codec.ProtoCodec),
-		InterfaceRegistry:   clientCtx.InterfaceRegistry,
-	}
-
-	rosettaSrv, err := rosetta.ServerFromConfig(conf)
-	if err != nil {
-		return err
-	}
-
-	g.Go(rosettaSrv.Start)
-	return nil
 }
 
 func getCtx(svrCtx *server.Context, block bool) (*errgroup.Group, context.Context) {

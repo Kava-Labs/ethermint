@@ -17,6 +17,7 @@ package ante
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
@@ -112,7 +113,10 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		return next(ctx, tx, simulate)
 	}
 
-	sigetheriumTx, ok := tx.(*evmtypes.MsgEthereumTx)
+	fmt.Println("EthValidateBasicDecorator.AnteHandle")
+
+	//sigetheriumTx, ok := tx.(*evmtypes.MsgEthereumTx)
+	sigetheriumTx, ok := tx.(sdk.HasValidateBasic)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
