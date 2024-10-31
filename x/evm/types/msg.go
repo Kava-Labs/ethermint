@@ -44,10 +44,11 @@ import (
 )
 
 var (
-	_ sdk.Msg    = &MsgEthereumTx{}
-	_ sdk.Tx     = &MsgEthereumTx{}
-	_ ante.GasTx = &MsgEthereumTx{}
-	_ sdk.Msg    = &MsgUpdateParams{}
+	_ sdk.Msg              = &MsgEthereumTx{}
+	_ sdk.Tx               = &MsgEthereumTx{}
+	_ ante.GasTx           = &MsgEthereumTx{}
+	_ sdk.Msg              = &MsgUpdateParams{}
+	_ sdk.HasValidateBasic = &MsgUpdateParams{}
 
 	_ codectypes.UnpackInterfacesMessage = MsgEthereumTx{}
 )
@@ -231,29 +232,47 @@ func (msg *MsgEthereumTx) GetMsgs() []sdk.Msg {
 
 // TODO(boodyvo): should be implemented if we use
 func (msg *MsgEthereumTx) GetMsgsV2() ([]protov2.Message, error) {
-	return nil, nil
+	// usage will be skipped in cosmos-sdk if it returns error
+	return nil, errors.New("not implemented")
 }
 
 // GetSigners returns the expected signers for an Ethereum transaction message.
 // For such a message, there should exist only a single 'signer'.
 //
 // NOTE: This method panics if 'Sign' hasn't been called first.
-func (msg *MsgEthereumTx) GetSigners() []sdk.AccAddress {
+//func (msg *MsgEthereumTx) GetSigners() []sdk.AccAddress {
+//	fmt.Println("MsgEthereumTx GetSigners was triggered")
+//	data, err := UnpackTxData(msg.Data)
+//	if err != nil {
+//		panic(err)
+//	}
+//
+//	sender, err := msg.GetSender(data.GetChainID())
+//	if err != nil {
+//		panic(err)
+//	}
+//
+//	signer := sdk.AccAddress(sender.Bytes())
+//	return []sdk.AccAddress{signer}
+//}
+
+func (msg *MsgEthereumTx) GetSigners() ([][]byte, error) {
 	fmt.Println("MsgEthereumTx GetSigners was triggered")
 	data, err := UnpackTxData(msg.Data)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	sender, err := msg.GetSender(data.GetChainID())
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	signer := sdk.AccAddress(sender.Bytes())
-	return []sdk.AccAddress{signer}
+	return [][]byte{signer}, nil
 }
 
+// TODO(boodyvo): implement this method
 // func(proto.Message) ([][]byte, error)
 func GetSigners(msg protov2.Message) ([][]byte, error) {
 	fmt.Println("Test Eth Get signers is invoked")
