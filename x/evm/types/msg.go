@@ -288,26 +288,42 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	fmt.Println("Eth message value of ", protoreflect.ValueOfMessage(msg.ProtoReflect()))
 
 	value := protoreflect.ValueOfMessage(msg.ProtoReflect())
-	var msgEthereumTx *MsgEthereumTx
-	err := msgEthereumTx.Unmarshal(value.Bytes())
+	//var msgEthereumTx *MsgEthereumTx
+	//err := msgEthereumTx.Unmarshal(value.Bytes())
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	var msgData *codectypes.Any
+	err := msgData.Unmarshal(value.Bytes())
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := UnpackTxData(msgEthereumTx.Data)
+	data, err := UnpackTxData(msgData)
 	if err != nil {
 		return nil, err
 	}
 
-	sender, err := msgEthereumTx.GetSender(data.GetChainID())
+	// func (msg MsgEthereumTx) AsTransaction() *ethtypes.Transaction {
+	//	txData, err := UnpackTxData(msg.Data)
+	//	if err != nil {
+	//		return nil
+	//	}
+	//
+	//	return ethtypes.NewTx(txData.AsEthereumData())
+	// }
+
+	transaction := ethtypes.NewTx(data.AsEthereumData())
+
+	signerEncoded := ethtypes.LatestSignerForChainID(data.GetChainID())
+	from, err := signerEncoded.Sender(transaction)
 	if err != nil {
 		return nil, err
 	}
 
-	signer := sdk.AccAddress(sender.Bytes())
+	signer := sdk.AccAddress(from.Bytes())
 	return [][]byte{signer}, nil
-
-	return nil, nil
 }
 
 // GetSignBytes returns the Amino bytes of an Ethereum transaction message used
