@@ -16,9 +16,11 @@
 package types
 
 import (
+	txsigning "cosmossdk.io/x/tx/signing"
 	"errors"
 	"fmt"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"math/big"
 
 	sdkmath "cosmossdk.io/math"
@@ -33,6 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/evmos/ethermint/types"
+	protov1 "github.com/golang/protobuf/proto" //nolint:staticcheck
 	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -54,6 +57,12 @@ const (
 	// TypeMsgEthereumTx defines the type string of an Ethereum transaction
 	TypeMsgEthereumTx = "ethereum_tx"
 )
+
+var MsgEthereumTxGetSigner = txsigning.CustomGetSigner{
+	MsgType: protoreflect.FullName(protov1.MessageName(&MsgEthereumTx{})),
+	// func(proto.Message) ([][]byte, error)
+	Fn: GetSigners,
+}
 
 // NewTx returns a reference to a new Ethereum transaction message.
 func NewTx(
@@ -242,6 +251,14 @@ func (msg *MsgEthereumTx) GetSigners() []sdk.AccAddress {
 
 	signer := sdk.AccAddress(sender.Bytes())
 	return []sdk.AccAddress{signer}
+}
+
+// func(proto.Message) ([][]byte, error)
+func GetSigners(msg protov2.Message) ([][]byte, error) {
+	fmt.Println("Test Eth Get signers is invoked")
+	fmt.Println("Eth message type", msg.ProtoReflect().Type())
+
+	return nil, nil
 }
 
 // GetSignBytes returns the Amino bytes of an Ethereum transaction message used

@@ -112,7 +112,7 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		return next(ctx, tx, simulate)
 	}
 
-	fmt.Println("EthValidateBasicDecorator.AnteHandle", tx)
+	fmt.Println("EthValidateBasicDecorator.AnteHandle start")
 	for _, msg := range tx.GetMsgs() {
 		fmt.Println("EthValidateBasicDecorator.AnteHandle", msg.String())
 	}
@@ -120,8 +120,10 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	//sigetheriumTx, ok := tx.(*evmtypes.MsgEthereumTx)
 	sigetheriumTx, ok := tx.(sdk.HasValidateBasic)
 	if ok {
+		fmt.Println("going to validate basic")
 		err := sigetheriumTx.ValidateBasic()
 		// ErrNoSignatures is fine with eth tx
+		fmt.Println("validation error is ", err)
 		if err != nil && !errors.Is(err, errortypes.ErrNoSignatures) {
 			return ctx, errorsmod.Wrap(err, "tx basic validation failed")
 		}
@@ -132,12 +134,15 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// For eth type cosmos tx, some fields should be verified as zero values,
 	// since we will only verify the signature against the hash of the MsgEthereumTx.Data
 	wrapperTx, ok := tx.(protoTxProvider)
+	fmt.Println("wrapperTx", wrapperTx, ok)
 	if !ok {
 		return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid tx type %T, didn't implement interface protoTxProvider", tx)
 	}
 
 	protoTx := wrapperTx.GetProtoTx()
 	body := protoTx.Body
+	fmt.Println("protoTx", protoTx)
+	fmt.Println("body", body)
 	if body.Memo != "" || body.TimeoutHeight != uint64(0) || len(body.NonCriticalExtensionOptions) > 0 {
 		return ctx, errorsmod.Wrap(errortypes.ErrInvalidRequest,
 			"for eth tx body Memo TimeoutHeight NonCriticalExtensionOptions should be empty")
@@ -174,6 +179,7 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	evmDenom := evmParams.GetEvmDenom()
 
 	for _, msg := range protoTx.GetMsgs() {
+		fmt.Println("eth msg", msg)
 		msgEthTx, ok := msg.(*evmtypes.MsgEthereumTx)
 		if !ok {
 			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgEthereumTx)(nil))
@@ -212,6 +218,8 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	if authInfo.Fee.GasLimit != txGasLimit {
 		return ctx, errorsmod.Wrapf(errortypes.ErrInvalidRequest, "invalid AuthInfo Fee GasLimit (%d != %d)", authInfo.Fee.GasLimit, txGasLimit)
 	}
+
+	fmt.Println("going to call next for eth ante")
 
 	return next(ctx, tx, simulate)
 }

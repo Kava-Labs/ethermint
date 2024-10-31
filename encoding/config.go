@@ -25,6 +25,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	enccodec "github.com/evmos/ethermint/encoding/codec"
 	"github.com/evmos/ethermint/simapp/params"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // MakeConfig creates an EncodingConfig for testing
@@ -37,6 +39,9 @@ func MakeConfig() params.EncodingConfig {
 		},
 		ValidatorAddressCodec: address.Bech32Codec{
 			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+		},
+		CustomGetSigners: map[protoreflect.FullName]signing.GetSignersFunc{
+			evmtypes.MsgEthereumTxGetSigner.MsgType: evmtypes.MsgEthereumTxGetSigner.Fn,
 		},
 	}
 	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
