@@ -302,10 +302,10 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 		return nil, err
 	}
 
-	msg.ProtoReflect()
-
 	msgData := &MsgEthereumTx{}
 	err = msgData.Unmarshal(marshaledData)
+	fmt.Println("Eth message data after transformation", msgData)
+	fmt.Println("Eth message error", err)
 	if err != nil {
 		return nil, err
 	}
