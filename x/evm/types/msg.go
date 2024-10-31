@@ -289,15 +289,23 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 
 	value := protoreflect.ValueOfMessage(msg.ProtoReflect())
 	fmt.Println("Eth message value string", value.String())
-	fmt.Println("Eth message value bytes", value.Bytes())
 	//var msgEthereumTx *MsgEthereumTx
 	//err := msgEthereumTx.Unmarshal(value.Bytes())
 	//if err != nil {
 	//	return nil, err
 	//}
 
+	marshaledData, err := protov2.Marshal(msg)
+	fmt.Println("Eth message marshaled data", marshaledData)
+	fmt.Println("Eth message marshaled error", err)
+	if err != nil {
+		return nil, err
+	}
+
+	msg.ProtoReflect()
+
 	var msgData *MsgEthereumTx
-	err := msgData.Unmarshal(value.Bytes())
+	err = msgData.Unmarshal(marshaledData)
 	if err != nil {
 		return nil, err
 	}
