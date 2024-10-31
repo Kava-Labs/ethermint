@@ -239,6 +239,7 @@ func (msg *MsgEthereumTx) GetMsgsV2() ([]protov2.Message, error) {
 //
 // NOTE: This method panics if 'Sign' hasn't been called first.
 func (msg *MsgEthereumTx) GetSigners() []sdk.AccAddress {
+	fmt.Println("MsgEthereumTx GetSigners was triggered")
 	data, err := UnpackTxData(msg.Data)
 	if err != nil {
 		panic(err)
