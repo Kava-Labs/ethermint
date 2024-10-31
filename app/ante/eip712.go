@@ -105,6 +105,8 @@ func (svd LegacyEip712SigVerificationDecorator) AnteHandle(ctx sdk.Context,
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
+	fmt.Println("AnteHandle for eip712")
+
 	// no need to verify signatures on recheck tx
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
@@ -127,10 +129,14 @@ func (svd LegacyEip712SigVerificationDecorator) AnteHandle(ctx sdk.Context,
 		return ctx, err
 	}
 
+	fmt.Println("eip712 sigs: ", sigs)
+
 	signerAddrs, err := sigTx.GetSigners()
 	if err != nil {
 		return ctx, err
 	}
+
+	fmt.Println("eip712 addresses: ", sigs)
 
 	// EIP712 allows just one signature
 	if len(sigs) != 1 {
