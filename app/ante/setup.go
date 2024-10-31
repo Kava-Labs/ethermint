@@ -25,7 +25,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -113,18 +112,21 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		return next(ctx, tx, simulate)
 	}
 
-	fmt.Println("EthValidateBasicDecorator.AnteHandle")
+	fmt.Println("EthValidateBasicDecorator.AnteHandle", tx)
+	for _, msg := range tx.GetMsgs() {
+		fmt.Println("EthValidateBasicDecorator.AnteHandle", msg.String())
+	}
 
 	//sigetheriumTx, ok := tx.(*evmtypes.MsgEthereumTx)
 	sigetheriumTx, ok := tx.(sdk.HasValidateBasic)
-	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
-	}
+	if ok {
+		err := sigetheriumTx.ValidateBasic()
+		// ErrNoSignatures is fine with eth tx
+		if err != nil && !errors.Is(err, errortypes.ErrNoSignatures) {
+			return ctx, errorsmod.Wrap(err, "tx basic validation failed")
+		}
 
-	err := sigetheriumTx.ValidateBasic()
-	// ErrNoSignatures is fine with eth tx
-	if err != nil && !errors.Is(err, errortypes.ErrNoSignatures) {
-		return ctx, errorsmod.Wrap(err, "tx basic validation failed")
+		//return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	// For eth type cosmos tx, some fields should be verified as zero values,
