@@ -191,6 +191,7 @@ func (msg MsgEthereumTx) Type() string { return TypeMsgEthereumTx }
 // ValidateBasic implements the sdk.Msg interface. It performs basic validation
 // checks of a Transaction. If returns an error if validation fails.
 func (msg MsgEthereumTx) ValidateBasic() error {
+	fmt.Println("MsgEthereumTx.ValidateBasic")
 	if msg.From != "" {
 		if err := types.ValidateAddress(msg.From); err != nil {
 			return errorsmod.Wrap(err, "invalid from address")
@@ -286,18 +287,25 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	fmt.Println("Eth message data", msg.ProtoReflect().Descriptor().Fields().ByName("data"))
 	fmt.Println("Eth message value of ", protoreflect.ValueOfMessage(msg.ProtoReflect()))
 
-	//data, err := UnpackTxData(data.Bytes())
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//sender, err := msg.GetSender(data.GetChainID())
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//signer := sdk.AccAddress(sender.Bytes())
-	//return [][]byte{signer}, nil
+	value := protoreflect.ValueOfMessage(msg.ProtoReflect())
+	var msgEthereumTx *MsgEthereumTx
+	err := msgEthereumTx.Unmarshal(value.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := UnpackTxData(msgEthereumTx.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	sender, err := msgEthereumTx.GetSender(data.GetChainID())
+	if err != nil {
+		return nil, err
+	}
+
+	signer := sdk.AccAddress(sender.Bytes())
+	return [][]byte{signer}, nil
 
 	return nil, nil
 }
@@ -465,6 +473,7 @@ func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic does a sanity check of the provided data
 func (m *MsgUpdateParams) ValidateBasic() error {
+	fmt.Println("MsgUpdateParams.ValidateBasic")
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return errorsmod.Wrap(err, "invalid authority address")
 	}
