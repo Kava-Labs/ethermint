@@ -304,7 +304,7 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 
 	msg.ProtoReflect()
 
-	var msgData *MsgEthereumTx
+	msgData := &MsgEthereumTx{}
 	err = msgData.Unmarshal(marshaledData)
 	if err != nil {
 		return nil, err
