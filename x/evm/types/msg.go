@@ -277,6 +277,27 @@ func (msg *MsgEthereumTx) GetSigners() ([][]byte, error) {
 func GetSigners(msg protov2.Message) ([][]byte, error) {
 	fmt.Println("Test Eth Get signers is invoked")
 	fmt.Println("Eth message type", msg.ProtoReflect().Type())
+	fmt.Println("Eth message name", msg.ProtoReflect().Descriptor().Name())
+	fmt.Println("Eth message full name", msg.ProtoReflect().Descriptor().FullName())
+	fmt.Println("Eth message full fields", msg.ProtoReflect().Descriptor().Fields())
+
+	// extract data from msg
+	fmt.Println("Eth message Data", msg.ProtoReflect().Descriptor().Fields().ByName("Data"))
+	fmt.Println("Eth message data", msg.ProtoReflect().Descriptor().Fields().ByName("data"))
+	fmt.Println("Eth message value of ", protoreflect.ValueOfMessage(msg.ProtoReflect()))
+
+	//data, err := UnpackTxData(data.Bytes())
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//sender, err := msg.GetSender(data.GetChainID())
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//signer := sdk.AccAddress(sender.Bytes())
+	//return [][]byte{signer}, nil
 
 	return nil, nil
 }
