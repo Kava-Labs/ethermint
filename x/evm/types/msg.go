@@ -19,6 +19,8 @@ import (
 	txsigning "cosmossdk.io/x/tx/signing"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-proto/anyutil"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"math/big"
@@ -291,6 +293,18 @@ func (msg *MsgEthereumTx) GetSigners() ([][]byte, error) {
 //	return signers, msgv2, err
 //}
 
+//func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Message, error) {
+//	if msgV2, ok := msg.(proto.Message); ok {
+//		signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgV2)
+//		return signers, msgV2, err
+//	}
+//	a, err := types.NewAnyWithValue(msg)
+//	if err != nil {
+//		return nil, nil, err
+//	}
+//	return pc.GetMsgAnySigners(a)
+//}
+
 // TODO(boodyvo): implement this method
 // func(proto.Message) ([][]byte, error)
 func GetSigners(msg protov2.Message) ([][]byte, error) {
@@ -310,8 +324,32 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 
 	msgV1 := protoadapt.MessageV1Of(msg)
 
+	anyMsg, err := anyutil.New(msg)
+	fmt.Println("Eth Any message", anyMsg)
+	fmt.Println("Eth Any message error", err)
+	if err != nil {
+	}
+
+	type protoTxProvider interface {
+		GetProtoTx() *tx.Tx
+	}
+
+	wrapperTx, ok := msg.(protoTxProvider)
+	fmt.Println("Eth message is protoTxProvider", wrapperTx, ok)
+	if !ok {
+	}
+
 	fmt.Println("Test Eth Get signers is invoked")
 	fmt.Println("Eth message type", msgV1.String())
+
+	switch {
+	case anyMsg.TypeUrl == "/ethermint.evm.v1.DynamicFeeTx":
+		fmt.Println("Eth message is DynamicFeeTx")
+	case anyMsg.TypeUrl == "/ethermint.evm.v1.AccessListTx":
+		fmt.Println("Eth message is AccessListTx")
+	case anyMsg.TypeUrl == "/ethermint.evm.v1.LegacyTx":
+		fmt.Println("Eth message is LegacyTx")
+	}
 	//fmt.Println("Eth message name", msg.ProtoReflect().Descriptor().Name())
 	//fmt.Println("Eth message full name", msg.ProtoReflect().Descriptor().FullName())
 	//fmt.Println("Eth message full fields", msg.ProtoReflect().Descriptor().Fields())
@@ -333,7 +371,8 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 
 	msgEthTx, ok := msgV1.(*MsgEthereumTx)
 	if !ok {
-		return nil, fmt.Errorf("invalid type, expected MsgEthereumTx and got %T", msg)
+		fmt.Println("cannot unmarshal message to MsgEthereumTx")
+		//return nil, fmt.Errorf("invalid type, expected MsgEthereumTx and got %T", msg)
 	}
 
 	//testMsg := &MsgEthereumTx{}
@@ -352,7 +391,7 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	//	return nil, err
 	//}
 
-	data, err := UnpackTxData(msgEthTx.Data)
+	data, err := UnpackTxData(anyMsg.Value)
 	if err != nil {
 		return nil, err
 	}
