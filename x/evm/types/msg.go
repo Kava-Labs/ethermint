@@ -19,7 +19,6 @@ import (
 	txsigning "cosmossdk.io/x/tx/signing"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-proto/anyutil"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"math/big"
@@ -306,7 +305,6 @@ func (msg *MsgEthereumTx) GetSigners() ([][]byte, error) {
 // TODO(boodyvo): implement this method
 // func(proto.Message) ([][]byte, error)
 func GetSigners(msg protov2.Message) ([][]byte, error) {
-
 	// Message is the top-level interface that all messages must implement.
 	// It provides access to a reflective view of a message.
 	// Any implementation of this interface may be used with all functions in the
@@ -322,132 +320,47 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 
 	msgV1 := protoadapt.MessageV1Of(msg)
 
-	anyMsg, err := anyutil.New(msg)
-	fmt.Println("Eth Any message", anyMsg)
-	fmt.Println("Eth Any message error", err)
-	if err != nil {
-	}
-
-	fmt.Println("Test Eth Get signers is invoked")
-	fmt.Println("Eth message type", msgV1.String())
-
-	switch {
-	case anyMsg.TypeUrl == "/ethermint.evm.v1.DynamicFeeTx":
-		fmt.Println("Eth message is DynamicFeeTx")
-	case anyMsg.TypeUrl == "/ethermint.evm.v1.AccessListTx":
-		fmt.Println("Eth message is AccessListTx")
-	case anyMsg.TypeUrl == "/ethermint.evm.v1.LegacyTx":
-		fmt.Println("Eth message is LegacyTx")
-	case anyMsg.TypeUrl == "/ethermint.evm.v1.MsgEthereumTx":
-		fmt.Println("Eth message is MsgEthereumTx")
-	default:
-		fmt.Println("Eth message is unknown")
-	}
-
-	//fmt.Println("Eth message name", msg.ProtoReflect().Descriptor().Name())
-	//fmt.Println("Eth message full name", msg.ProtoReflect().Descriptor().FullName())
-	//fmt.Println("Eth message full fields", msg.ProtoReflect().Descriptor().Fields())
-
-	// extract data from msg
-	//fmt.Println("Eth message Data", msg.ProtoReflect().Descriptor().Fields().ByName("Data"))
-	//fmt.Println("Eth message data", msg.ProtoReflect().Descriptor().Fields().ByName("data"))
-	//fmt.Println("Eth message value of ", protoreflect.ValueOfMessage(msg.ProtoReflect()))
-
-	//value := protoreflect.ValueOfMessage(msg.ProtoReflect())
-	//fmt.Println("Eth message value string", value.String())
-	//
-	//marshaledData, err := protov2.Marshal(msg)
-	//fmt.Println("Eth message marshaled data", marshaledData)
-	//fmt.Println("Eth message marshaled error", err)
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	//msgEthTx, ok := msgV1.(*MsgEthereumTx)
-	//if !ok {
-	//	fmt.Println("cannot unmarshal message to MsgEthereumTx")
-	//return nil, fmt.Errorf("invalid type, expected MsgEthereumTx and got %T", msg)
-	//}
-
-	//testMsg := &MsgEthereumTx{}
-	//
-	//err = protov1.Unmarshal(marshaledData, testMsg)
-	//fmt.Println("Eth unmarshaled data message", testMsg)
-	//if err != nil {
-	//	fmt.Println("Eth message unmarshaled first message from proto error", err)
-	//}
-
-	//msgData := &MsgEthereumTx{}
-	//err = msgData.Unmarshal(testMsg.Data)
-	//fmt.Println("Eth message data after transformation", msgData)
-	//fmt.Println("Eth message error", err)
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	tryingTypeAnyV1, err := codectypes.NewAnyWithValue(msgV1)
-	fmt.Println("Eth message tryingTypeAnyV1", tryingTypeAnyV1)
 	if err != nil {
-		fmt.Println("Eth message tryingTypeAnyV1 error", err)
+		return nil, err
 	}
 
 	msgTyped := &MsgEthereumTx{}
 	err = msgTyped.Unmarshal(tryingTypeAnyV1.Value)
-	fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx", msgTyped)
 	if err != nil {
-		fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx error", err)
+		return nil, err
 	}
 	fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data", msgTyped.Data)
-	fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data type", msgTyped.Data.TypeUrl)
 
 	var data TxData
 	switch {
 	case msgTyped.Data.TypeUrl == "/ethermint.evm.v1.DynamicFeeTx":
 		msgTyped2 := &DynamicFeeTx{}
 		err = msgTyped2.Unmarshal(msgTyped.Data.Value)
-		fmt.Println("Eth message tryingTypeAnyV1 DynamicFeeTx", msgTyped)
 		if err != nil {
-			fmt.Println("Eth message tryingTypeAnyV1 DynamicFeeTx error", err)
+			return nil, err
 		}
 
 		data = msgTyped2
 	case msgTyped.Data.TypeUrl == "/ethermint.evm.v1.AccessListTx":
 		msgTyped2 := &AccessListTx{}
 		err = msgTyped2.Unmarshal(msgTyped.Data.Value)
-		fmt.Println("Eth message tryingTypeAnyV1 AccessListTx", msgTyped)
 		if err != nil {
-			fmt.Println("Eth message tryingTypeAnyV1 AccessListTx error", err)
+			return nil, err
 		}
 
 		data = msgTyped2
 	case msgTyped.Data.TypeUrl == "/ethermint.evm.v1.LegacyTx":
 		msgTyped2 := &LegacyTx{}
 		err = msgTyped2.Unmarshal(msgTyped.Data.Value)
-		fmt.Println("Eth message tryingTypeAnyV1 LegacyTx", msgTyped)
 		if err != nil {
-			fmt.Println("Eth message tryingTypeAnyV1 LegacyTx error", err)
+			return nil, err
 		}
 
 		data = msgTyped2
 	default:
-		fmt.Println("Eth message msgTyped.Data.TypeUrl unknown")
+		return nil, fmt.Errorf("invalid TypeUrl %s", msgTyped.Data.TypeUrl)
 	}
-
-	//data, err := UnpackTxData(tryingTypeAnyV1)
-	//if err != nil {
-	//	return nil, err
-	//}
-	// data, err := UnpackTxData(msg.Data)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//
-
-	// signer := ethtypes.LatestSignerForChainID(txData.GetChainID())
-	//	from, err := signer.Sender(ethtypes.NewTx(txData.AsEthereumData()))
-	//	if err != nil {
-	//		return common.Address{}, err
-	//	}
 
 	transaction := ethtypes.NewTx(data.AsEthereumData())
 
@@ -456,37 +369,11 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	signer := ethtypes.LatestSignerForChainID(data.GetChainID())
 	from, err := signer.Sender(transaction)
 	if err != nil {
-		fmt.Println("Eth message signer error", err)
+		return nil, err
 	}
-
-	//signer := ethtypes.LatestSignerForChainID(chainID)
-	//from, err := signer.Sender(msg.AsTransaction())
-	//if err != nil {
-	//	return common.Address{}, err
-	//}
-	//
-	//msg.From = from.Hex()
-	//return from, nil
-
-	//sender, err := msgEthTx.GetSender(data.GetChainID())
-	//if err != nil {
-	//	return nil, err
-	//}
 
 	sign := sdk.AccAddress(from.Bytes())
 	return [][]byte{sign}, nil
-	//
-	//
-	//transaction := ethtypes.NewTx(data.AsEthereumData())
-	//
-	//signerEncoded := ethtypes.LatestSignerForChainID(data.GetChainID())
-	//from, err := signerEncoded.Sender(transaction)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//signer := sdk.AccAddress(from.Bytes())
-	//return [][]byte{signer}, nil
 }
 
 // GetSignBytes returns the Amino bytes of an Ethereum transaction message used
