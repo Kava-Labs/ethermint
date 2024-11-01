@@ -391,7 +391,7 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	//	return nil, err
 	//}
 
-	data, err := UnpackTxData(anyMsg.Value)
+	data, err := UnpackTxData(msgEthTx.Data)
 	if err != nil {
 		return nil, err
 	}
