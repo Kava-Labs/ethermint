@@ -22,6 +22,7 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"math/big"
+	"runtime/debug"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -91,6 +92,9 @@ func newMsgEthereumTx(
 	chainID *big.Int, nonce uint64, to *common.Address, amount *big.Int,
 	gasLimit uint64, gasPrice, gasFeeCap, gasTipCap *big.Int, input []byte, accesses *ethtypes.AccessList,
 ) *MsgEthereumTx {
+	fmt.Println("Going to create eth transaction")
+	debug.PrintStack()
+
 	var (
 		cid, amt, gp *sdkmath.Int
 		toAddr       string
