@@ -40,6 +40,7 @@ import (
 	protov1 "github.com/golang/protobuf/proto" //nolint:staticcheck
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/protoadapt"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -386,59 +387,47 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	//	return nil, err
 	//}
 
+	anypb.Any{}.UnmarshalTo()
 	tryingTypeAnyV1, err := codectypes.NewAnyWithValue(msgV1)
 	fmt.Println("Eth message tryingTypeAnyV1", tryingTypeAnyV1)
 	if err != nil {
 		fmt.Println("Eth message tryingTypeAnyV1 error", err)
 	}
 
+	msgTyped := &MsgEthereumTx{}
+	err = msgTyped.Unmarshal(tryingTypeAnyV1.Value)
+	fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx", msgTyped)
+	if err != nil {
+		fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx error", err)
+	}
+	fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data", msgTyped.Data)
+	fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data type", msgTyped.Data.TypeUrl)
+
 	var data TxData
 	switch {
-	case tryingTypeAnyV1.TypeUrl == "/ethermint.evm.v1.DynamicFeeTx":
-		msgTyped := &DynamicFeeTx{}
-		err = msgTyped.Unmarshal(tryingTypeAnyV1.Value)
+	case msgTyped.Data.TypeUrl == "/ethermint.evm.v1.DynamicFeeTx":
+		msgTyped2 := &DynamicFeeTx{}
+		err = msgTyped2.Unmarshal(msgTyped.Data.Value)
 		fmt.Println("Eth message tryingTypeAnyV1 DynamicFeeTx", msgTyped)
 		if err != nil {
 			fmt.Println("Eth message tryingTypeAnyV1 DynamicFeeTx error", err)
 		}
-	case tryingTypeAnyV1.TypeUrl == "/ethermint.evm.v1.AccessListTx":
-		msgTyped := &AccessListTx{}
-		err = msgTyped.Unmarshal(tryingTypeAnyV1.Value)
+	case msgTyped.Data.TypeUrl == "/ethermint.evm.v1.AccessListTx":
+		msgTyped2 := &AccessListTx{}
+		err = msgTyped2.Unmarshal(msgTyped.Data.Value)
 		fmt.Println("Eth message tryingTypeAnyV1 AccessListTx", msgTyped)
 		if err != nil {
 			fmt.Println("Eth message tryingTypeAnyV1 AccessListTx error", err)
 		}
-	case tryingTypeAnyV1.TypeUrl == "/ethermint.evm.v1.LegacyTx":
-		msgTyped := &LegacyTx{}
-		err = msgTyped.Unmarshal(tryingTypeAnyV1.Value)
+	case msgTyped.Data.TypeUrl == "/ethermint.evm.v1.LegacyTx":
+		msgTyped2 := &LegacyTx{}
+		err = msgTyped2.Unmarshal(msgTyped.Data.Value)
 		fmt.Println("Eth message tryingTypeAnyV1 LegacyTx", msgTyped)
 		if err != nil {
 			fmt.Println("Eth message tryingTypeAnyV1 LegacyTx error", err)
 		}
-	case tryingTypeAnyV1.TypeUrl == "/ethermint.evm.v1.MsgEthereumTx":
-		msgTyped := &MsgEthereumTx{}
-		err = msgTyped.Unmarshal(tryingTypeAnyV1.Value)
-		fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx", msgTyped)
-		if err != nil {
-			fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx error", err)
-		}
-		fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data", msgTyped.Data)
-		fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data type", msgTyped.Data.TypeUrl)
-
-		data, err = UnpackTxData(msgTyped.Data)
-		if err != nil {
-			fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data error", err)
-		}
-
-		sender, err := msgEthTx.GetSender(data.GetChainID())
-		if err != nil {
-			return nil, err
-		}
-
-		signer := sdk.AccAddress(sender.Bytes())
-		return [][]byte{signer}, nil
 	default:
-		fmt.Println("Eth message tryingTypeAnyV1 unknown")
+		fmt.Println("Eth message msgTyped.Data.TypeUrl unknown")
 	}
 
 	//data, err := UnpackTxData(tryingTypeAnyV1)
