@@ -17,6 +17,7 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -92,6 +93,8 @@ func UnpackTxData(any *codectypes.Any) (TxData, error) {
 	if any == nil {
 		return nil, errorsmod.Wrap(errortypes.ErrUnpackAny, "protobuf Any message cannot be nil")
 	}
+
+	fmt.Println("UnpackTxData", any.GetCachedValue())
 
 	txData, ok := any.GetCachedValue().(TxData)
 	if !ok {

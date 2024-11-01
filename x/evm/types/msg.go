@@ -301,6 +301,14 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 		return nil, err
 	}
 
+	testMsg := &MsgEthereumTx{}
+
+	err = protov1.Unmarshal(marshaledData, testMsg)
+	fmt.Println("Eth unmarshaled data message", testMsg)
+	if err != nil {
+		fmt.Println("Eth message unmarshaled first message from proto error", err)
+	}
+
 	msgData := &MsgEthereumTx{}
 	err = msgData.Unmarshal(marshaledData)
 	fmt.Println("Eth message data after transformation", msgData)
