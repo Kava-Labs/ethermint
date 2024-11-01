@@ -391,11 +391,6 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	if err != nil {
 		fmt.Println("Eth message tryingTypeAnyV1 error", err)
 	}
-	msgEthTx, is := tryingTypeAnyV1.(*MsgEthereumTx)
-	if !is {
-		fmt.Println("Eth message tryingTypeAnyV1 is not MsgEthereumTx")
-		//return nil, fmt.Errorf("invalid type, expected MsgEthereumTx and got %T", msg)
-	}
 
 	var data TxData
 	switch {
@@ -431,6 +426,14 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 		if err != nil {
 			fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data error", err)
 		}
+
+		sender, err := msgEthTx.GetSender(data.GetChainID())
+		if err != nil {
+			return nil, err
+		}
+
+		signer := sdk.AccAddress(sender.Bytes())
+		return [][]byte{signer}, nil
 	default:
 		fmt.Println("Eth message tryingTypeAnyV1 unknown")
 	}
