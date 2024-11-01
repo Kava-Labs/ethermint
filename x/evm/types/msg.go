@@ -36,15 +36,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/evmos/ethermint/types"
 	protov1 "github.com/golang/protobuf/proto" //nolint:staticcheck
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/protoadapt"
-	anypb "google.golang.org/protobuf/types/known/anypb"
-
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
 var (
@@ -387,7 +385,6 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	//	return nil, err
 	//}
 
-	anypb.Any{}.UnmarshalTo()
 	tryingTypeAnyV1, err := codectypes.NewAnyWithValue(msgV1)
 	fmt.Println("Eth message tryingTypeAnyV1", tryingTypeAnyV1)
 	if err != nil {
