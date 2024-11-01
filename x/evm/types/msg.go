@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-proto/anyutil"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"math/big"
@@ -330,15 +329,6 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	if err != nil {
 	}
 
-	type protoTxProvider interface {
-		GetProtoTx() *tx.Tx
-	}
-
-	wrapperTx, ok := msg.(protoTxProvider)
-	fmt.Println("Eth message is protoTxProvider", wrapperTx, ok)
-	if !ok {
-	}
-
 	fmt.Println("Test Eth Get signers is invoked")
 	fmt.Println("Eth message type", msgV1.String())
 
@@ -401,6 +391,11 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	if err != nil {
 		fmt.Println("Eth message tryingTypeAnyV1 error", err)
 	}
+	msgEthTx, is := tryingTypeAnyV1.(*MsgEthereumTx)
+	if !is {
+		fmt.Println("Eth message tryingTypeAnyV1 is not MsgEthereumTx")
+		//return nil, fmt.Errorf("invalid type, expected MsgEthereumTx and got %T", msg)
+	}
 
 	var data TxData
 	switch {
@@ -424,6 +419,17 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 		fmt.Println("Eth message tryingTypeAnyV1 LegacyTx", msgTyped)
 		if err != nil {
 			fmt.Println("Eth message tryingTypeAnyV1 LegacyTx error", err)
+		}
+	case tryingTypeAnyV1.TypeUrl == "/ethermint.evm.v1.MsgEthereumTx":
+		msgTyped := &MsgEthereumTx{}
+		err = msgTyped.Unmarshal(tryingTypeAnyV1.Value)
+		fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx", msgTyped)
+		if err != nil {
+			fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx error", err)
+		}
+		data, err = UnpackTxData(msgTyped.Data)
+		if err != nil {
+			fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data error", err)
 		}
 	default:
 		fmt.Println("Eth message tryingTypeAnyV1 unknown")
