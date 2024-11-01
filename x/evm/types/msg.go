@@ -38,6 +38,7 @@ import (
 	"github.com/evmos/ethermint/types"
 	protov1 "github.com/golang/protobuf/proto" //nolint:staticcheck
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -277,37 +278,71 @@ func (msg *MsgEthereumTx) GetSigners() ([][]byte, error) {
 	return [][]byte{signer}, nil
 }
 
+// func (pc ProtoCodec) GetMsgAnySigners(msg *types.Any) ([][]byte, proto.Message, error) {
+//	msgv2, err := anyutil.Unpack(&anypb.Any{
+//		TypeUrl: msg.TypeUrl,
+//		Value:   msg.Value,
+//	}, pc.interfaceRegistry, nil)
+//	if err != nil {
+//		return nil, nil, err
+//	}
+//
+//	signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgv2)
+//	return signers, msgv2, err
+//}
+
 // TODO(boodyvo): implement this method
 // func(proto.Message) ([][]byte, error)
 func GetSigners(msg protov2.Message) ([][]byte, error) {
+
+	// Message is the top-level interface that all messages must implement.
+	// It provides access to a reflective view of a message.
+	// Any implementation of this interface may be used with all functions in the
+	// protobuf module that accept a Message, except where otherwise specified.
+	//
+	// This is the v2 interface definition for protobuf messages.
+	// The v1 interface definition is [github.com/golang/protobuf/proto.Message].
+	//
+	//   - To convert a v1 message to a v2 message,
+	//     use [google.golang.org/protobuf/protoadapt.MessageV2Of].
+	//   - To convert a v2 message to a v1 message,
+	//     use [google.golang.org/protobuf/protoadapt.MessageV1Of].
+
+	msgV1 := protoadapt.MessageV1Of(msg)
+
 	fmt.Println("Test Eth Get signers is invoked")
-	fmt.Println("Eth message type", msg.ProtoReflect().Type())
-	fmt.Println("Eth message name", msg.ProtoReflect().Descriptor().Name())
-	fmt.Println("Eth message full name", msg.ProtoReflect().Descriptor().FullName())
-	fmt.Println("Eth message full fields", msg.ProtoReflect().Descriptor().Fields())
+	fmt.Println("Eth message type", msgV1.String())
+	//fmt.Println("Eth message name", msg.ProtoReflect().Descriptor().Name())
+	//fmt.Println("Eth message full name", msg.ProtoReflect().Descriptor().FullName())
+	//fmt.Println("Eth message full fields", msg.ProtoReflect().Descriptor().Fields())
 
 	// extract data from msg
-	fmt.Println("Eth message Data", msg.ProtoReflect().Descriptor().Fields().ByName("Data"))
-	fmt.Println("Eth message data", msg.ProtoReflect().Descriptor().Fields().ByName("data"))
-	fmt.Println("Eth message value of ", protoreflect.ValueOfMessage(msg.ProtoReflect()))
+	//fmt.Println("Eth message Data", msg.ProtoReflect().Descriptor().Fields().ByName("Data"))
+	//fmt.Println("Eth message data", msg.ProtoReflect().Descriptor().Fields().ByName("data"))
+	//fmt.Println("Eth message value of ", protoreflect.ValueOfMessage(msg.ProtoReflect()))
 
-	value := protoreflect.ValueOfMessage(msg.ProtoReflect())
-	fmt.Println("Eth message value string", value.String())
+	//value := protoreflect.ValueOfMessage(msg.ProtoReflect())
+	//fmt.Println("Eth message value string", value.String())
+	//
+	//marshaledData, err := protov2.Marshal(msg)
+	//fmt.Println("Eth message marshaled data", marshaledData)
+	//fmt.Println("Eth message marshaled error", err)
+	//if err != nil {
+	//	return nil, err
+	//}
 
-	marshaledData, err := protov2.Marshal(msg)
-	fmt.Println("Eth message marshaled data", marshaledData)
-	fmt.Println("Eth message marshaled error", err)
-	if err != nil {
-		return nil, err
+	msgEthTx, ok := msgV1.(*MsgEthereumTx)
+	if !ok {
+		return nil, fmt.Errorf("invalid type, expected MsgEthereumTx and got %T", msg)
 	}
 
-	testMsg := &MsgEthereumTx{}
-
-	err = protov1.Unmarshal(marshaledData, testMsg)
-	fmt.Println("Eth unmarshaled data message", testMsg)
-	if err != nil {
-		fmt.Println("Eth message unmarshaled first message from proto error", err)
-	}
+	//testMsg := &MsgEthereumTx{}
+	//
+	//err = protov1.Unmarshal(marshaledData, testMsg)
+	//fmt.Println("Eth unmarshaled data message", testMsg)
+	//if err != nil {
+	//	fmt.Println("Eth message unmarshaled first message from proto error", err)
+	//}
 
 	//msgData := &MsgEthereumTx{}
 	//err = msgData.Unmarshal(testMsg.Data)
@@ -317,21 +352,34 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	//	return nil, err
 	//}
 
-	data, err := UnpackTxData(testMsg.Data)
+	data, err := UnpackTxData(msgEthTx.Data)
+	if err != nil {
+		return nil, err
+	}
+	// data, err := UnpackTxData(msg.Data)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//
+	sender, err := msgEthTx.GetSender(data.GetChainID())
 	if err != nil {
 		return nil, err
 	}
 
-	transaction := ethtypes.NewTx(data.AsEthereumData())
-
-	signerEncoded := ethtypes.LatestSignerForChainID(data.GetChainID())
-	from, err := signerEncoded.Sender(transaction)
-	if err != nil {
-		return nil, err
-	}
-
-	signer := sdk.AccAddress(from.Bytes())
+	signer := sdk.AccAddress(sender.Bytes())
 	return [][]byte{signer}, nil
+	//
+	//
+	//transaction := ethtypes.NewTx(data.AsEthereumData())
+	//
+	//signerEncoded := ethtypes.LatestSignerForChainID(data.GetChainID())
+	//from, err := signerEncoded.Sender(transaction)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//signer := sdk.AccAddress(from.Bytes())
+	//return [][]byte{signer}, nil
 }
 
 // GetSignBytes returns the Amino bytes of an Ethereum transaction message used
