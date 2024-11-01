@@ -402,10 +402,37 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 		fmt.Println("Eth message tryingTypeAnyV1 error", err)
 	}
 
-	data, err := UnpackTxData(tryingTypeAnyV1)
-	if err != nil {
-		return nil, err
+	var data TxData
+	switch {
+	case tryingTypeAnyV1.TypeUrl == "/ethermint.evm.v1.DynamicFeeTx":
+		msgTyped := &DynamicFeeTx{}
+		err = msgTyped.Unmarshal(tryingTypeAnyV1.Value)
+		fmt.Println("Eth message tryingTypeAnyV1 DynamicFeeTx", msgTyped)
+		if err != nil {
+			fmt.Println("Eth message tryingTypeAnyV1 DynamicFeeTx error", err)
+		}
+	case tryingTypeAnyV1.TypeUrl == "/ethermint.evm.v1.AccessListTx":
+		msgTyped := &AccessListTx{}
+		err = msgTyped.Unmarshal(tryingTypeAnyV1.Value)
+		fmt.Println("Eth message tryingTypeAnyV1 AccessListTx", msgTyped)
+		if err != nil {
+			fmt.Println("Eth message tryingTypeAnyV1 AccessListTx error", err)
+		}
+	case tryingTypeAnyV1.TypeUrl == "/ethermint.evm.v1.LegacyTx":
+		msgTyped := &LegacyTx{}
+		err = msgTyped.Unmarshal(tryingTypeAnyV1.Value)
+		fmt.Println("Eth message tryingTypeAnyV1 LegacyTx", msgTyped)
+		if err != nil {
+			fmt.Println("Eth message tryingTypeAnyV1 LegacyTx error", err)
+		}
+	default:
+		fmt.Println("Eth message tryingTypeAnyV1 unknown")
 	}
+
+	//data, err := UnpackTxData(tryingTypeAnyV1)
+	//if err != nil {
+	//	return nil, err
+	//}
 	// data, err := UnpackTxData(msg.Data)
 	//	if err != nil {
 	//		return nil, err
