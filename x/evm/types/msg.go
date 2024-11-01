@@ -349,7 +349,12 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 		fmt.Println("Eth message is AccessListTx")
 	case anyMsg.TypeUrl == "/ethermint.evm.v1.LegacyTx":
 		fmt.Println("Eth message is LegacyTx")
+	case anyMsg.TypeUrl == "/ethermint.evm.v1.MsgEthereumTx":
+		fmt.Println("Eth message is MsgEthereumTx")
+	default:
+		fmt.Println("Eth message is unknown")
 	}
+
 	//fmt.Println("Eth message name", msg.ProtoReflect().Descriptor().Name())
 	//fmt.Println("Eth message full name", msg.ProtoReflect().Descriptor().FullName())
 	//fmt.Println("Eth message full fields", msg.ProtoReflect().Descriptor().Fields())
@@ -391,7 +396,13 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	//	return nil, err
 	//}
 
-	data, err := UnpackTxData(msgEthTx.Data)
+	tryingTypeAnyV1, err := codectypes.NewAnyWithValue(msgV1)
+	fmt.Println("Eth message tryingTypeAnyV1", tryingTypeAnyV1)
+	if err != nil {
+		fmt.Println("Eth message tryingTypeAnyV1 error", err)
+	}
+
+	data, err := UnpackTxData(tryingTypeAnyV1)
 	if err != nil {
 		return nil, err
 	}
