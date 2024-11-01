@@ -309,15 +309,15 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 		fmt.Println("Eth message unmarshaled first message from proto error", err)
 	}
 
-	msgData := &MsgEthereumTx{}
-	err = msgData.Unmarshal(marshaledData)
-	fmt.Println("Eth message data after transformation", msgData)
-	fmt.Println("Eth message error", err)
-	if err != nil {
-		return nil, err
-	}
+	//msgData := &MsgEthereumTx{}
+	//err = msgData.Unmarshal(testMsg.Data)
+	//fmt.Println("Eth message data after transformation", msgData)
+	//fmt.Println("Eth message error", err)
+	//if err != nil {
+	//	return nil, err
+	//}
 
-	data, err := UnpackTxData(msgData.Data)
+	data, err := UnpackTxData(testMsg.Data)
 	if err != nil {
 		return nil, err
 	}
