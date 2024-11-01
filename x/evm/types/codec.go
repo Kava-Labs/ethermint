@@ -94,7 +94,8 @@ func UnpackTxData(any *codectypes.Any) (TxData, error) {
 		return nil, errorsmod.Wrap(errortypes.ErrUnpackAny, "protobuf Any message cannot be nil")
 	}
 
-	fmt.Println("UnpackTxData", any.GetCachedValue())
+	fmt.Println("UnpackTxData cached", any.GetCachedValue())
+	fmt.Println("UnpackTxData not cached", any.GetValue())
 
 	txData, ok := any.GetCachedValue().(TxData)
 	if !ok {

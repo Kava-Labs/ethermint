@@ -422,6 +422,9 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 		if err != nil {
 			fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx error", err)
 		}
+		fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data", msgTyped.Data)
+		fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data type", msgTyped.Data.TypeUrl)
+
 		data, err = UnpackTxData(msgTyped.Data)
 		if err != nil {
 			fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data error", err)
