@@ -363,11 +363,11 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	//	return nil, err
 	//}
 
-	msgEthTx, ok := msgV1.(*MsgEthereumTx)
-	if !ok {
-		fmt.Println("cannot unmarshal message to MsgEthereumTx")
-		//return nil, fmt.Errorf("invalid type, expected MsgEthereumTx and got %T", msg)
-	}
+	//msgEthTx, ok := msgV1.(*MsgEthereumTx)
+	//if !ok {
+	//	fmt.Println("cannot unmarshal message to MsgEthereumTx")
+	//return nil, fmt.Errorf("invalid type, expected MsgEthereumTx and got %T", msg)
+	//}
 
 	//testMsg := &MsgEthereumTx{}
 	//
@@ -409,6 +409,8 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 		if err != nil {
 			fmt.Println("Eth message tryingTypeAnyV1 DynamicFeeTx error", err)
 		}
+
+		data = msgTyped2
 	case msgTyped.Data.TypeUrl == "/ethermint.evm.v1.AccessListTx":
 		msgTyped2 := &AccessListTx{}
 		err = msgTyped2.Unmarshal(msgTyped.Data.Value)
@@ -416,6 +418,8 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 		if err != nil {
 			fmt.Println("Eth message tryingTypeAnyV1 AccessListTx error", err)
 		}
+
+		data = msgTyped2
 	case msgTyped.Data.TypeUrl == "/ethermint.evm.v1.LegacyTx":
 		msgTyped2 := &LegacyTx{}
 		err = msgTyped2.Unmarshal(msgTyped.Data.Value)
@@ -423,6 +427,8 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 		if err != nil {
 			fmt.Println("Eth message tryingTypeAnyV1 LegacyTx error", err)
 		}
+
+		data = msgTyped2
 	default:
 		fmt.Println("Eth message msgTyped.Data.TypeUrl unknown")
 	}
@@ -436,13 +442,39 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	//		return nil, err
 	//	}
 	//
-	sender, err := msgEthTx.GetSender(data.GetChainID())
+
+	// signer := ethtypes.LatestSignerForChainID(txData.GetChainID())
+	//	from, err := signer.Sender(ethtypes.NewTx(txData.AsEthereumData()))
+	//	if err != nil {
+	//		return common.Address{}, err
+	//	}
+
+	transaction := ethtypes.NewTx(data.AsEthereumData())
+
+	data.AsEthereumData()
+
+	signer := ethtypes.LatestSignerForChainID(data.GetChainID())
+	from, err := signer.Sender(transaction)
 	if err != nil {
-		return nil, err
+		fmt.Println("Eth message signer error", err)
 	}
 
-	signer := sdk.AccAddress(sender.Bytes())
-	return [][]byte{signer}, nil
+	//signer := ethtypes.LatestSignerForChainID(chainID)
+	//from, err := signer.Sender(msg.AsTransaction())
+	//if err != nil {
+	//	return common.Address{}, err
+	//}
+	//
+	//msg.From = from.Hex()
+	//return from, nil
+
+	//sender, err := msgEthTx.GetSender(data.GetChainID())
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	sign := sdk.AccAddress(from.Bytes())
+	return [][]byte{sign}, nil
 	//
 	//
 	//transaction := ethtypes.NewTx(data.AsEthereumData())
