@@ -71,6 +71,7 @@ func ConstructUntypedEIP712Data(
 		bz := legacytx.RegressionTestingAminoCodec.MustMarshalJSON(msg)
 		fmt.Println("ConstructUntypedEIP712Data bz for msg: ", msg)
 		fmt.Println("ConstructUntypedEIP712Data bz for msg: ", bz)
+		fmt.Println("ConstructUntypedEIP712Data bz for msg: ", sdk.MustSortJSON(bz))
 	}
 
 	// remove msgs from the sign doc since we will be adding them as separate fields
@@ -83,7 +84,7 @@ func ConstructUntypedEIP712Data(
 
 		bz := legacytx.RegressionTestingAminoCodec.MustMarshalJSON(msg)
 		fmt.Println("ConstructUntypedEIP712Data bz", bz)
-		msgBytes := mustSortJSON(bz)
+		msgBytes := sdk.MustSortJSON(bz)
 		fmt.Println("ConstructUntypedEIP712Data msgBytes", msgBytes)
 
 		//legacyMsg, ok := msg.(legacytx.LegacyMsg)
