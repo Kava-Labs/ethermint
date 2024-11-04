@@ -38,6 +38,7 @@ func ConstructUntypedEIP712Data(
 	msgs []sdk.Msg,
 	memo string,
 ) []byte {
+	fmt.Println("ConstructUntypedEIP712Data")
 	// tx.TipTx interface was removed, added types.TxWithTimeoutHeight, they have been deprecated and should not be used since v0.46.0
 	// Deprecated: Please use x/tx/signing/aminojson instead.
 	signBytes := legacytx.StdSignBytes(chainID, accnum, sequence, timeout, fee, msgs, memo)
@@ -52,6 +53,7 @@ func ConstructUntypedEIP712Data(
 
 	// Add messages as separate fields
 	for i := 0; i < len(msgs); i++ {
+		fmt.Println("ConstructUntypedEIP712Data msg", msgs[i])
 		msg := msgs[i]
 		legacyMsg, ok := msg.(legacytx.LegacyMsg)
 		if !ok {
