@@ -16,8 +16,11 @@
 package eip712
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -73,7 +76,9 @@ func ConstructUntypedEIP712Data(
 		msg := msgs[i]
 
 		bz := legacytx.RegressionTestingAminoCodec.MustMarshalJSON(msg)
+		fmt.Println("ConstructUntypedEIP712Data bz", bz)
 		msgBytes := mustSortJSON(bz)
+		fmt.Println("ConstructUntypedEIP712Data msgBytes", msgBytes)
 
 		//legacyMsg, ok := msg.(legacytx.LegacyMsg)
 		//if !ok {
@@ -90,6 +95,82 @@ func ConstructUntypedEIP712Data(
 	return sdk.MustSortJSON(bz)
 }
 
+func dataMismatchError(encType string, encValue interface{}) error {
+	return fmt.Errorf("provided data '%v' doesn't match type '%s'", encValue, encType)
+}
+
+func EncodeData(typedData apitypes.TypedData, primaryType string, data map[string]interface{}, depth int) (hexutil.Bytes, error) {
+	//if err := typedData.validate(); err != nil {
+	//	return nil, err
+	//}
+
+	buffer := bytes.Buffer{}
+
+	// Verify extra data
+	if exp, got := len(typedData.Types[primaryType]), len(data); exp < got {
+		return nil, fmt.Errorf("there is extra data provided in the message (%d < %d)", exp, got)
+	}
+
+	// Add typehash
+	buffer.Write(typedData.TypeHash(primaryType))
+
+	// Add field contents. Structs and arrays have special handlers.
+	for _, field := range typedData.Types[primaryType] {
+		encType := field.Type
+		encValue := data[field.Name]
+		if encType[len(encType)-1:] == "]" {
+			arrayValue, ok := encValue.([]interface{})
+			fmt.Println("arrayValue", arrayValue, ok)
+			if !ok {
+				return nil, dataMismatchError(encType, encValue)
+			}
+
+			arrayBuffer := bytes.Buffer{}
+			parsedType := strings.Split(encType, "[")[0]
+			for _, item := range arrayValue {
+				if typedData.Types[parsedType] != nil {
+					mapValue, ok := item.(map[string]interface{})
+					fmt.Println("mapValue", mapValue, ok)
+					if !ok {
+						return nil, dataMismatchError(parsedType, item)
+					}
+					encodedData, err := typedData.EncodeData(parsedType, mapValue, depth+1)
+					fmt.Println("encodedData", encodedData, err)
+					if err != nil {
+						return nil, err
+					}
+					arrayBuffer.Write(crypto.Keccak256(encodedData))
+				} else {
+					bytesValue, err := typedData.EncodePrimitiveValue(parsedType, item, depth)
+					if err != nil {
+						return nil, err
+					}
+					arrayBuffer.Write(bytesValue)
+				}
+			}
+
+			buffer.Write(crypto.Keccak256(arrayBuffer.Bytes()))
+		} else if typedData.Types[field.Type] != nil {
+			mapValue, ok := encValue.(map[string]interface{})
+			if !ok {
+				return nil, dataMismatchError(encType, encValue)
+			}
+			encodedData, err := typedData.EncodeData(field.Type, mapValue, depth+1)
+			if err != nil {
+				return nil, err
+			}
+			buffer.Write(crypto.Keccak256(encodedData))
+		} else {
+			byteValue, err := typedData.EncodePrimitiveValue(encType, encValue, depth)
+			if err != nil {
+				return nil, err
+			}
+			buffer.Write(byteValue)
+		}
+	}
+	return buffer.Bytes(), nil
+}
+
 // ComputeTypedDataHash computes keccak hash of typed data for signing.
 func ComputeTypedDataHash(typedData apitypes.TypedData) ([]byte, error) {
 	fmt.Println("ComputeTypedDataHash", typedData)
@@ -103,11 +184,20 @@ func ComputeTypedDataHash(typedData apitypes.TypedData) ([]byte, error) {
 	fmt.Println("typedData.PrimaryType", typedData.PrimaryType)
 	fmt.Println("typedData.Message", typedData.Message)
 
+	fmt.Println("before encoding")
+
+	//encodedData, err := typedData.EncodeData(typedData.PrimaryType, typedData.Message, 1)
+	encodedData, err := EncodeData(typedData, typedData.PrimaryType, typedData.Message, 1)
+	fmt.Println("encodedData", encodedData)
+	fmt.Println("err", err)
+
 	typedDataHash, err := typedData.HashStruct(typedData.PrimaryType, typedData.Message)
 	if err != nil {
 		err = errorsmod.Wrap(err, "failed to pack and hash typedData primary type")
 		return nil, err
 	}
+
+	fmt.Println("typedDataHash", typedDataHash)
 
 	rawData := []byte(fmt.Sprintf("\x19\x01%s%s", string(domainSeparator), string(typedDataHash)))
 	return crypto.Keccak256(rawData), nil
