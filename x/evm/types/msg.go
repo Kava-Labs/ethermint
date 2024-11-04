@@ -330,7 +330,6 @@ func GetSigners(msg protov2.Message) ([][]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Eth message tryingTypeAnyV1 MsgEthereumTx data", msgTyped.Data)
 
 	var data TxData
 	switch {
