@@ -52,9 +52,12 @@ const (
 
 // Account implements the Query/Account gRPC method
 func (k Keeper) Account(c context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
+	fmt.Println("calling evm account", req)
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+
+	fmt.Println("calling evm account", req.Address)
 
 	if err := ethermint.ValidateAddress(req.Address); err != nil {
 		return nil, status.Error(
@@ -67,6 +70,8 @@ func (k Keeper) Account(c context.Context, req *types.QueryAccountRequest) (*typ
 	ctx := sdk.UnwrapSDKContext(c)
 	acct := k.GetAccountOrEmpty(ctx, addr)
 
+	fmt.Println("calling evm account", acct)
+
 	return &types.QueryAccountResponse{
 		Balance:  acct.Balance.String(),
 		CodeHash: common.BytesToHash(acct.CodeHash).Hex(),
@@ -75,6 +80,7 @@ func (k Keeper) Account(c context.Context, req *types.QueryAccountRequest) (*typ
 }
 
 func (k Keeper) CosmosAccount(c context.Context, req *types.QueryCosmosAccountRequest) (*types.QueryCosmosAccountResponse, error) {
+	fmt.Println("calling evm CosmosAccount", req)
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -105,6 +111,7 @@ func (k Keeper) CosmosAccount(c context.Context, req *types.QueryCosmosAccountRe
 
 // ValidatorAccount implements the Query/Balance gRPC method
 func (k Keeper) ValidatorAccount(c context.Context, req *types.QueryValidatorAccountRequest) (*types.QueryValidatorAccountResponse, error) {
+	fmt.Println("calling evm ValidatorAccount", req)
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}

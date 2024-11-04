@@ -113,9 +113,6 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	}
 
 	fmt.Println("EthValidateBasicDecorator.AnteHandle start")
-	for _, msg := range tx.GetMsgs() {
-		fmt.Println("EthValidateBasicDecorator.AnteHandle", msg.String())
-	}
 
 	//sigetheriumTx, ok := tx.(*evmtypes.MsgEthereumTx)
 	sigetheriumTx, ok := tx.(sdk.HasValidateBasic)
@@ -123,7 +120,6 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		fmt.Println("going to validate basic")
 		err := sigetheriumTx.ValidateBasic()
 		// ErrNoSignatures is fine with eth tx
-		fmt.Println("validation error is ", err)
 		if err != nil && !errors.Is(err, errortypes.ErrNoSignatures) {
 			return ctx, errorsmod.Wrap(err, "tx basic validation failed")
 		}
@@ -134,15 +130,12 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// For eth type cosmos tx, some fields should be verified as zero values,
 	// since we will only verify the signature against the hash of the MsgEthereumTx.Data
 	wrapperTx, ok := tx.(protoTxProvider)
-	fmt.Println("wrapperTx", wrapperTx, ok)
 	if !ok {
 		return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid tx type %T, didn't implement interface protoTxProvider", tx)
 	}
 
 	protoTx := wrapperTx.GetProtoTx()
 	body := protoTx.Body
-	fmt.Println("protoTx", protoTx)
-	fmt.Println("body", body)
 	if body.Memo != "" || body.TimeoutHeight != uint64(0) || len(body.NonCriticalExtensionOptions) > 0 {
 		return ctx, errorsmod.Wrap(errortypes.ErrInvalidRequest,
 			"for eth tx body Memo TimeoutHeight NonCriticalExtensionOptions should be empty")
