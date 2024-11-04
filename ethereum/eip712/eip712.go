@@ -92,11 +92,16 @@ func ConstructUntypedEIP712Data(
 
 // ComputeTypedDataHash computes keccak hash of typed data for signing.
 func ComputeTypedDataHash(typedData apitypes.TypedData) ([]byte, error) {
+	fmt.Println("ComputeTypedDataHash", typedData)
 	domainSeparator, err := typedData.HashStruct("EIP712Domain", typedData.Domain.Map())
 	if err != nil {
 		err = errorsmod.Wrap(err, "failed to pack and hash typedData EIP712Domain")
 		return nil, err
 	}
+
+	fmt.Println("domainSeparator", domainSeparator)
+	fmt.Println("typedData.PrimaryType", typedData.PrimaryType)
+	fmt.Println("typedData.Message", typedData.Message)
 
 	typedDataHash, err := typedData.HashStruct(typedData.PrimaryType, typedData.Message)
 	if err != nil {
