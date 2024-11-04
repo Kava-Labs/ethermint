@@ -170,9 +170,15 @@ func extractMsgTypes(msgs []sdk.Msg, params evmtypes.Params) (apitypes.Types, er
 		msgTypeName := fmt.Sprintf("Msg%d", i+1)
 
 		// ensure eip712 messages implement legacytx.LegacyMsg
-		_, ok := msg.(legacytx.LegacyMsg)
+		//_, ok := msg.(legacytx.LegacyMsg)
+		//if !ok {
+		//	err := errorsmod.Wrapf(sdkerrors.ErrInvalidType, "msg %T must implement legacytx.LegacyMsg", (*legacytx.LegacyMsg)(nil))
+		//	return apitypes.Types{}, err
+		//}
+
+		_, ok := msg.(sdk.Msg)
 		if !ok {
-			err := errorsmod.Wrapf(sdkerrors.ErrInvalidType, "msg %T must implement legacytx.LegacyMsg", (*legacytx.LegacyMsg)(nil))
+			err := errorsmod.Wrapf(sdkerrors.ErrInvalidType, "msg %T must implement sdk.Msg", (*sdk.Msg)(nil))
 			return apitypes.Types{}, err
 		}
 
