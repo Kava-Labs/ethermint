@@ -30,6 +30,20 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
+// Deprecated: please delete this code eventually.
+func mustSortJSON(bz []byte) []byte {
+	var c any
+	err := json.Unmarshal(bz, &c)
+	if err != nil {
+		panic(err)
+	}
+	js, err := json.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+	return js
+}
+
 // ConstructUntypedEIP712Data returns the bytes to sign for a transaction.
 func ConstructUntypedEIP712Data(
 	chainID string,
@@ -48,6 +62,8 @@ func ConstructUntypedEIP712Data(
 		panic(err)
 	}
 
+	fmt.Println("ConstructUntypedEIP712Data inInterface", inInterface)
+
 	// remove msgs from the sign doc since we will be adding them as separate fields
 	delete(inInterface, "msgs")
 
@@ -55,12 +71,16 @@ func ConstructUntypedEIP712Data(
 	for i := 0; i < len(msgs); i++ {
 		fmt.Println("ConstructUntypedEIP712Data msg", msgs[i])
 		msg := msgs[i]
-		legacyMsg, ok := msg.(legacytx.LegacyMsg)
-		if !ok {
-			panic(fmt.Errorf("expected %T when using amino JSON", (*legacytx.LegacyMsg)(nil)))
-		}
-		msgsBytes := json.RawMessage(legacyMsg.GetSignBytes())
-		inInterface[fmt.Sprintf("msg%d", i+1)] = msgsBytes
+
+		bz := legacytx.RegressionTestingAminoCodec.MustMarshalJSON(msg)
+		msgBytes := mustSortJSON(bz)
+
+		//legacyMsg, ok := msg.(legacytx.LegacyMsg)
+		//if !ok {
+		//	panic(fmt.Errorf("expected %T when using amino JSON", (*legacytx.LegacyMsg)(nil)))
+		//}
+		//msgsBytes := json.RawMessage(legacyMsg.GetSignBytes())
+		inInterface[fmt.Sprintf("msg%d", i+1)] = msgBytes
 	}
 
 	bz, err := json.Marshal(inInterface)
