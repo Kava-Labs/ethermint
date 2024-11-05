@@ -85,14 +85,14 @@ func ConstructUntypedEIP712Data(
 		bz := legacytx.RegressionTestingAminoCodec.MustMarshalJSON(msg)
 		fmt.Println("ConstructUntypedEIP712Data bz", bz)
 		msgBytes := sdk.MustSortJSON(bz)
-		fmt.Println("ConstructUntypedEIP712Data msgBytes", msgBytes)
+		fmt.Println("ConstructUntypedEIP712Data msgBytes", json.RawMessage(msgBytes))
 
 		//legacyMsg, ok := msg.(legacytx.LegacyMsg)
 		//if !ok {
 		//	panic(fmt.Errorf("expected %T when using amino JSON", (*legacytx.LegacyMsg)(nil)))
 		//}
 		//msgsBytes := json.RawMessage(legacyMsg.GetSignBytes())
-		inInterface[fmt.Sprintf("msg%d", i+1)] = msgBytes
+		inInterface[fmt.Sprintf("msg%d", i+1)] = json.RawMessage(msgBytes)
 	}
 
 	bz, err := json.Marshal(inInterface)
