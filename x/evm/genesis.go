@@ -77,6 +77,7 @@ func InitGenesis(
 	}
 
 	isEnabledPrecompile := make(map[string]struct{})
+	fmt.Println("eth evm genesis InitGenesis gs.Params.EnabledPrecompiles", data.Params.EnabledPrecompiles)
 	for _, ep := range data.Params.EnabledPrecompiles {
 		isEnabledPrecompile[ep] = struct{}{}
 	}

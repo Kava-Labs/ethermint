@@ -76,6 +76,8 @@ func (gs GenesisState) Validate() error {
 		return fmt.Errorf("invalid params: %w", err)
 	}
 
+	fmt.Println("eth types genesis Validate gs.Params.EnabledPrecompiles", gs.Params.EnabledPrecompiles)
+
 	for _, ep := range gs.Params.EnabledPrecompiles {
 		if _, ok := seenAccounts[ep]; !ok {
 			return fmt.Errorf("enabled precompile %s must have a matching genesis account", ep)

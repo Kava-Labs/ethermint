@@ -17,6 +17,7 @@ package eth
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
@@ -313,6 +314,7 @@ func (e *PublicAPI) ProtocolVersion() hexutil.Uint {
 
 // GasPrice returns the current gas price based on Ethermint's gas price oracle.
 func (e *PublicAPI) GasPrice() (*hexutil.Big, error) {
+	fmt.Println("GasPrice eth_gasPrice")
 	e.logger.Debug("eth_gasPrice")
 	return e.backend.GasPrice()
 }

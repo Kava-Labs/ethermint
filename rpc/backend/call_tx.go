@@ -397,6 +397,7 @@ func (b *Backend) DoCall(
 
 // GasPrice returns the current gas price based on Ethermint's gas price oracle.
 func (b *Backend) GasPrice() (*hexutil.Big, error) {
+	fmt.Println("Backend GasPrice")
 	var (
 		result *big.Int
 		err    error

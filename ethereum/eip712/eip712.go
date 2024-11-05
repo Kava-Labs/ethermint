@@ -65,27 +65,15 @@ func ConstructUntypedEIP712Data(
 		panic(err)
 	}
 
-	fmt.Println("ConstructUntypedEIP712Data inInterface", inInterface)
-
-	for _, msg := range msgs {
-		bz := legacytx.RegressionTestingAminoCodec.MustMarshalJSON(msg)
-		fmt.Println("ConstructUntypedEIP712Data bz for msg: ", msg)
-		fmt.Println("ConstructUntypedEIP712Data bz for msg: ", bz)
-		fmt.Println("ConstructUntypedEIP712Data bz for msg: ", sdk.MustSortJSON(bz))
-	}
-
 	// remove msgs from the sign doc since we will be adding them as separate fields
 	delete(inInterface, "msgs")
 
 	// Add messages as separate fields
 	for i := 0; i < len(msgs); i++ {
-		fmt.Println("ConstructUntypedEIP712Data msg", msgs[i])
 		msg := msgs[i]
 
 		bz := legacytx.RegressionTestingAminoCodec.MustMarshalJSON(msg)
-		fmt.Println("ConstructUntypedEIP712Data bz", bz)
 		msgBytes := sdk.MustSortJSON(bz)
-		fmt.Println("ConstructUntypedEIP712Data msgBytes", json.RawMessage(msgBytes))
 
 		//legacyMsg, ok := msg.(legacytx.LegacyMsg)
 		//if !ok {
@@ -185,31 +173,17 @@ func EncodeData(typedData apitypes.TypedData, primaryType string, data map[strin
 
 // ComputeTypedDataHash computes keccak hash of typed data for signing.
 func ComputeTypedDataHash(typedData apitypes.TypedData) ([]byte, error) {
-	fmt.Println("ComputeTypedDataHash", typedData)
 	domainSeparator, err := typedData.HashStruct("EIP712Domain", typedData.Domain.Map())
 	if err != nil {
 		err = errorsmod.Wrap(err, "failed to pack and hash typedData EIP712Domain")
 		return nil, err
 	}
 
-	fmt.Println("domainSeparator", domainSeparator)
-	fmt.Println("typedData.PrimaryType", typedData.PrimaryType)
-	fmt.Println("typedData.Message", typedData.Message)
-
-	fmt.Println("before encoding")
-
-	//encodedData, err := typedData.EncodeData(typedData.PrimaryType, typedData.Message, 1)
-	encodedData, err := EncodeData(typedData, typedData.PrimaryType, typedData.Message, 1)
-	fmt.Println("encodedData", encodedData)
-	fmt.Println("err", err)
-
 	typedDataHash, err := typedData.HashStruct(typedData.PrimaryType, typedData.Message)
 	if err != nil {
 		err = errorsmod.Wrap(err, "failed to pack and hash typedData primary type")
 		return nil, err
 	}
-
-	fmt.Println("typedDataHash", typedDataHash)
 
 	rawData := []byte(fmt.Sprintf("\x19\x01%s%s", string(domainSeparator), string(typedDataHash)))
 	return crypto.Keccak256(rawData), nil
