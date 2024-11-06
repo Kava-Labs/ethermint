@@ -17,9 +17,11 @@ package evm
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	"runtime/debug"
 
 	"github.com/evmos/ethermint/x/evm/types"
 )
@@ -27,6 +29,9 @@ import (
 // NewHandler returns a handler for Ethermint type messages.
 func NewHandler(server types.MsgServer) baseapp.MsgServiceHandler {
 	return func(ctx sdk.Context, msg sdk.Msg) (result *sdk.Result, err error) {
+		fmt.Println("evm handler execution", msg)
+		debug.PrintStack()
+
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {

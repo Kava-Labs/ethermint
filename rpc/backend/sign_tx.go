@@ -159,7 +159,7 @@ func (b *Backend) SignTypedData(address common.Address, typedData apitypes.Typed
 
 	// TODO(boodyvo): identify the signing mode
 	// Sign the requested hash with the wallet
-	signature, _, err := b.clientCtx.Keyring.SignByAddress(from, sigHash, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	signature, _, err := b.clientCtx.Keyring.SignByAddress(from, sigHash, signing.SignMode_SIGN_MODE_TEXTUAL)
 	if err != nil {
 		b.logger.Error("keyring.SignByAddress failed", "address", address.Hex())
 		return nil, err
