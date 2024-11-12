@@ -16,15 +16,13 @@
 package types
 
 import (
+	sdkmath "cosmossdk.io/math"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"errors"
 	"fmt"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"math/big"
-	"runtime/debug"
-
-	sdkmath "cosmossdk.io/math"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -92,9 +90,6 @@ func newMsgEthereumTx(
 	chainID *big.Int, nonce uint64, to *common.Address, amount *big.Int,
 	gasLimit uint64, gasPrice, gasFeeCap, gasTipCap *big.Int, input []byte, accesses *ethtypes.AccessList,
 ) *MsgEthereumTx {
-	fmt.Println("Going to create eth transaction")
-	debug.PrintStack()
-
 	var (
 		cid, amt, gp *sdkmath.Int
 		toAddr       string
@@ -195,7 +190,6 @@ func (msg MsgEthereumTx) Type() string { return TypeMsgEthereumTx }
 // ValidateBasic implements the sdk.Msg interface. It performs basic validation
 // checks of a Transaction. If returns an error if validation fails.
 func (msg MsgEthereumTx) ValidateBasic() error {
-	fmt.Println("MsgEthereumTx.ValidateBasic")
 	if msg.From != "" {
 		if err := types.ValidateAddress(msg.From); err != nil {
 			return errorsmod.Wrap(err, "invalid from address")
@@ -262,7 +256,6 @@ func (msg *MsgEthereumTx) GetMsgsV2() ([]protov2.Message, error) {
 //}
 
 func (msg *MsgEthereumTx) GetSigners() ([][]byte, error) {
-	fmt.Println("MsgEthereumTx GetSigners was triggered")
 	data, err := UnpackTxData(msg.Data)
 	if err != nil {
 		return nil, err
@@ -513,7 +506,6 @@ func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic does a sanity check of the provided data
 func (m *MsgUpdateParams) ValidateBasic() error {
-	fmt.Println("MsgUpdateParams.ValidateBasic")
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return errorsmod.Wrap(err, "invalid authority address")
 	}

@@ -55,7 +55,6 @@ func ConstructUntypedEIP712Data(
 	msgs []sdk.Msg,
 	memo string,
 ) []byte {
-	fmt.Println("ConstructUntypedEIP712Data")
 	// tx.TipTx interface was removed, added types.TxWithTimeoutHeight, they have been deprecated and should not be used since v0.46.0
 	// Deprecated: Please use x/tx/signing/aminojson instead.
 	signBytes := legacytx.StdSignBytes(chainID, accnum, sequence, timeout, fee, msgs, memo)
@@ -111,12 +110,10 @@ func EncodeData(typedData apitypes.TypedData, primaryType string, data map[strin
 
 	// Add field contents. Structs and arrays have special handlers.
 	for _, field := range typedData.Types[primaryType] {
-		fmt.Println("field", field)
 		encType := field.Type
 		encValue := data[field.Name]
 		if encType[len(encType)-1:] == "]" {
 			arrayValue, ok := encValue.([]interface{})
-			fmt.Println("arrayValue 1", arrayValue, ok)
 			if !ok {
 				return nil, dataMismatchError(encType, encValue)
 			}
@@ -126,19 +123,16 @@ func EncodeData(typedData apitypes.TypedData, primaryType string, data map[strin
 			for _, item := range arrayValue {
 				if typedData.Types[parsedType] != nil {
 					mapValue, ok := item.(map[string]interface{})
-					fmt.Println("mapValue 1", mapValue, ok)
 					if !ok {
 						return nil, dataMismatchError(parsedType, item)
 					}
 					encodedData, err := typedData.EncodeData(parsedType, mapValue, depth+1)
-					fmt.Println("encodedData 1", encodedData, err)
 					if err != nil {
 						return nil, err
 					}
 					arrayBuffer.Write(crypto.Keccak256(encodedData))
 				} else {
 					bytesValue, err := typedData.EncodePrimitiveValue(parsedType, item, depth)
-					fmt.Println("bytesValue 1", bytesValue, err)
 					if err != nil {
 						return nil, err
 					}
@@ -149,12 +143,10 @@ func EncodeData(typedData apitypes.TypedData, primaryType string, data map[strin
 			buffer.Write(crypto.Keccak256(arrayBuffer.Bytes()))
 		} else if typedData.Types[field.Type] != nil {
 			mapValue, ok := encValue.(map[string]interface{})
-			fmt.Println("mapValue 2", mapValue, ok)
 			if !ok {
 				return nil, dataMismatchError(encType, encValue)
 			}
 			encodedData, err := typedData.EncodeData(field.Type, mapValue, depth+1)
-			fmt.Println("encodedData 2", encodedData, err)
 			if err != nil {
 				return nil, err
 			}
