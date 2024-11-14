@@ -108,6 +108,28 @@ func SetupWithDB(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.Genesis
 		if err != nil {
 			panic(err)
 		}
+		// _, err = app.InitChain(&abci.RequestInitChain{
+		//		Validators:      []abci.ValidatorUpdate{},
+		//		ConsensusParams: simtestutil.DefaultConsensusParams,
+		//		AppStateBytes:   stateBytes,
+		//	},
+		//	)
+		//	require.NoError(t, err)
+		//
+		//	require.NoError(t, err)
+		//	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		//		Height:             app.LastBlockHeight() + 1,
+		//		Hash:               app.LastCommitID().Hash,
+		//		NextValidatorsHash: valSet.Hash(),
+		//	})
+
+		//_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		//	Height: app.LastBlockHeight() + 1,
+		//	Hash:   app.LastCommitID().Hash,
+		//})
+		//if err != nil {
+		//	panic(err)
+		//}
 	}
 
 	return app

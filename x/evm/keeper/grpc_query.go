@@ -275,6 +275,7 @@ func (k Keeper) EthCall(c context.Context, req *types.EthCallRequest) (*types.Ms
 
 // EstimateGas implements eth_estimateGas rpc api.
 func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*types.EstimateGasResponse, error) {
+	fmt.Println("Keeper EstimateGas", req)
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -315,6 +316,8 @@ func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*type
 		}
 	}
 
+	fmt.Println("Keeper EstimateGas 1", lo, hi, gasCap)
+
 	// TODO: Recap the highest gas limit with account's available balance.
 
 	// Recap the highest gas allowance with specified gascap.
@@ -332,6 +335,9 @@ func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*type
 	args.Nonce = (*hexutil.Uint64)(&nonce)
 
 	txConfig := statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash()))
+
+	fmt.Println("txConfig", txConfig)
+	fmt.Println("Keeper EstimateGas 2", lo, hi, gasCap)
 
 	// convert the tx args to an ethereum message
 	msg, err := args.ToMessage(req.GasCap, cfg.BaseFee)
@@ -361,6 +367,7 @@ func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*type
 
 		// pass false to not commit StateDB
 		rsp, err = k.ApplyMessageWithConfig(ctx, msg, nil, false, cfg, txConfig)
+		fmt.Println("Keeper EstimateGas 3", rsp.GasUsed, err)
 		if err != nil {
 			if errors.Is(err, core.ErrIntrinsicGas) {
 				return true, nil, nil // Special case, raise gas limit
@@ -372,6 +379,7 @@ func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*type
 
 	// Execute the binary search and hone in on an executable gas limit
 	hi, err = types.BinSearch(lo, hi, executable)
+	fmt.Println("Keeper EstimateGas 4", hi, lo, err)
 	if err != nil {
 		return nil, err
 	}

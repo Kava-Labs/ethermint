@@ -17,6 +17,7 @@ package keeper
 
 import (
 	sdkmath "cosmossdk.io/math"
+	"fmt"
 	"math/big"
 
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -316,6 +317,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	cfg *statedb.EVMConfig,
 	txConfig statedb.TxConfig,
 ) (*types.MsgEthereumTxResponse, error) {
+	fmt.Println("ApplyMessageWithConfig", msg.Gas(), msg)
 	var (
 		ret   []byte // return bytes from evm execution
 		vmErr error  // vm errors do not effect consensus and are therefore not assigned to err
@@ -332,6 +334,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	evm := k.NewEVM(ctx, msg, cfg, tracer, stateDB)
 
 	leftoverGas := msg.Gas()
+	fmt.Println("ApplyMessageWithConfig leftoverGas", leftoverGas)
 
 	// Allow the tracer captures the tx level events, mainly the gas consumption.
 	vmCfg := evm.Config
@@ -351,6 +354,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 		// should have already been checked on Ante Handler
 		return nil, errorsmod.Wrap(err, "intrinsic gas failed")
 	}
+	fmt.Println("ApplyMessageWithConfig intrinsicGas", intrinsicGas)
 
 	// Should check again even if it is checked on Ante Handler, because eth_call don't go through Ante Handler.
 	if leftoverGas < intrinsicGas {
@@ -358,6 +362,8 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 		return nil, errorsmod.Wrap(core.ErrIntrinsicGas, "apply message")
 	}
 	leftoverGas -= intrinsicGas
+
+	fmt.Println("ApplyMessageWithConfig leftoverGas after intrinsicGas", leftoverGas)
 
 	// access list preparation is moved from ante handler to here, because it's needed when `ApplyMessage` is called
 	// under contexts where ante handlers are not run, for example `eth_call` and `eth_estimateGas`.
@@ -391,6 +397,9 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	temporaryGasUsed := msg.Gas() - leftoverGas
 	leftoverGas += GasToRefund(stateDB.GetRefund(), temporaryGasUsed, refundQuotient)
 
+	fmt.Println("ApplyMessageWithConfig temporaryGasUsed", temporaryGasUsed)
+	fmt.Println("ApplyMessageWithConfig leftoverGas after GasToRefund", leftoverGas)
+
 	// EVM execution error needs to be available for the JSON-RPC client
 	var vmError string
 	if vmErr != nil {
@@ -410,14 +419,19 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	gasLimit := sdkmath.LegacyNewDec(int64(msg.Gas()))
 	minGasMultiplier := k.GetMinGasMultiplier(ctx)
 	minimumGasUsed := gasLimit.Mul(minGasMultiplier)
+	fmt.Println("ApplyMessageWithConfig gasLimit", gasLimit)
+	fmt.Println("ApplyMessageWithConfig minGasMultiplier", minGasMultiplier)
+	fmt.Println("ApplyMessageWithConfig minimumGasUsed", minimumGasUsed)
 
 	if msg.Gas() < leftoverGas {
 		return nil, errorsmod.Wrapf(types.ErrGasOverflow, "message gas limit < leftover gas (%d < %d)", msg.Gas(), leftoverGas)
 	}
 
 	gasUsed := sdkmath.LegacyMaxDec(minimumGasUsed, sdkmath.LegacyNewDec(int64(temporaryGasUsed))).TruncateInt().Uint64()
+	fmt.Println("ApplyMessageWithConfig gasUsed", gasUsed)
 	// reset leftoverGas, to be used by the tracer
 	leftoverGas = msg.Gas() - gasUsed
+	fmt.Println("ApplyMessageWithConfig leftoverGas after gasUsed", leftoverGas)
 
 	return &types.MsgEthereumTxResponse{
 		GasUsed: gasUsed,

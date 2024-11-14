@@ -156,8 +156,9 @@ func (suite *EvmTestSuite) DoSetupTest(t require.TestingT) {
 		BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(address.Bytes()), nil, 0, 0),
 		CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
 	}
+	accs := suite.app.AccountKeeper.NewAccount(suite.ctx, acc)
 
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, accs)
 
 	valAddr := sdk.ValAddress(address.Bytes())
 	validator, err := stakingtypes.NewValidator(valAddr.String(), priv.PubKey(), stakingtypes.Description{})

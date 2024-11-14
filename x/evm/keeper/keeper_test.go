@@ -3,6 +3,7 @@ package keeper_test
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"math"
 	"math/big"
 	"os"
@@ -117,6 +118,7 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 	}
 	suite.address = common.BytesToAddress(priv.PubKey().Address().Bytes())
 	suite.signer = tests.NewSigner(priv)
+	fmt.Println("set up address", suite.address)
 
 	// consensus key
 	priv, err = ethsecp256k1.GenerateKey()
@@ -208,11 +210,12 @@ func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 
 	acc := &ethermint.EthAccount{
 		//BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(suite.address.Bytes()), nil, 20, 20),
-		BaseAccount: authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), nil, 20, 20),
+		BaseAccount: authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), nil, 0, 0),
 		CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
 	}
 
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+	akacc := suite.app.AccountKeeper.NewAccount(suite.ctx, acc)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, akacc)
 
 	// valAddr := sdk.ValAddress(suite.Address.Bytes())
 	//	validator, err := stakingtypes.NewValidator(valAddr.String(), consPriv.PubKey(), stakingtypes.Description{})
@@ -443,6 +446,7 @@ func (suite *KeeperTestSuite) TransferERC20Token(t require.TestingT, contractAdd
 		ProposerAddress: suite.ctx.BlockHeader().ProposerAddress,
 	})
 	require.NoError(t, err)
+	fmt.Println("estimated gas for the transfer", res.Gas)
 
 	nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, suite.address)
 

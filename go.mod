@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/client/v2 v2.0.0-beta.3
+	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/core v0.11.1
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
@@ -64,7 +65,6 @@ require (
 	cloud.google.com/go/iam v1.1.9 // indirect
 	cloud.google.com/go/storage v1.41.0 // indirect
 	cosmossdk.io/api v0.7.5 // indirect
-	cosmossdk.io/collections v0.4.0 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -241,6 +241,7 @@ require (
 )
 
 replace (
+	//cosmossdk.io/collections => ../cosmos-sdk/collections
 	//cosmossdk.io/tools/rosetta => github.com/cosmos/rosetta v0.50.2
 	//cosmossdk.io/x/evidence => cosmossdk.io/x/evidence v0.1.1
 	//cosmossdk.io/x/evidence => cosmossdk.io/x/feegrant v0.1.1
@@ -252,8 +253,8 @@ replace (
 
 	//github.com/cosmos/cosmos-sdk => github.com/kava-labs/cosmos-sdk v0.47.10-iavl-v1-kava.1
 	//github.com/cosmos/cosmos-sdk => github.com/kava-labs/cosmos-sdk v0.50.10-test-patch 5f9239e3147358ef034bfc4d19aacb34e5ea2064
-	github.com/cosmos/cosmos-sdk => github.com/kava-labs/cosmos-sdk v0.0.0-20241112214135-3a130e4e7d2b
-	//github.com/cosmos/cosmos-sdk => ../cosmos-sdk
+	//github.com/cosmos/cosmos-sdk => github.com/kava-labs/cosmos-sdk v0.0.0-20241112214135-3a130e4e7d2b
+	github.com/cosmos/cosmos-sdk => ../cosmos-sdk
 	// Use cosmos-sdk fork with staking transfer events, and custom tally handler support
 	//github.com/cosmos/cosmos-sdk => github.com/kava-labs/cosmos-sdk v0.47.10-iavl-v1-kava.1
 	github.com/ethereum/go-ethereum => github.com/Kava-Labs/go-ethereum v1.10.27-0.20240308170502-da7973e5eee0

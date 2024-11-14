@@ -196,7 +196,9 @@ func TestInitGenesis(t *testing.T) {
 
 				acc := authtypes.NewBaseAccountWithAddress(accAddr)
 				acc.Sequence = uint64(1)
-				tApp.AccountKeeper.SetAccount(ctx, acc)
+				// had to be wrapped with NewAccount, as it set's account number, that is used for index in collection internally. Otherwise it panics
+				akacc := tApp.AccountKeeper.NewAccount(ctx, acc)
+				tApp.AccountKeeper.SetAccount(ctx, akacc)
 
 				return testFixture{
 					ctx:         ctx,
@@ -230,7 +232,8 @@ func TestInitGenesis(t *testing.T) {
 					CodeHash:    incorrectCodeHash.String(),
 				}
 				acc.Sequence = uint64(1)
-				tApp.AccountKeeper.SetAccount(ctx, &acc)
+				akacc := tApp.AccountKeeper.NewAccount(ctx, &acc)
+				tApp.AccountKeeper.SetAccount(ctx, akacc)
 
 				s := "the evm state code doesn't match with the codehash\n"
 				expectedPanic := fmt.Sprintf("%s account: %s , evm state codehash: %v, ethAccount codehash: %v, evm state code: %s\n", s, address, codeHash, incorrectCodeHash, codeHex)
@@ -263,7 +266,8 @@ func TestInitGenesis(t *testing.T) {
 					CodeHash:    someCodeHash.String(),
 				}
 				acc.Sequence = uint64(1)
-				tApp.AccountKeeper.SetAccount(ctx, &acc)
+				akacc := tApp.AccountKeeper.NewAccount(ctx, &acc)
+				tApp.AccountKeeper.SetAccount(ctx, akacc)
 
 				s := "the evm state code doesn't match with the codehash\n"
 				expectedPanic := fmt.Sprintf("%s account: %s , evm state codehash: %v, ethAccount codehash: %v, evm state code: %s\n", s, address, common.BytesToHash(types.EmptyCodeHash), acc.GetCodeHash(), "")
@@ -298,7 +302,8 @@ func TestInitGenesis(t *testing.T) {
 					CodeHash:    "", // we do not allow empty code hash when code is set
 				}
 				acc.Sequence = uint64(1)
-				tApp.AccountKeeper.SetAccount(ctx, &acc)
+				akacc := tApp.AccountKeeper.NewAccount(ctx, &acc)
+				tApp.AccountKeeper.SetAccount(ctx, akacc)
 
 				s := "the evm state code doesn't match with the codehash\n"
 				expectedPanic := fmt.Sprintf("%s account: %s , evm state codehash: %v, ethAccount codehash: %v, evm state code: %s\n", s, address, codeHash, acc.GetCodeHash(), codeHex)
@@ -333,7 +338,8 @@ func TestInitGenesis(t *testing.T) {
 					CodeHash:    codeHash.String(),
 				}
 				acc.Sequence = uint64(1)
-				tApp.AccountKeeper.SetAccount(ctx, &acc)
+				akacc := tApp.AccountKeeper.NewAccount(ctx, &acc)
+				tApp.AccountKeeper.SetAccount(ctx, akacc)
 
 				expectFunc := func() {
 					storedCode := tApp.EvmKeeper.GetCode(ctx, codeHash)
@@ -388,7 +394,8 @@ func TestInitGenesis(t *testing.T) {
 					CodeHash:    codeHash.String(),
 				}
 				acc.Sequence = uint64(1)
-				tApp.AccountKeeper.SetAccount(ctx, &acc)
+				akacc := tApp.AccountKeeper.NewAccount(ctx, &acc)
+				tApp.AccountKeeper.SetAccount(ctx, akacc)
 
 				expectFunc := func() {
 					for _, rs := range rawStorage {
@@ -509,7 +516,8 @@ func TestInitGenesis(t *testing.T) {
 					CodeHash:    codeHash.String(),
 				}
 				acc1.Sequence = uint64(1)
-				tApp.AccountKeeper.SetAccount(ctx, &acc1)
+				akacc1 := tApp.AccountKeeper.NewAccount(ctx, &acc1)
+				tApp.AccountKeeper.SetAccount(ctx, akacc1)
 
 				accAddr2 := sdk.AccAddress(addr2.Bytes())
 				acc2 := ethermint.EthAccount{
@@ -517,7 +525,8 @@ func TestInitGenesis(t *testing.T) {
 					CodeHash:    codeHash.String(),
 				}
 				acc2.Sequence = uint64(1)
-				tApp.AccountKeeper.SetAccount(ctx, &acc2)
+				akacc2 := tApp.AccountKeeper.NewAccount(ctx, &acc2)
+				tApp.AccountKeeper.SetAccount(ctx, akacc2)
 
 				expectFunc := func() {
 					assert.Equal(t,
@@ -557,7 +566,8 @@ func TestInitGenesis(t *testing.T) {
 					CodeHash:    codeHash.String(),
 				}
 				acc.Sequence = uint64(0) // Not allowed for contracts
-				tApp.AccountKeeper.SetAccount(ctx, &acc)
+				akacc := tApp.AccountKeeper.NewAccount(ctx, &acc)
+				tApp.AccountKeeper.SetAccount(ctx, akacc)
 
 				return testFixture{
 					ctx:         ctx,
@@ -589,7 +599,8 @@ func TestInitGenesis(t *testing.T) {
 					CodeHash:    codeHash.String(),
 				}
 				acc.Sequence = uint64(1000)
-				tApp.AccountKeeper.SetAccount(ctx, &acc)
+				akacc := tApp.AccountKeeper.NewAccount(ctx, &acc)
+				tApp.AccountKeeper.SetAccount(ctx, akacc)
 
 				return testFixture{
 					ctx:         ctx,
@@ -626,7 +637,8 @@ func TestInitGenesis(t *testing.T) {
 				pubkey, err := codectypes.NewAnyWithValue(privkey.PubKey())
 				require.NoError(t, err)
 				acc.PubKey = pubkey
-				tApp.AccountKeeper.SetAccount(ctx, &acc)
+				akacc := tApp.AccountKeeper.NewAccount(ctx, &acc)
+				tApp.AccountKeeper.SetAccount(ctx, akacc)
 
 				return testFixture{
 					ctx:         ctx,
@@ -659,7 +671,8 @@ func TestInitGenesis(t *testing.T) {
 					CodeHash:    codeHash.String(),
 				}
 				acc.Sequence = uint64(1)
-				tApp.AccountKeeper.SetAccount(ctx, &acc)
+				akacc := tApp.AccountKeeper.NewAccount(ctx, &acc)
+				tApp.AccountKeeper.SetAccount(ctx, akacc)
 
 				registeredPrecompiles := []precompile_modules.Module{{Address: common.HexToAddress(address)}}
 
@@ -720,7 +733,8 @@ func setupApp() (sdk.Context, *app.EthermintApp) {
 	tApp := app.Setup(isCheckTx, func(_ *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
 		return genesis
 	})
-	ctx := tApp.BaseApp.NewContextLegacy(isCheckTx, tmproto.Header{Height: 1, Time: time.Now().UTC(), ChainID: "ethermint_9000-1"})
+	ctx := tApp.NewContextLegacy(isCheckTx, tmproto.Header{Height: 1, Time: time.Now().UTC(), ChainID: "ethermint_9000-1"})
+	//ctx := tApp.BaseApp.NewContextLegacy(isCheckTx, tmproto.Header{Height: 1, Time: time.Now().UTC(), ChainID: "ethermint_9000-1"})
 
 	return ctx, tApp
 }
